@@ -90,7 +90,7 @@ Installation
 
 	python setup.py install
 
-*pathspec* is also available for install through `PyPI`_::
+*pathspec* is also available for install through `PyPI`_ ::
 
 	pip install pathspec
 
