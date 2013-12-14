@@ -57,6 +57,11 @@ class RegexPattern(Pattern):
 
 		*regex* (``RegexObject`` or ``str``) is the regular expression for
 		the pattern.
+
+		`*args` are positional arguments to send to the ``Pattern``
+		constructor.
+
+		`**kw` are keyword arguments to send to the ``Pattern`` constructor.
 		"""
 
 		self.regex = None

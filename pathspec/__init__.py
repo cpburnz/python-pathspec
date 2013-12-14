@@ -14,7 +14,7 @@ __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
-__updated__ = "2013-12-07"
+__updated__ = "2013-12-14"
 __version__ = "0.2.0"
 
 from .gitignore import GitIgnorePattern
