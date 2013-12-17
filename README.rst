@@ -86,6 +86,10 @@ The source code for *pathspec* is available from the GitHub repo
 Installation
 ------------
 
+*pathspec* requires the following packages:
+
+- `setuptools`_
+
 *pathspec* can be installed from source with::
 
 	python setup.py install
@@ -94,6 +98,7 @@ Installation
 
 	pip install pathspec
 
+.. _`setuptools`: https://pypi.python.org/pypi/setuptools
 .. _`PyPI`: http://pypi.python.org/pypi/pathspec
 
 

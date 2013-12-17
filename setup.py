@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import io
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 from pathspec import __author__, __email__, __license__, __project__, __version__
 
@@ -32,5 +32,5 @@ setup(
     "Topic :: Utilities",
 	],
 	license=__license__,
-	packages=['pathspec'],
+	packages=find_packages(),
 )
