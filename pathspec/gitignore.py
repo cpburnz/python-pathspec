@@ -30,11 +30,15 @@ class GitIgnorePattern(RegexPattern):
 			raise TypeError("pattern:{!r} is not a string.".format(pattern))
 
 		pattern = pattern.strip()
-		if pattern:
-			if pattern.startswith('#'):
-				# A pattern starting with a hash ('#') serves as a comment. Escape
-				# the hash with a back-slash to match a literal hash (i.e., '\#').
-				return
+
+		if pattern.startswith('#'):
+			# A pattern starting with a hash ('#') serves as a comment
+			# (neither includes nor excludes files). Escape the hash with a
+			# back-slash to match a literal hash (i.e., '\#').
+			regex = None
+			include = None
+
+		elif pattern:
 
 			if pattern.startswith('!'):
 				# A pattern starting with an exclamation mark ('!') negates the
@@ -59,13 +63,15 @@ class GitIgnorePattern(RegexPattern):
 
 			if not pattern_segs[0]:
 				# A pattern beginning with a slash ('/') will only match paths
-				# directly on the root directory instead of any descendant paths.
-				# So, remove empty first segment to make pattern relative to root.
+				# directly on the root directory instead of any descendant
+				# paths. So, remove empty first segment to make pattern relative
+				# to root.
 				del pattern_segs[0]
 			else:
 				# A pattern without a beginning slash ('/') will match any
 				# descendant path. This is equivilent to "**/{pattern}". So,
-				# prepend with double-asterisks to make pattern relative to root.
+				# prepend with double-asterisks to make pattern relative to
+				# root.
 				if pattern_segs[0] != '**':
 					pattern_segs.insert(0, '**')
 
@@ -78,17 +84,19 @@ class GitIgnorePattern(RegexPattern):
 
 			# Build regular expression from pattern.
 			regex = ['^']
+			need_slash = False
 			end = len(pattern_segs) - 1
 			for i, seg in enumerate(pattern_segs):
 				if seg == '**':
 					if i == 0 and i == end:
-						# A pattern consisting solely of double-asterisks ('**') will
-						# match every path.
+						# A pattern consisting solely of double-asterisks ('**')
+						# will match every path.
 						regex.append('.+')
 					elif i == 0:
-						# A normalized pattern beginning with double-asterisks ('**')
-						# will match any leading path segments.
+						# A normalized pattern beginning with double-asterisks
+						# ('**') will match any leading path segments.
 						regex.append('(?:.+/)?')
+						need_slash = False
 					elif i == end:
 						# A normalized pattern ending with double-asterisks ('**')
 						# will match any trailing path segments.
@@ -97,16 +105,19 @@ class GitIgnorePattern(RegexPattern):
 						# A pattern with inner double-asterisks ('**') will match
 						# multiple (or zero) inner path segments.
 						regex.append('(?:/.+)?')
+						need_slash = True
 				elif seg == '*':
 					# Match single path segment.
-					if i != 0:
+					if need_slash:
 						regex.append('/')
 					regex.append('[^/]+')
+					need_slash = True
 				else:
 					# Match segment glob pattern.
-					if i != 0:
+					if need_slash:
 						regex.append('/')
 					regex.append(self._translate_segment_glob(seg))
+					need_slash = True
 			regex.append('$')
 			regex = ''.join(regex)
 

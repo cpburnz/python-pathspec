@@ -16,7 +16,7 @@ setup(
 	version=__version__,
 	author=__author__,
 	author_email=__email__,
-	url="https://github.com/cpburnz/python-path-specification.git",
+	url="https://github.com/cpburnz/python-path-specification",
 	description="Utility library for gitignore style pattern matching of file paths.",
 	long_description=readme + "\n\n" + changes,
 	classifiers=[
@@ -26,7 +26,6 @@ setup(
 		"Operating System :: OS Independent",
 		"Programming Language :: Python",
 		"Programming Language :: Python :: 2",
-		"Programming Language :: Python :: 2.6",
 		"Programming Language :: Python :: 2.7",
 		"Programming Language :: Python :: 3",
 		"Topic :: Software Development :: Libraries :: Python Modules",

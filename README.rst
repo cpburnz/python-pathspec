@@ -80,7 +80,7 @@ Source
 The source code for *pathspec* is available from the GitHub repo
 `cpburnz/python-path-specification`_.
 
-.. _`cpburnz/python-path-specification`: https://github.com/cpburnz/python-path-specification.git
+.. _`cpburnz/python-path-specification`: https://github.com/cpburnz/python-path-specification
 
 
 Installation
@@ -100,4 +100,3 @@ Installation
 .. image:: https://d2weczhvl823v0.cloudfront.net/cpburnz/python-path-specification/trend.png
    :alt: Bitdeli badge
    :target: https://bitdeli.com/free
-
