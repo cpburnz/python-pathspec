@@ -100,7 +100,7 @@ class GitIgnorePattern(RegexPattern):
 					elif i == end:
 						# A normalized pattern ending with double-asterisks ('**')
 						# will match any trailing path segments.
-						regex.append('/.+')
+						regex.append('/.*')
 					else:
 						# A pattern with inner double-asterisks ('**') will match
 						# multiple (or zero) inner path segments.
