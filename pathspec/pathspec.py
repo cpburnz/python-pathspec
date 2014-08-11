@@ -7,6 +7,7 @@ of files.
 import collections
 
 from . import util
+from .compat import string_types
 
 
 class PathSpec(object):
@@ -19,8 +20,8 @@ class PathSpec(object):
 		"""
 		Initializes the ``PathSpec`` instance.
 
-		*patterns* (``Iterable``) yields each compiled pattern
-		(``pathspec.Pattern``).
+		*patterns* (``Container`` or ``Iterable``) yields each compiled
+		pattern (``pathspec.Pattern``).
 		"""
 
 		self.patterns = None
@@ -42,16 +43,20 @@ class PathSpec(object):
 		"""
 		Compiles the pattern lines.
 
-		*pattern_factory* (``callable``) is used to compile patterns. It
+		*pattern_factory* can be either the name of a registered pattern
+		factory (``str``), or a ``callable`` used to compile patterns. It
 		must accept an uncompiled pattern (``str``) and return the compiled
 		pattern (``pathspec.Pattern``).
 
-		*lines* (``Iterable``) yields each uncompiled pattern (``str``). This
-		simply has to yield each line so it can be a ``file`` (e.g., ``open(file)``
-		or ``io.StringIO(text)``) or the result from ``str.splitlines()``.
+		*lines* (``Iterable``) yields each uncompiled pattern (``str``).
+		This simply has to yield each line so it can be a ``file`` (e.g.,
+		``open(file)`` or ``io.StringIO(text)``) or the result from
+		``str.splitlines()``.
 
 		Returns the ``PathSpec`` instance.
 		"""
+		if isinstance(pattern_factory, string_types):
+			pattern_factory = util.lookup_pattern(pattern_factory)
 		if not callable(pattern_factory):
 			raise TypeError("pattern_factory:{!r} is not callable.".format(pattern_factory))
 

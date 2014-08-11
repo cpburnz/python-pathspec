@@ -6,8 +6,9 @@ incorporates POSIX glob patterns.
 
 import re
 
-from .pattern import RegexPattern
+from . import util
 from .compat import string_types
+from .pattern import RegexPattern
 
 
 class GitIgnorePattern(RegexPattern):
@@ -77,7 +78,7 @@ class GitIgnorePattern(RegexPattern):
 
 			if not pattern_segs[-1]:
 				# A pattern ending with a slash ('/') will match all descendant
-				# paths of if it is a directory but not if it is a regular file.
+				# paths if it is a directory but not if it is a regular file.
 				# This is equivilent to "{pattern}/**". So, set last segment to
 				# double asterisks to include all descendants.
 				pattern_segs[-1] = '**'
@@ -234,3 +235,5 @@ class GitIgnorePattern(RegexPattern):
 				regex += re.escape(char)
 
 		return regex
+
+util.register_pattern('gitignore', GitIgnorePattern)

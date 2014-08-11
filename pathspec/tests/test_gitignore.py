@@ -5,6 +5,7 @@ This script tests ``GitIgnorePattern``.
 
 import unittest
 
+import pathspec.util
 from pathspec import GitIgnorePattern
 
 class GitIgnoreTest(unittest.TestCase):
@@ -61,7 +62,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		spec = GitIgnorePattern('spam/**')
 		self.assertTrue(spec.include)
-		self.assertEquals(spec.regex.pattern, '^(?:.+/)?spam/.+$')
+		self.assertEquals(spec.regex.pattern, '^(?:.+/)?spam/.*$')
 
 	def test_03_inner_double_asterisk(self):
 		"""
@@ -110,6 +111,21 @@ class GitIgnoreTest(unittest.TestCase):
 		spec = GitIgnorePattern('*.py')
 		self.assertTrue(spec.include)
 		self.assertEquals(spec.regex.pattern, '^(?:.+/)?[^/]*\\.py$')
+
+	def test_05_directory(self):
+		"""
+		Tests a directory pattern.
+		"""
+		spec = GitIgnorePattern('dir/')
+		self.assertTrue(spec.include)
+		self.assertEquals(spec.regex.pattern, '^(?:.+/)?dir/.*$')
+
+	def test_05_registered(self):
+		"""
+		Tests that the pattern is registered.
+		"""
+		self.assertIs(pathspec.util.lookup_pattern('gitignore'), GitIgnorePattern)
+
 
 if __name__ == '__main__':
 	suite = unittest.TestLoader().loadTestsFromTestCase(GitIgnoreTest)

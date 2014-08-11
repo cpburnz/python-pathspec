@@ -7,6 +7,14 @@ import collections
 import os
 import os.path
 
+from .compat import string_types
+
+_registered_patterns = {}
+"""
+*_registered_patterns* (``dict``) maps a name (``str``) to the
+registered pattern factory (``callable``).
+"""
+
 def iter_tree(root):
 	"""
 	Walks the specified root path for all files.
@@ -40,6 +48,17 @@ def iter_tree(root):
 				path = os.path.join(parent, path)
 			yield path
 
+def lookup_pattern(name):
+	"""
+	Lookups a registered pattern factory by name.
+
+	*name* (``str``) is the name of the pattern factory.
+
+	Returns the registered pattern factory (``callable``). If no pattern
+	factory is registered, raises ``KeyError``.
+	"""
+	return _registered_patterns[name]
+
 def match_files(patterns, files):
 	"""
 	Matches the files to the patterns.
@@ -62,6 +81,70 @@ def match_files(patterns, files):
 			else:
 				return_files.difference_update(result_files)
 	return return_files
+
+def register_pattern(name, pattern_factory, override=None):
+	"""
+	Registers the specified pattern factory.
+
+	*name* (``str``) is the name to register the pattern factory under.
+
+	*pattern_factory* (``callable``) is used to compile patterns. It must
+	accept an uncompiled pattern (``str``) and return the compiled pattern
+	(``pathspec.Pattern``).
+
+	*override* (``bool``) optionally is whether to allow overriding an
+	already registered pattern under the same name (``True``), instead of
+	raising an ``AlreadyRegisteredError`` (``False``). Default is ``None``
+	for ``False``.
+	"""
+	if not isinstance(name, string_types):
+		raise TypeError("name:{!r} is not a string.".format(name))
+	if not callable(pattern_factory):
+		raise TypeError("pattern_factory:{!r} is not callable.".format(pattern_factory))
+	if name in _registered_patterns and not override:
+		raise AlreadyRegisteredError(name, _registered_patterns[name])
+	_registered_patterns[name] = pattern_factory
+
+
+class AlreadyRegisteredError(Exception):
+	"""
+	The ``AlreadyRegisteredError`` exception is raised when a pattern
+	factory is registered under a name already in use.
+	"""
+
+	def __init__(self, name, pattern_factory):
+		"""
+		Initializes the ``AlreadyRegisteredError`` instance.
+
+		*name* (``str``) is the name of the registered pattern.
+
+		*pattern_factory* (``callable``) is the registered pattern factory.
+		"""
+		super(AlreadyRegisteredError, self).__init__(name, pattern_factory)
+
+	@property
+	def message(self):
+		"""
+		*message* (``str``) is the error message.
+		"""
+		return "{name!r} is already registered for pattern factory:{!r}.".format(
+			name=self.name,
+			pattern_factory=self.pattern_factory,
+		)
+
+	@property
+	def name(self):
+		"""
+		*name* (``str``) is the name of the registered pattern.
+		"""
+		return self.args[0]
+
+	@property
+	def pattern_factory(self):
+		"""
+		*pattern_factory* (``callable``) is the registered pattern factory.
+		"""
+		return self.args[1]
 
 
 class RecursionError(Exception):
