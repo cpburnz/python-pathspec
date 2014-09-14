@@ -33,4 +33,5 @@ setup(
 	],
 	license=__license__,
 	packages=find_packages(),
+	test_suite='pathspec.tests.test_gitignore.GitIgnoreTest',
 )
