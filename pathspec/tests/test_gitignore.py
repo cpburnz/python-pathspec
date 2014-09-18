@@ -61,7 +61,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		spec = GitIgnorePattern('spam/**')
 		self.assertTrue(spec.include)
-		self.assertEquals(spec.regex.pattern, '^(?:.+/)?spam/.+$')
+		self.assertEquals(spec.regex.pattern, '^(?:.+/)?spam/.*$')
 
 	def test_03_inner_double_asterisk(self):
 		"""
