@@ -44,7 +44,7 @@ certain files, and ignore others depending on certain conditions.
   ...
   ... # Ignore the build directories but only directly under the project
   ... # directories.
-  ... !/*/build/
+  ... !/*/build/q
   ...
   ... """
 
@@ -59,6 +59,12 @@ sent to them. ``GitIgnorePattern`` is the implementation of the actual pattern
 which internally gets converted into a regular expression. ``PathSpec`` is a
 simple wrapper around a list of compiled patterns.
 
+To make things simpler, we can use the registered name for a pattern class
+instead of always having to provide the class. The ``GitIgnorePattern`` class
+is registered as **gitignore**:
+
+  >>> spec = pathspec.PathSpec.from_lines('gitignore', spec.splitlines())
+
 If we wanted to manually compile the patterns we can just do the following.
 
   >>> patterns = map(pathspec.GitIgnorePattern, spec.splitlines())
@@ -70,7 +76,7 @@ If you want to load the patterns from file, you can pass the instance directly
 as well.
 
   >>> with open('patterns.list', 'r') as fh:
-  >>>     spec = pathspec.PathSpec.from_lines(pathspec.GitIgnorePattern, fh)
+  >>>     spec = pathspec.PathSpec.from_lines('gitignore', fh)
 
 
 

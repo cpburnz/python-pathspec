@@ -19,7 +19,7 @@ __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
 __updated__ = "2014-09-17"
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 from .gitignore import GitIgnorePattern
 from .pathspec import PathSpec
