@@ -20,6 +20,7 @@ lib
 lib64
 __pycache__
 /MANIFEST
+.tox
 
 # Installer logs.
 pip-log.txt
