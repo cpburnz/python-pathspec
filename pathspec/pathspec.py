@@ -1,4 +1,4 @@
-# coding: utf-8
+# encoding: utf-8
 """
 This module provides an object oriented interface for pattern matching
 of files.
@@ -7,7 +7,7 @@ of files.
 import collections
 
 from . import util
-from .compat import string_types
+from .compat import string_types, viewkeys
 
 
 class PathSpec(object):
@@ -63,16 +63,27 @@ class PathSpec(object):
 		lines = [pattern_factory(line) for line in lines if line]
 		return cls(lines)
 
-	def match_files(self, files):
+	def match_files(self, files, separators=None):
 		"""
 		Matches the files to this path-spec.
 
 		*files* (``Iterable`` of ``str``) contains the files to be matched
 		against *patterns*.
 
-		Returns the matched files (``set`` of ``str``).
+		*separators* (``Container`` of ``str``) optionally contains the path
+		separators to normalize. This does not need to include the POSIX
+		path separator (`/`), but including it will not affect the results.
+		Default is ``None`` to determine the separators based upon the
+		current operating system by examining `os.sep` and `os.altsep`. To
+		prevent normalization, pass an empty container (e.g., an empty tuple
+		`()`).
+
+		Returns the matched files (``Iterable`` of ``str``).
 		"""
-		return util.match_files(self.patterns, files)
+		file_map = util.normalize_files(files, separators=separators)
+		matched_files = util.match_files(self.patterns, viewkeys(file_map))
+		for path in matched_files:
+			yield file_map[path]
 
 	def match_tree(self, root):
 		"""
@@ -81,7 +92,7 @@ class PathSpec(object):
 
 		*root* (``str``) is the root directory to search for files.
 
-		Returns the matched files (``set`` of ``str``).
+		Returns the matched files (``Iterable`` of ``str``).
 		"""
 		files = util.iter_tree(root)
 		return self.match_files(files)

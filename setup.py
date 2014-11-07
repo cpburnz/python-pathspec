@@ -1,4 +1,4 @@
-# coding: utf-8
+# encoding: utf-8
 
 import io
 from setuptools import setup, find_packages
@@ -33,5 +33,5 @@ setup(
 	],
 	license=__license__,
 	packages=find_packages(),
-	test_suite='pathspec.tests.test_gitignore.GitIgnoreTest',
+	test_suite='pathspec.tests',
 )

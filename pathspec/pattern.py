@@ -1,4 +1,4 @@
-# coding: utf-8
+# encoding: utf-8
 """
 This module provides the base definition for patterns.
 """

@@ -1,4 +1,4 @@
-# coding: utf-8
+# encoding: utf-8
 """
 This module provides utility methods for dealing with path-specs.
 """
@@ -8,6 +8,13 @@ import os
 import os.path
 
 from .compat import string_types
+
+NORMALIZE_PATH_SEPS = [sep for sep in [os.sep, os.altsep] if sep and sep != '/']
+"""
+*NORMALIZE_PATH_SEPS* (``list`` of ``str``) contains the path separators
+that need to be normalized to the POSIX separator for the current
+operating system.
+"""
 
 _registered_patterns = {}
 """
@@ -66,8 +73,8 @@ def match_files(patterns, files):
 	*patterns* (``Iterable`` of ``pathspec.Pattern``) contains the
 	patterns to use.
 
-	*files* (``Iterable`` of ``str``) contains the files to be matched
-	against *patterns*.
+	*files* (``Iterable`` of ``str``) contains the normalized files to be
+	matched against *patterns*.
 
 	Returns the matched files (``set`` of ``str``).
 	"""
@@ -81,6 +88,29 @@ def match_files(patterns, files):
 			else:
 				return_files.difference_update(result_files)
 	return return_files
+
+def normalize_files(files, separators=None):
+	"""
+	Normalizes the file paths to use the POSIX path separator (i.e., `/`).
+
+	*files* (``Iterable`` of ``str``) contains the file paths to be
+	normalized.
+
+	*separators* (``Container`` of ``str``) optionally contains the path
+	separators to normalize.
+
+	Returns a ``dict`` mapping the normalized file path (``str``) to the
+	original file path (``str``)
+	"""
+	if separators is None:
+		separators = NORMALIZE_PATH_SEPS
+	file_map = {}
+	for path in files:
+		norm = path
+		for sep in separators:
+			norm = norm.replace(sep, '/')
+		file_map[norm] = path
+	return file_map
 
 def register_pattern(name, pattern_factory, override=None):
 	"""

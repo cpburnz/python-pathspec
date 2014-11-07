@@ -1,4 +1,4 @@
-# coding: utf-8
+# encoding: utf-8
 """
 The *pathspec* package provides pattern matching for file paths. So far
 this only includes gitignore style pattern matching.
@@ -18,8 +18,8 @@ __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
-__updated__ = "2014-09-17"
-__version__ = "0.3.1"
+__updated__ = "2014-11-07"
+__version__ = "0.3.2b1"
 
 from .gitignore import GitIgnorePattern
 from .pathspec import PathSpec

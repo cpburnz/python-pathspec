@@ -1,4 +1,4 @@
-# coding: utf-8
+# encoding: utf-8
 """
 This module implements gitignore style pattern matching which
 incorporates POSIX glob patterns.
