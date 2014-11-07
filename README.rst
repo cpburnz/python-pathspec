@@ -60,8 +60,8 @@ which internally gets converted into a regular expression. ``PathSpec`` is a
 simple wrapper around a list of compiled patterns.
 
 To make things simpler, we can use the registered name for a pattern class
-instead of always having to provide the class. The ``GitIgnorePattern`` class
-is registered as **gitignore**:
+instead of always having to provide a reference to the class itself. The
+``GitIgnorePattern`` class is registered as **gitignore**:
 
   >>> spec = pathspec.PathSpec.from_lines('gitignore', spec.splitlines())
 
@@ -70,7 +70,7 @@ If we wanted to manually compile the patterns we can just do the following.
   >>> patterns = map(pathspec.GitIgnorePattern, spec.splitlines())
   >>> spec = PathSpec(patterns)
 
-``PathSpec.from_lines()`` is simply a dumb class method to do just that.
+``PathSpec.from_lines()`` is simply a simple class method to do just that.
 
 If you want to load the patterns from file, you can pass the instance directly
 as well.
