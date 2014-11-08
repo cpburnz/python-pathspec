@@ -2,9 +2,10 @@
 Change History
 ==============
 
-0.3.2 (TBD)
------------
+0.3.2 (2014-11-08)
+------------------
 
+- Improved documentation.
 - Issue #6: Fixed matching Windows paths.
 
 

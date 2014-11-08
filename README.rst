@@ -14,44 +14,44 @@ Tutorial
 --------
 
 Say you have a "Projects" directory and you want to back it up, but only
-certain files, and ignore others depending on certain conditions.
+certain files, and ignore others depending on certain conditions::
 
-  >>> import pathspec
-  >>> # The gitignore-style patterns for files to select, but we're including
-  >>> # instead of ignoring.
-  >>> spec = """
-  ...
-  ... # This is a comment because the line begins with a hash: "#"
-  ...
-  ... # Include several project directories (and all descendants) relative to
-  ... # the current directory. To reference a directory you must end with a
-  ... # slash: "/"
-  ... /project-a/
-  ... /project-b/
-  ... /project-c/
-  ...
-  ... # Patterns can be negated by prefixing with exclamation mark: "!"
-  ...
-  ... # Ignore temporary files beginning or ending with "~" and ending with
-  ... # ".swp".
-  ... !~*
-  ... !*~
-  ... !*.swp
-  ...
-  ... # These are python projects so ignore compiled python files from
-  ... # testing.
-  ... !*.pyc
-  ...
-  ... # Ignore the build directories but only directly under the project
-  ... # directories.
-  ... !/*/build/q
-  ...
-  ... """
+	>>> import pathspec
+	>>> # The gitignore-style patterns for files to select, but we're including
+	>>> # instead of ignoring.
+	>>> spec = """
+	...
+	... # This is a comment because the line begins with a hash: "#"
+	...
+	... # Include several project directories (and all descendants) relative to
+	... # the current directory. To reference a directory you must end with a
+	... # slash: "/"
+	... /project-a/
+	... /project-b/
+	... /project-c/
+	...
+	... # Patterns can be negated by prefixing with exclamation mark: "!"
+	...
+	... # Ignore temporary files beginning or ending with "~" and ending with
+	... # ".swp".
+	... !~*
+	... !*~
+	... !*.swp
+	...
+	... # These are python projects so ignore compiled python files from
+	... # testing.
+	... !*.pyc
+	...
+	... # Ignore the build directories but only directly under the project
+	... # directories.
+	... !/*/build/q
+	...
+	... """
 
 We want to use the ``GitIgnorePattern`` class to compile our patterns, and the
-``PathSpec`` to provide an iterface around them:
+``PathSpec`` to provide an iterface around them::
 
-  >>> spec = pathspec.PathSpec.from_lines(pathspec.GitIgnorePattern, spec.splitlines())
+	>>> spec = pathspec.PathSpec.from_lines(pathspec.GitIgnorePattern, spec.splitlines())
 
 That may be a mouthful but it allows for additional patterns to be implemented
 in the future without them having to deal with anything but matching the paths
@@ -61,24 +61,30 @@ simple wrapper around a list of compiled patterns.
 
 To make things simpler, we can use the registered name for a pattern class
 instead of always having to provide a reference to the class itself. The
-``GitIgnorePattern`` class is registered as **gitignore**:
+``GitIgnorePattern`` class is registered as **gitignore**::
 
-  >>> spec = pathspec.PathSpec.from_lines('gitignore', spec.splitlines())
+	>>> spec = pathspec.PathSpec.from_lines('gitignore', spec.splitlines())
 
-If we wanted to manually compile the patterns we can just do the following.
+If we wanted to manually compile the patterns we can just do the following::
 
-  >>> patterns = map(pathspec.GitIgnorePattern, spec.splitlines())
-  >>> spec = PathSpec(patterns)
+	>>> patterns = map(pathspec.GitIgnorePattern, spec.splitlines())
+	>>> spec = PathSpec(patterns)
 
 ``PathSpec.from_lines()`` is simply a simple class method to do just that.
 
 If you want to load the patterns from file, you can pass the instance directly
-as well.
+as well::
 
-  >>> with open('patterns.list', 'r') as fh:
-  >>>     spec = pathspec.PathSpec.from_lines('gitignore', fh)
+	>>> with open('patterns.list', 'r') as fh:
+	>>>     spec = pathspec.PathSpec.from_lines('gitignore', fh)
 
+You can perform matching on a whole directory tree with::
 
+	>>> matches = spec.iter_tree('path/to/directory')
+
+Or you can perform matching a specific set of file paths with::
+
+	>>> matches = spec.iter_files(file_paths)
 
 Source
 ------
