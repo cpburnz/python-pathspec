@@ -13,6 +13,7 @@ __created__ = "2013-10-12"
 __credits__ = [
 	"dahlia <https://github.com/dahlia>",
 	"highb <https://github.com/highb>",
+	"029xue <https://github.com/029xue>"
 ]
 __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
