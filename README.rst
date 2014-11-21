@@ -86,6 +86,26 @@ Or you can perform matching on a specific set of file paths with::
 
 	>>> matches = spec.iter_files(file_paths)
 
+
+
+License
+-------
+
+*pathspec* is licensed under the `Mozilla Public License Version 2.0`_. See
+`LICENSE`_ or the `FAQ`_ for more information.
+
+In summary, you may use *pathspec* with any closed or open source project
+without affecting the license of the larger work so long as you:
+
+- give credit where credit is due,
+
+- and release any custom changes made to *pathspec*.
+
+.. _`Mozilla Public License Version 2.0`: http://www.mozilla.org/MPL/2.0
+.. _`LICENSE`: LICENSE
+.. _`FAQ`: http://www.mozilla.org/MPL/2.0/FAQ.html
+
+
 Source
 ------
 
