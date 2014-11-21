@@ -28,3 +28,7 @@ pip-log.txt
 # Temporary files.
 *~
 *.swp
+
+# Hidden files.
+.*
+!.gitignore
