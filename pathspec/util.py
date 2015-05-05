@@ -42,11 +42,18 @@ def iter_tree(root):
 	for parent, _dirs, files in os.walk(root, followlinks=True):
 		# Get parent path relative to root path.
 		parent = os.path.relpath(parent, root)
-
+		
 		# Check for recursion.
 		real = os.path.realpath(parent)
 		if real in memo:
-			raise RecursionError(real_path=real, first_path=memo[real], second_path=parent)
+			abspath = os.path.abspath(parent)
+			if real != abspath and real in abspath:
+				# if real is a parent of current parent
+				raise RecursionError(real_path=real, first_path=memo[real], second_path=parent)
+			else:
+				# not recursion, just a sideways link
+				continue
+		
 		memo[real] = parent
 
 		# Yield files.
