@@ -39,6 +39,12 @@ class GitIgnorePattern(RegexPattern):
 			regex = None
 			include = None
 
+		elif pattern == '/':
+			# EDGE CASE: According to git check-ignore (v2.4.1)), a single '/'
+			# does not match any file.
+			regex = None
+			include = None
+
 		elif pattern:
 
 			if pattern.startswith('!'):
@@ -68,15 +74,24 @@ class GitIgnorePattern(RegexPattern):
 				# paths. So, remove empty first segment to make pattern relative
 				# to root.
 				del pattern_segs[0]
-			else:
-				# A pattern without a beginning slash ('/') will match any
-				# descendant path. This is equivilent to "**/{pattern}". So,
-				# prepend with double-asterisks to make pattern relative to
-				# root.
+			elif len(pattern_segs) == 1 or \
+				 (len(pattern_segs) == 2 and not pattern_segs[1]):
+				# A **single** pattern without a beginning slash ('/') will
+				# match any descendant path. This is equivalent to
+				# "**/{pattern}". So, prepend with double-asterisks to make
+				# pattern relative to root.
+				# EDGE CASE: This also holds for a single pattern with a
+				# trailing slash (e.g. dir/).
 				if pattern_segs[0] != '**':
 					pattern_segs.insert(0, '**')
+			else:
+				# EDGE CASE: A pattern without a beginning slash ('/') but
+				# contains at least one prepended directory (e.g.
+				# "dir/{pattern}") should not match "**/dir/{pattern}",
+				# according to `git check-ignore` (v2.4.1).
+				pass
 
-			if not pattern_segs[-1]:
+			if not pattern_segs[-1] and len(pattern_segs) > 1:
 				# A pattern ending with a slash ('/') will match all descendant
 				# paths if it is a directory but not if it is a regular file.
 				# This is equivilent to "{pattern}/**". So, set last segment to
@@ -118,6 +133,13 @@ class GitIgnorePattern(RegexPattern):
 					if need_slash:
 						regex.append('/')
 					regex.append(self._translate_segment_glob(seg))
+					if i == end and include == True:
+						# A pattern ending without a slash ('/') will match a file
+						# or a directory (with paths underneath it).
+						# e.g. foo matches: foo, foo/bar, foo/bar/baz, etc.
+						# EDGE CASE: However, this does not hold for exclusion cases
+						# according to `git check-ignore` (v2.4.1).
+						regex.append('(?:/.*)?')
 					need_slash = True
 			regex.append('$')
 			regex = ''.join(regex)
