@@ -80,11 +80,11 @@ as well::
 
 You can perform matching on a whole directory tree with::
 
-	>>> matches = spec.iter_tree('path/to/directory')
+	>>> matches = spec.match_tree('path/to/directory')
 
 Or you can perform matching on a specific set of file paths with::
 
-	>>> matches = spec.iter_files(file_paths)
+	>>> matches = spec.match_files(file_paths)
 
 
 
