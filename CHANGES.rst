@@ -3,6 +3,13 @@ Change History
 ==============
 
 
+0.3.4 (TBD)
+----------
+
+- Issue #8: Fixed edge cases in gitignore patterns.
+- Issue #9: Fixed minor usage documentation.
+
+
 0.3.3 (2014-11-21)
 ------------------
 

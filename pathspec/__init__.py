@@ -8,19 +8,20 @@ for more information. Or you can always scour the source code.
 """
 
 __author__ = "Caleb P. Burns"
-__copyright__ = u"Copyright © 2013-2014 Caleb P. Burns"
+__copyright__ = u"Copyright © 2013-2015 Caleb P. Burns"
 __created__ = "2013-10-12"
 __credits__ = [
 	"dahlia <https://github.com/dahlia>",
 	"highb <https://github.com/highb>",
 	"029xue <https://github.com/029xue>",
+	"mikexstudios <https://github.com/mikexstudios>",
 ]
 __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
-__updated__ = "2014-11-21"
-__version__ = "0.3.3"
+__updated__ = "2015-05-16"
+__version__ = "0.3.4.dev1"
 
 from .gitignore import GitIgnorePattern
 from .pathspec import PathSpec
