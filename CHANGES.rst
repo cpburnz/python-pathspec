@@ -4,8 +4,9 @@ Change History
 
 
 0.3.4 (TBD)
-----------
+-----------
 
+- Issue #7: Fixed non-recursive links.
 - Issue #8: Fixed edge cases in gitignore patterns.
 - Issue #9: Fixed minor usage documentation.
 
