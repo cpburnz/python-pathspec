@@ -15,12 +15,13 @@ __credits__ = [
 	"highb <https://github.com/highb>",
 	"029xue <https://github.com/029xue>",
 	"mikexstudios <https://github.com/mikexstudios>",
+	"nhumrich <https://github.com/nhumrich>",
 ]
 __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
-__updated__ = "2015-05-16"
+__updated__ = "2015-05-22"
 __version__ = "0.3.4.dev1"
 
 from .gitignore import GitIgnorePattern
