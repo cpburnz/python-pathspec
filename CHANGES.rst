@@ -22,6 +22,7 @@ Change History
 
 - Improved documentation.
 - Issue #6: Fixed matching Windows paths.
+- API change: `spec.match_tree` and `spec.match_files` now return iterators instead of sets
 
 
 0.3.1 (2014-09-17)
