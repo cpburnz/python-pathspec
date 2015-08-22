@@ -45,7 +45,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		spec = GitIgnorePattern('/an/absolute/file/path')
 		self.assertTrue(spec.include)
-		self.assertEquals(spec.regex.pattern, '^an/absolute/file/path(?:/.*)?$')
+		self.assertEqual(spec.regex.pattern, '^an/absolute/file/path(?:/.*)?$')
 
 	def test_01_relative(self):
 		"""
@@ -60,7 +60,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		spec = GitIgnorePattern('spam')
 		self.assertTrue(spec.include)
-		self.assertEquals(spec.regex.pattern, '^(?:.+/)?spam(?:/.*)?$')
+		self.assertEqual(spec.regex.pattern, '^(?:.+/)?spam(?:/.*)?$')
 
 	def test_01_relative_nested(self):
 		"""
@@ -75,7 +75,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		spec = GitIgnorePattern('foo/spam')
 		self.assertTrue(spec.include)
-		self.assertEquals(spec.regex.pattern, '^foo/spam(?:/.*)?$')
+		self.assertEqual(spec.regex.pattern, '^foo/spam(?:/.*)?$')
 
 	def test_02_comment(self):
 		"""
@@ -95,7 +95,7 @@ class GitIgnoreTest(unittest.TestCase):
 		spec = GitIgnorePattern('!temp')
 		self.assertIsNotNone(spec.include)
 		self.assertFalse(spec.include)
-		self.assertEquals(spec.regex.pattern, '^(?:.+/)?temp$')
+		self.assertEqual(spec.regex.pattern, '^(?:.+/)?temp$')
 
 	def test_03_child_double_asterisk(self):
 		"""
@@ -110,7 +110,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		spec = GitIgnorePattern('spam/**')
 		self.assertTrue(spec.include)
-		self.assertEquals(spec.regex.pattern, '^spam/.*$')
+		self.assertEqual(spec.regex.pattern, '^spam/.*$')
 
 	def test_03_inner_double_asterisk(self):
 		"""
@@ -126,7 +126,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		spec = GitIgnorePattern('left/**/right')
 		self.assertTrue(spec.include)
-		self.assertEquals(spec.regex.pattern, '^left(?:/.+)?/right(?:/.*)?$')
+		self.assertEqual(spec.regex.pattern, '^left(?:/.+)?/right(?:/.*)?$')
 
 	def test_03_only_double_asterisk(self):
 		"""
@@ -134,7 +134,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		spec = GitIgnorePattern('**')
 		self.assertTrue(spec.include)
-		self.assertEquals(spec.regex.pattern, '^.+$')
+		self.assertEqual(spec.regex.pattern, '^.+$')
 
 	def test_03_parent_double_asterisk(self):
 		"""
@@ -146,7 +146,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		spec = GitIgnorePattern('**/spam')
 		self.assertTrue(spec.include)
-		self.assertEquals(spec.regex.pattern, '^(?:.+/)?spam(?:/.*)?$')
+		self.assertEqual(spec.regex.pattern, '^(?:.+/)?spam(?:/.*)?$')
 
 	def test_04_infix_wildcard(self):
 		"""
@@ -161,7 +161,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		spec = GitIgnorePattern('foo-*-bar')
 		self.assertTrue(spec.include)
-		self.assertEquals(spec.regex.pattern, '^(?:.+/)?foo\\-[^/]*\\-bar(?:/.*)?$')
+		self.assertEqual(spec.regex.pattern, '^(?:.+/)?foo\\-[^/]*\\-bar(?:/.*)?$')
 
 	def test_04_postfix_wildcard(self):
 		"""
@@ -176,7 +176,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		spec = GitIgnorePattern('~temp-*')
 		self.assertTrue(spec.include)
-		self.assertEquals(spec.regex.pattern, '^(?:.+/)?\\~temp\\-[^/]*(?:/.*)?$')
+		self.assertEqual(spec.regex.pattern, '^(?:.+/)?\\~temp\\-[^/]*(?:/.*)?$')
 
 	def test_04_prefix_wildcard(self):
 		"""
@@ -190,7 +190,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		spec = GitIgnorePattern('*.py')
 		self.assertTrue(spec.include)
-		self.assertEquals(spec.regex.pattern, '^(?:.+/)?[^/]*\\.py(?:/.*)?$')
+		self.assertEqual(spec.regex.pattern, '^(?:.+/)?[^/]*\\.py(?:/.*)?$')
 
 	def test_05_directory(self):
 		"""
@@ -206,7 +206,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		spec = GitIgnorePattern('dir/')
 		self.assertTrue(spec.include)
-		self.assertEquals(spec.regex.pattern, '^(?:.+/)?dir/.*$')
+		self.assertEqual(spec.regex.pattern, '^(?:.+/)?dir/.*$')
 
 	def test_05_registered(self):
 		"""

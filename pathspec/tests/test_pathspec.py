@@ -28,7 +28,7 @@ class PathSpecTest(unittest.TestCase):
 			'src\\test2\\b.txt',
 			'src\\test2\\c\\c.txt',
 		], separators=('\\',)))
-		self.assertEquals(results, {
+		self.assertEqual(results, {
 			'src\\test2\\a.txt',
 			'src\\test2\\b.txt',
 			'src\\test2\\c\\c.txt',
