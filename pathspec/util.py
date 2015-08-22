@@ -7,6 +7,7 @@ import collections
 import os
 import os.path
 import posixpath
+import stat
 
 from .compat import string_types
 
@@ -25,43 +26,62 @@ registered pattern factory (``callable``).
 
 def iter_tree(root):
 	"""
-	Walks the specified root path for all files.
+	Walks the specified directory for all files.
 
 	*root* (``str``) is the root directory to search for files.
 
 	Raises ``RecursionError`` if recursion is detected.
 
-	Returns an ``Iterable`` yielding each file path (``str``) relative to
-	*root*.
-
-	.. _`recursion`: http://docs.python.org/2/library/os.html#os.walk
+	Returns an ``Iterable`` yielding the path to each file (``str``)
+	relative to *root*.
 	"""
-	# Keep track of files encountered. Map real path to relative path.
-	memo = {}
+	for file_rel in _iter_tree_next(os.path.abspath(root), '', {}):
+		yield file_rel
 
-	root = os.path.abspath(root)
-	for parent, _dirs, files in os.walk(root, followlinks=True):
-		# Get parent path relative to root path.
-		parent = os.path.relpath(parent, root)
+def _iter_tree_next(root_full, dir_rel, memo):
+	"""
+	Scan the directory for all descendant files.
 
-		# Check for recursion.
-		real = os.path.realpath(parent)
-		if real in memo:
-			abspath = os.path.abspath(parent)
-			if real != abspath and real in abspath:
-				# if real is a parent of current parent
-				raise RecursionError(real_path=real, first_path=memo[real], second_path=parent)
-			else:
-				# not recursion, just a sideways link
-				continue
+	*root_full* (``str``) the absolute path to the root directory.
 
-		memo[real] = parent
+	*dir_rel* (``str``) the path to the directory to scan relative to
+	*root_full*.
 
-		# Yield files.
-		for path in files:
-			if parent != '.':
-				path = os.path.join(parent, path)
-			yield path
+	*memo* (``dict``) keeps track of ancestor directories encountered.
+	Maps each ancestor real path (``str``) to relative path (``str``).
+	"""
+	dir_full = os.path.join(root_full, dir_rel)
+	dir_real = os.path.realpath(dir_full)
+
+	# Remember each encountered ancestor directory and its canonical
+	# (real) path. If a canonical path is encountered more than once,
+	# recursion has occurred.
+	if dir_real not in memo:
+		memo[dir_real] = dir_rel
+	else:
+		raise RecursionError(real_path=dir_real, first_path=memo[dir_real], second_path=dir_rel)
+
+	for node in os.listdir(dir_full):
+		node_rel = os.path.join(dir_rel, node)
+		node_full = os.path.join(root_full, node_rel)
+		node_stat = os.stat(node_full)
+
+		if stat.S_ISDIR(node_stat.st_mode):
+			# Child node is a directory, recurse into it and yield its
+			# decendant files.
+			for file_rel in _iter_tree_next(root_full, node_rel, memo):
+				yield file_rel
+
+		elif stat.S_ISREG(node_stat.st_mode):
+			# Child node is a file, yield it.
+			yield node_rel
+
+	# NOTE: Make sure to remove the canonical (real) path of the directory
+	# from the ancestors memo once we are done with it. This allows the
+	# same directory to appear multiple times. If this is not done, the
+	# second occurance of the directory will be incorrectly interpreted as
+	# a recursion. See <https://github.com/cpburnz/python-path-specification/pull/7>.
+	del memo[dir_real]
 
 def lookup_pattern(name):
 	"""
