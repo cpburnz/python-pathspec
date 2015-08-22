@@ -6,9 +6,10 @@ this only includes gitignore style pattern matching.
 See "README.rst" or <https://github.com/cpburnz/python-path-specification>
 for more information. Or you can always scour the source code.
 """
+from __future__ import unicode_literals
 
 __author__ = "Caleb P. Burns"
-__copyright__ = u"Copyright © 2013-2015 Caleb P. Burns"
+__copyright__ = "Copyright © 2013-2015 Caleb P. Burns"
 __created__ = "2013-10-12"
 __credits__ = [
 	"dahlia <https://github.com/dahlia>",

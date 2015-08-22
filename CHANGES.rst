@@ -10,6 +10,7 @@ Change History
 - Issue #8: Fixed edge cases in gitignore patterns.
 - Issue #9: Fixed minor usage documentation.
 - Fixed recursion detection.
+- Fixed trivial incompatibility with Python 3.2.
 
 
 0.3.3 (2014-11-21)
