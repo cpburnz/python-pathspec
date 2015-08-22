@@ -6,10 +6,11 @@ This module provides utility methods for dealing with path-specs.
 import collections
 import os
 import os.path
+import posixpath
 
 from .compat import string_types
 
-NORMALIZE_PATH_SEPS = [sep for sep in [os.sep, os.altsep] if sep and sep != '/']
+NORMALIZE_PATH_SEPS = [sep for sep in [os.sep, os.altsep] if sep and sep != posixpath.sep]
 """
 *NORMALIZE_PATH_SEPS* (``list`` of ``str``) contains the path separators
 that need to be normalized to the POSIX separator for the current
@@ -42,7 +43,7 @@ def iter_tree(root):
 	for parent, _dirs, files in os.walk(root, followlinks=True):
 		# Get parent path relative to root path.
 		parent = os.path.relpath(parent, root)
-		
+
 		# Check for recursion.
 		real = os.path.realpath(parent)
 		if real in memo:
@@ -53,7 +54,7 @@ def iter_tree(root):
 			else:
 				# not recursion, just a sideways link
 				continue
-		
+
 		memo[real] = parent
 
 		# Yield files.
@@ -115,7 +116,7 @@ def normalize_files(files, separators=None):
 	for path in files:
 		norm = path
 		for sep in separators:
-			norm = norm.replace(sep, '/')
+			norm = norm.replace(sep, posixpath.sep)
 		file_map[norm] = path
 	return file_map
 
