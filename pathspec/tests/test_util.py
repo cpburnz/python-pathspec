@@ -82,14 +82,14 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Inner/f',
 		])
 		results = set(iter_tree(self.temp_dir))
-		self.assertEqual(results, {
+		self.assertEqual(results, set(map(self.ospath, {
 			'a',
 			'b',
 			'Dir/c',
 			'Dir/d',
 			'Dir/Inner/e',
 			'Dir/Inner/f',
-		})
+		})))
 
 	def test_02_links(self):
 		"""
@@ -111,7 +111,7 @@ class IterTreeTest(unittest.TestCase):
 			('Dir/dx', 'Dir/d'),
 		])
 		results = set(iter_tree(self.temp_dir))
-		self.assertEqual(results, {
+		self.assertEqual(results, set(map(self.ospath, {
 			'a',
 			'ax',
 			'b',
@@ -120,7 +120,7 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/cx',
 			'Dir/d',
 			'Dir/dx',
-		})
+		})))
 
 	def test_03_sideways_links(self):
 		"""
@@ -143,7 +143,7 @@ class IterTreeTest(unittest.TestCase):
 			('Dir/Fx', 'Dir/Target'),
 		])
 		results = set(iter_tree(self.temp_dir))
-		self.assertEqual(results, {
+		self.assertEqual(results, set(map(self.ospath, {
 			'Ax/Ex/file',
 			'Ax/Fx/file',
 			'Ax/Target/file',
@@ -155,7 +155,7 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Ex/file',
 			'Dir/Fx/file',
 			'Dir/Target/file',
-		})
+		})))
 
 	def test_04_recursive_links(self):
 		self.make_dirs([
