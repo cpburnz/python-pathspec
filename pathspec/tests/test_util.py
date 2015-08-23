@@ -6,6 +6,7 @@ This script tests utility functions.
 import os
 import os.path
 import shutil
+import sys
 import tempfile
 import unittest
 
@@ -52,6 +53,21 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		return os.path.join(*path.split('/'))
 
+	def require_realpath(self):
+		"""
+		Skips the test if `os.path.realpath` does not properly support
+		symlinks.
+		"""
+		if self.broken_realpath:
+			raise unittest.SkipTest("`os.path.realpath` is broken.")
+			
+	def require_symlink(self):
+		"""
+		Skips the test if `os.symlink` is not supported.
+		"""
+		if self.no_symlink:
+			raise unittest.SkipTest("`os.symlink` is not supported.")
+	
 	def setUp(self):
 		"""
 		Called before each test.
@@ -64,7 +80,7 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		shutil.rmtree(self.temp_dir)
 
-	def test_01_files(self):
+	def test_1_files(self):
 		"""
 		Tests to make sure all files are found.
 		"""
@@ -91,10 +107,53 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Inner/f',
 		})))
 
-	def test_02_links(self):
+	def test_2_0_check_symlink(self):
+		"""
+		Tests whether links can be created.
+		"""
+		no_symlink = None
+		try:
+			file = os.path.join(self.temp_dir, 'file')
+			link = os.path.join(self.temp_dir, 'link')
+			self.mkfile(file)
+			
+			try:
+				os.symlink(file, link)
+			except (AttributeError, NotImplementedError):
+				no_symlink = True
+				raise
+			no_symlink = False
+			
+		finally:
+			self.__class__.no_symlink = no_symlink
+
+	def test_2_1_check_realpath(self):
+		"""
+		Tests whether `os.path.realpath` works properly with symlinks.
+		"""
+		broken_realpath = None
+		try:	
+			self.require_symlink()
+			file = os.path.join(self.temp_dir, 'file')
+			link = os.path.join(self.temp_dir, 'link')
+			self.mkfile(file)
+			os.symlink(file, link)			
+			
+			try:
+				self.assertEqual(os.path.realpath(file), os.path.realpath(link))
+			except AssertionError:
+				broken_realpath = True
+				raise
+			broken_realpath = False
+			
+		finally:
+			self.__class__.broken_realpath = broken_realpath
+				
+	def test_2_2_links(self):
 		"""
 		Tests to make sure links to directories and files work.
 		"""
+		self.require_symlink()
 		self.make_dirs([
 			'Dir'
 		])
@@ -122,11 +181,12 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/dx',
 		})))
 
-	def test_03_sideways_links(self):
+	def test_2_3_sideways_links(self):
 		"""
 		Tests to make sure the same directory can be encountered multiple
 		times via links.
 		"""
+		self.require_symlink()
 		self.make_dirs([
 			'Dir',
 			'Dir/Target',
@@ -157,7 +217,12 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Target/file',
 		})))
 
-	def test_04_recursive_links(self):
+	def test_2_4_recursive_links(self):
+		"""
+		Tests detection of recursive links.
+		"""
+		self.require_symlink()
+		self.require_realpath()
 		self.make_dirs([
 			'Dir',
 		])
@@ -172,7 +237,12 @@ class IterTreeTest(unittest.TestCase):
 		self.assertEqual(context.exception.first_path, 'Dir')
 		self.assertEqual(context.exception.second_path, self.ospath('Dir/Self'))
 
-	def test_05_recursive_circular_links(self):
+	def test_2_5_recursive_circular_links(self):
+		"""
+		Tests detection of recursion through circular links.
+		"""
+		self.require_symlink()
+		self.require_realpath()
 		self.make_dirs([
 			'A',
 			'B',
