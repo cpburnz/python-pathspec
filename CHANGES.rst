@@ -3,8 +3,8 @@ Change History
 ==============
 
 
-0.3.4 (TBD)
------------
+0.3.4 (2015-08-24)
+------------------
 
 - Issue #7: Fixed non-recursive links.
 - Issue #8: Fixed edge cases in gitignore patterns.

@@ -22,8 +22,8 @@ __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
-__updated__ = "2015-05-22"
-__version__ = "0.3.4.dev1"
+__updated__ = "2015-08-24"
+__version__ = "0.3.4"
 
 from .gitignore import GitIgnorePattern
 from .pathspec import PathSpec
