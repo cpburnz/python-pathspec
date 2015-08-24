@@ -111,6 +111,8 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		Tests whether links can be created.
 		"""
+		# NOTE: Windows does not support `os.symlink` for Python 2. Windows Vista
+		# and greater supports `os.symlink` for Python 3.2+.
 		no_symlink = None
 		try:
 			file = os.path.join(self.temp_dir, 'file')
@@ -131,6 +133,9 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		Tests whether `os.path.realpath` works properly with symlinks.
 		"""
+		# NOTE: Windows does not follow symlinks with `os.path.realpath` which is
+		# what we use to detect recursion. See <https://bugs.python.org/issue9949>
+		# for details.
 		broken_realpath = None
 		try:	
 			self.require_symlink()
