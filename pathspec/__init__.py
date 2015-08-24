@@ -17,13 +17,14 @@ __credits__ = [
 	"029xue <https://github.com/029xue>",
 	"mikexstudios <https://github.com/mikexstudios>",
 	"nhumrich <https://github.com/nhumrich>",
+	"davidfraser <https://github.com/davidfraser>",
 ]
 __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
 __updated__ = "2015-08-24"
-__version__ = "0.3.4"
+__version__ = "0.3.5.dev1"
 
 from .gitignore import GitIgnorePattern
 from .pathspec import PathSpec
