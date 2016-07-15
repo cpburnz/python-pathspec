@@ -3,6 +3,13 @@ Change History
 ==============
 
 
+0.4.0 (2016-07-15)
+------------------
+
+- Issue #11: Support converting patterns into regular expressions without compiling them.
+- API change: Subclasses of `RegexPattern` should implement `pattern_to_regex()`.
+
+
 0.3.4 (2015-08-24)
 ------------------
 
@@ -24,7 +31,7 @@ Change History
 
 - Improved documentation.
 - Issue #6: Fixed matching Windows paths.
-- API change: `spec.match_tree` and `spec.match_files` now return iterators instead of sets
+- API change: `spec.match_tree` and `spec.match_files` now return iterators instead of sets.
 
 
 0.3.1 (2014-09-17)

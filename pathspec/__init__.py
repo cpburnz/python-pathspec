@@ -9,7 +9,7 @@ for more information. Or you can always scour the source code.
 from __future__ import unicode_literals
 
 __author__ = "Caleb P. Burns"
-__copyright__ = "Copyright © 2013-2015 Caleb P. Burns"
+__copyright__ = "Copyright © 2013-2016 Caleb P. Burns"
 __created__ = "2013-10-12"
 __credits__ = [
 	"dahlia <https://github.com/dahlia>",
@@ -23,8 +23,8 @@ __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
-__updated__ = "2015-08-24"
-__version__ = "0.3.5.dev1"
+__updated__ = "2016-07-15"
+__version__ = "0.4.0"
 
 from .gitignore import GitIgnorePattern
 from .pathspec import PathSpec
