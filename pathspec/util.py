@@ -32,8 +32,8 @@ def iter_tree(root):
 
 	Raises ``RecursionError`` if recursion is detected.
 
-	Returns an ``Iterable`` yielding the path to each file (``str``)
-	relative to *root*.
+	Returns an ``collections.Iterable`` yielding the path to each file
+	(``str``) relative to *root*.
 	"""
 	for file_rel in _iter_tree_next(os.path.abspath(root), '', {}):
 		yield file_rel
@@ -98,11 +98,11 @@ def match_files(patterns, files):
 	"""
 	Matches the files to the patterns.
 
-	*patterns* (``Iterable`` of ``pathspec.Pattern``) contains the
-	patterns to use.
+	*patterns* (``collections.Iterable`` of ``pathspec.Pattern``) contains
+	the patterns to use.
 
-	*files* (``Iterable`` of ``str``) contains the normalized files to be
-	matched against *patterns*.
+	*files* (``collections.Iterable`` of ``str``) contains the normalized
+	files to be matched against *patterns*.
 
 	Returns the matched files (``set`` of ``str``).
 	"""
@@ -121,11 +121,11 @@ def normalize_files(files, separators=None):
 	"""
 	Normalizes the file paths to use the POSIX path separator (i.e., `/`).
 
-	*files* (``Iterable`` of ``str``) contains the file paths to be
-	normalized.
+	*files* (``collections.Iterable`` of ``str``) contains the file paths
+	to be normalized.
 
-	*separators* (``Container`` of ``str``) optionally contains the path
-	separators to normalize.
+	*separators* (``collections.Container`` of ``str``) optionally
+	contains the path separators to normalize.
 
 	Returns a ``dict`` mapping the normalized file path (``str``) to the
 	original file path (``str``)

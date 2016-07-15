@@ -60,14 +60,14 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		if self.broken_realpath:
 			raise unittest.SkipTest("`os.path.realpath` is broken.")
-			
+
 	def require_symlink(self):
 		"""
 		Skips the test if `os.symlink` is not supported.
 		"""
 		if self.no_symlink:
 			raise unittest.SkipTest("`os.symlink` is not supported.")
-	
+
 	def setUp(self):
 		"""
 		Called before each test.
@@ -111,21 +111,21 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		Tests whether links can be created.
 		"""
-		# NOTE: Windows does not support `os.symlink` for Python 2. Windows Vista
-		# and greater supports `os.symlink` for Python 3.2+.
+		# NOTE: Windows does not support `os.symlink` for Python 2. Windows
+		# Vista and greater supports `os.symlink` for Python 3.2+.
 		no_symlink = None
 		try:
 			file = os.path.join(self.temp_dir, 'file')
 			link = os.path.join(self.temp_dir, 'link')
 			self.mkfile(file)
-			
+
 			try:
 				os.symlink(file, link)
 			except (AttributeError, NotImplementedError):
 				no_symlink = True
 				raise
 			no_symlink = False
-			
+
 		finally:
 			self.__class__.no_symlink = no_symlink
 
@@ -133,27 +133,27 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		Tests whether `os.path.realpath` works properly with symlinks.
 		"""
-		# NOTE: Windows does not follow symlinks with `os.path.realpath` which is
-		# what we use to detect recursion. See <https://bugs.python.org/issue9949>
+		# NOTE: Windows does not follow symlinks with `os.path.realpath`
+		# which is what we use to detect recursion. See <https://bugs.python.org/issue9949>
 		# for details.
 		broken_realpath = None
-		try:	
+		try:
 			self.require_symlink()
 			file = os.path.join(self.temp_dir, 'file')
 			link = os.path.join(self.temp_dir, 'link')
 			self.mkfile(file)
-			os.symlink(file, link)			
-			
+			os.symlink(file, link)
+
 			try:
 				self.assertEqual(os.path.realpath(file), os.path.realpath(link))
 			except AssertionError:
 				broken_realpath = True
 				raise
 			broken_realpath = False
-			
+
 		finally:
 			self.__class__.broken_realpath = broken_realpath
-				
+
 	def test_2_2_links(self):
 		"""
 		Tests to make sure links to directories and files work.

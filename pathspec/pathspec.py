@@ -20,8 +20,8 @@ class PathSpec(object):
 		"""
 		Initializes the ``PathSpec`` instance.
 
-		*patterns* (``Container`` or ``Iterable``) yields each compiled
-		pattern (``pathspec.Pattern``).
+		*patterns* (``collections.Container`` or ``collections.Iterable``)
+		yields each compiled pattern (``pathspec.Pattern``).
 		"""
 
 		self.patterns = None
@@ -48,10 +48,10 @@ class PathSpec(object):
 		must accept an uncompiled pattern (``str``) and return the compiled
 		pattern (``pathspec.Pattern``).
 
-		*lines* (``Iterable``) yields each uncompiled pattern (``str``).
-		This simply has to yield each line so it can be a ``file`` (e.g.,
-		``open(file)`` or ``io.StringIO(text)``) or the result from
-		``str.splitlines()``.
+		*lines* (``collections.Iterable``) yields each uncompiled pattern
+		(``str``). This simply has to yield each line so it can be a
+		``file`` (e.g., ``open(file)`` or ``io.StringIO(text)``) or the
+		result from ``str.splitlines()``.
 
 		Returns the ``PathSpec`` instance.
 		"""
@@ -67,18 +67,18 @@ class PathSpec(object):
 		"""
 		Matches the files to this path-spec.
 
-		*files* (``Iterable`` of ``str``) contains the files to be matched
-		against *patterns*.
+		*files* (``collections.Iterable`` of ``str``) contains the files to
+		be matched against *patterns*.
 
-		*separators* (``Container`` of ``str``) optionally contains the path
-		separators to normalize. This does not need to include the POSIX
-		path separator (`/`), but including it will not affect the results.
-		Default is ``None`` to determine the separators based upon the
-		current operating system by examining `os.sep` and `os.altsep`. To
-		prevent normalization, pass an empty container (e.g., an empty tuple
-		`()`).
+		*separators* (``collections.Container`` of ``str``) optionally
+		contains the path separators to normalize. This does not need to
+		include the POSIX path separator (`/`), but including it will not
+		affect the results. Default is ``None`` to determine the separators
+		based upon the current operating system by examining `os.sep` and
+		`os.altsep`. To prevent normalization, pass an empty container
+		(e.g., an empty tuple `()`).
 
-		Returns the matched files (``Iterable`` of ``str``).
+		Returns the matched files (``collections.Iterable`` of ``str``).
 		"""
 		file_map = util.normalize_files(files, separators=separators)
 		matched_files = util.match_files(self.patterns, viewkeys(file_map))
@@ -92,7 +92,7 @@ class PathSpec(object):
 
 		*root* (``str``) is the root directory to search for files.
 
-		Returns the matched files (``Iterable`` of ``str``).
+		Returns the matched files (``collections.Iterable`` of ``str``).
 		"""
 		files = util.iter_tree(root)
 		return self.match_files(files)
