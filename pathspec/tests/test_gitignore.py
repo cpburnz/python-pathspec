@@ -18,84 +18,91 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		Tests an empty pattern.
 		"""
-		spec = GitIgnorePattern('')
-		self.assertIsNone(spec.include)
-		self.assertIsNone(spec.regex)
+		regex, include = GitIgnorePattern.pattern_to_regex('')
+		self.assertIsNone(include)
+		self.assertIsNone(regex)
 
 	def test_01_absolute_root(self):
 		"""
 		Tests a single root absolute path pattern.
 
-		This should NOT match any file (according to git check-ignore (v2.4.1)).
+		This should NOT match any file (according to git check-ignore
+		(v2.4.1)).
 		"""
-		spec = GitIgnorePattern('/')
-		self.assertIsNone(spec.include)
-		self.assertIsNone(spec.regex)
+		regex, include = GitIgnorePattern.pattern_to_regex('/')
+		self.assertIsNone(include)
+		self.assertIsNone(regex)
 
 	def test_01_absolute(self):
 		"""
 		Tests an absolute path pattern.
 
 		This should match:
-		an/absolute/file/path
-		an/absolute/file/path/foo
+
+			an/absolute/file/path
+			an/absolute/file/path/foo
 
 		This should NOT match:
-		foo/an/absolute/file/path
+
+			foo/an/absolute/file/path
 		"""
-		spec = GitIgnorePattern('/an/absolute/file/path')
-		self.assertTrue(spec.include)
-		self.assertEqual(spec.regex.pattern, '^an/absolute/file/path(?:/.*)?$')
+		regex, include = GitIgnorePattern.pattern_to_regex('/an/absolute/file/path')
+		self.assertTrue(include)
+		self.assertEqual(regex, '^an/absolute/file/path(?:/.*)?$')
 
 	def test_01_relative(self):
 		"""
 		Tests a relative path pattern.
 
 		This should match:
-		spam
-		spam/
-		foo/spam
-		spam/foo
-		foo/spam/bar
+
+			spam
+			spam/
+			foo/spam
+			spam/foo
+			foo/spam/bar
 		"""
-		spec = GitIgnorePattern('spam')
-		self.assertTrue(spec.include)
-		self.assertEqual(spec.regex.pattern, '^(?:.+/)?spam(?:/.*)?$')
+		regex, include = GitIgnorePattern.pattern_to_regex('spam')
+		self.assertTrue(include)
+		self.assertEqual(regex, '^(?:.+/)?spam(?:/.*)?$')
 
 	def test_01_relative_nested(self):
 		"""
 		Tests a relative nested path pattern.
 
 		This should match:
-		foo/spam
-		foo/spam/bar
+
+			foo/spam
+			foo/spam/bar
 
 		This should **not** match (according to git check-ignore (v2.4.1)):
-		bar/foo/spam
+
+			bar/foo/spam
 		"""
-		spec = GitIgnorePattern('foo/spam')
-		self.assertTrue(spec.include)
-		self.assertEqual(spec.regex.pattern, '^foo/spam(?:/.*)?$')
+		regex, include = GitIgnorePattern.pattern_to_regex('foo/spam')
+		self.assertTrue(include)
+		self.assertEqual(regex, '^foo/spam(?:/.*)?$')
 
 	def test_02_comment(self):
 		"""
 		Tests a comment pattern.
 		"""
-		spec = GitIgnorePattern('# Cork soakers.')
-		self.assertIsNone(spec.include)
-		self.assertIsNone(spec.regex)
+		regex, include = GitIgnorePattern.pattern_to_regex('# Cork soakers.')
+		self.assertIsNone(include)
+		self.assertIsNone(regex)
 
 	def test_02_ignore(self):
 		"""
 		Tests an exclude pattern.
 
 		This should NOT match (according to git check-ignore (v2.4.1)):
-		temp/foo
+
+			temp/foo
 		"""
-		spec = GitIgnorePattern('!temp')
-		self.assertIsNotNone(spec.include)
-		self.assertFalse(spec.include)
-		self.assertEqual(spec.regex.pattern, '^(?:.+/)?temp$')
+		regex, include = GitIgnorePattern.pattern_to_regex('!temp')
+		self.assertIsNotNone(include)
+		self.assertFalse(include)
+		self.assertEqual(regex, '^(?:.+/)?temp$')
 
 	def test_03_child_double_asterisk(self):
 		"""
@@ -103,110 +110,120 @@ class GitIgnoreTest(unittest.TestCase):
 		directory.
 
 		This should match:
-		spam/bar
+
+			spam/bar
 
 		This should **not** match (according to git check-ignore (v2.4.1)):
-		foo/spam/bar
+
+			foo/spam/bar
 		"""
-		spec = GitIgnorePattern('spam/**')
-		self.assertTrue(spec.include)
-		self.assertEqual(spec.regex.pattern, '^spam/.*$')
+		regex, include = GitIgnorePattern.pattern_to_regex('spam/**')
+		self.assertTrue(include)
+		self.assertEqual(regex, '^spam/.*$')
 
 	def test_03_inner_double_asterisk(self):
 		"""
 		Tests a path with an inner double-asterisk directory.
 
 		This should match:
-		left/bar/right
-		left/foo/bar/right
-		left/bar/right/foo
+
+			left/bar/right
+			left/foo/bar/right
+			left/bar/right/foo
 
 		This should **not** match (according to git check-ignore (v2.4.1)):
-		foo/left/bar/right
+
+			foo/left/bar/right
 		"""
-		spec = GitIgnorePattern('left/**/right')
-		self.assertTrue(spec.include)
-		self.assertEqual(spec.regex.pattern, '^left(?:/.+)?/right(?:/.*)?$')
+		regex, include = GitIgnorePattern.pattern_to_regex('left/**/right')
+		self.assertTrue(include)
+		self.assertEqual(regex, '^left(?:/.+)?/right(?:/.*)?$')
 
 	def test_03_only_double_asterisk(self):
 		"""
 		Tests a double-asterisk pattern which matches everything.
 		"""
-		spec = GitIgnorePattern('**')
-		self.assertTrue(spec.include)
-		self.assertEqual(spec.regex.pattern, '^.+$')
+		regex, include = GitIgnorePattern.pattern_to_regex('**')
+		self.assertTrue(include)
+		self.assertEqual(regex, '^.+$')
 
 	def test_03_parent_double_asterisk(self):
 		"""
 		Tests a file name with a double-asterisk parent directory.
 
 		This should match:
-		foo/spam
-		foo/spam/bar
+
+			foo/spam
+			foo/spam/bar
 		"""
-		spec = GitIgnorePattern('**/spam')
-		self.assertTrue(spec.include)
-		self.assertEqual(spec.regex.pattern, '^(?:.+/)?spam(?:/.*)?$')
+		regex, include = GitIgnorePattern.pattern_to_regex('**/spam')
+		self.assertTrue(include)
+		self.assertEqual(regex, '^(?:.+/)?spam(?:/.*)?$')
 
 	def test_04_infix_wildcard(self):
 		"""
 		Tests a pattern with an infix wildcard.
 
 		This should match:
-		foo--bar
-		foo-hello-bar
-		a/foo-hello-bar
-		foo-hello-bar/b
-		a/foo-hello-bar/b
+
+			foo--bar
+			foo-hello-bar
+			a/foo-hello-bar
+			foo-hello-bar/b
+			a/foo-hello-bar/b
 		"""
-		spec = GitIgnorePattern('foo-*-bar')
-		self.assertTrue(spec.include)
-		self.assertEqual(spec.regex.pattern, '^(?:.+/)?foo\\-[^/]*\\-bar(?:/.*)?$')
+		regex, include = GitIgnorePattern.pattern_to_regex('foo-*-bar')
+		self.assertTrue(include)
+		self.assertEqual(regex, '^(?:.+/)?foo\\-[^/]*\\-bar(?:/.*)?$')
 
 	def test_04_postfix_wildcard(self):
 		"""
 		Tests a pattern with a postfix wildcard.
 
 		This should match:
-		~temp-
-		~temp-foo
-		~temp-foo/bar
-		foo/~temp-bar
-		foo/~temp-bar/baz
+
+			~temp-
+			~temp-foo
+			~temp-foo/bar
+			foo/~temp-bar
+			foo/~temp-bar/baz
 		"""
-		spec = GitIgnorePattern('~temp-*')
-		self.assertTrue(spec.include)
-		self.assertEqual(spec.regex.pattern, '^(?:.+/)?\\~temp\\-[^/]*(?:/.*)?$')
+		regex, include = GitIgnorePattern.pattern_to_regex('~temp-*')
+		self.assertTrue(include)
+		self.assertEqual(regex, '^(?:.+/)?\\~temp\\-[^/]*(?:/.*)?$')
 
 	def test_04_prefix_wildcard(self):
 		"""
 		Tests a pattern with a prefix wildcard.
 
 		This should match:
-		bar.py
-		bar.py/
-		foo/bar.py
-		foo/bar.py/baz
+
+			bar.py
+			bar.py/
+			foo/bar.py
+			foo/bar.py/baz
 		"""
-		spec = GitIgnorePattern('*.py')
-		self.assertTrue(spec.include)
-		self.assertEqual(spec.regex.pattern, '^(?:.+/)?[^/]*\\.py(?:/.*)?$')
+		regex, include = GitIgnorePattern.pattern_to_regex('*.py')
+		self.assertTrue(include)
+		self.assertEqual(regex, '^(?:.+/)?[^/]*\\.py(?:/.*)?$')
 
 	def test_05_directory(self):
 		"""
 		Tests a directory pattern.
 
 		This should match:
-		dir/
-		foo/dir/
-		foo/dir/bar
+
+			dir/
+			foo/dir/
+			foo/dir/bar
 
 		This should **not** match:
-		dir
+
+			dir
 		"""
-		spec = GitIgnorePattern('dir/')
-		self.assertTrue(spec.include)
-		self.assertEqual(spec.regex.pattern, '^(?:.+/)?dir/.*$')
+		regex, include = GitIgnorePattern.pattern_to_regex('dir/')
+		self.assertTrue(include)
+		self.assertEqual(regex, '^(?:.+/)?dir/.*$')
 
 	def test_05_registered(self):
 		"""

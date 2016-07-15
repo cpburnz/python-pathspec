@@ -20,13 +20,18 @@ class GitIgnorePattern(RegexPattern):
 	# Keep the dict-less class hierarchy.
 	__slots__ = ()
 
-	def __init__(self, pattern):
+	@classmethod
+	def pattern_to_regex(cls, pattern):
 		"""
-		Initializes the ``GitIgnorePattern`` instance.
+		Convert the pattern into a regular expression.
 
-		*pattern* (``str``) is the gitignore pattern.
+		*pattern* (``str``) is the pattern to convert into a regular
+		expression.
+
+		Returns the uncompiled regular expression (``str`` or ``None``), and
+		whether matched files should be included (``True``), excluded
+		(``False``), or if it is a null-operation (``None``).
 		"""
-
 		if not isinstance(pattern, string_types):
 			raise TypeError("pattern:{!r} is not a string.".format(pattern))
 
@@ -40,7 +45,7 @@ class GitIgnorePattern(RegexPattern):
 			include = None
 
 		elif pattern == '/':
-			# EDGE CASE: According to git check-ignore (v2.4.1)), a single '/'
+			# EDGE CASE: According to git check-ignore (v2.4.1), a single '/'
 			# does not match any file.
 			regex = None
 			include = None
@@ -74,16 +79,17 @@ class GitIgnorePattern(RegexPattern):
 				# paths. So, remove empty first segment to make pattern relative
 				# to root.
 				del pattern_segs[0]
-			elif len(pattern_segs) == 1 or \
-				 (len(pattern_segs) == 2 and not pattern_segs[1]):
-				# A **single** pattern without a beginning slash ('/') will
-				# match any descendant path. This is equivalent to
-				# "**/{pattern}". So, prepend with double-asterisks to make
-				# pattern relative to root.
+
+			elif len(pattern_segs) == 1 or (len(pattern_segs) == 2 and not pattern_segs[1]):
+				# A single pattern without a beginning slash ('/') will match
+				# any descendant path. This is equivalent to "**/{pattern}". So,
+				# prepend with double-asterisks to make pattern relative to
+				# root.
 				# EDGE CASE: This also holds for a single pattern with a
 				# trailing slash (e.g. dir/).
 				if pattern_segs[0] != '**':
 					pattern_segs.insert(0, '**')
+
 			else:
 				# EDGE CASE: A pattern without a beginning slash ('/') but
 				# contains at least one prepended directory (e.g.
@@ -99,7 +105,7 @@ class GitIgnorePattern(RegexPattern):
 				pattern_segs[-1] = '**'
 
 			# Build regular expression from pattern.
-			regex = ['^']
+			output = ['^']
 			need_slash = False
 			end = len(pattern_segs) - 1
 			for i, seg in enumerate(pattern_segs):
@@ -107,42 +113,42 @@ class GitIgnorePattern(RegexPattern):
 					if i == 0 and i == end:
 						# A pattern consisting solely of double-asterisks ('**')
 						# will match every path.
-						regex.append('.+')
+						output.append('.+')
 					elif i == 0:
 						# A normalized pattern beginning with double-asterisks
 						# ('**') will match any leading path segments.
-						regex.append('(?:.+/)?')
+						output.append('(?:.+/)?')
 						need_slash = False
 					elif i == end:
 						# A normalized pattern ending with double-asterisks ('**')
 						# will match any trailing path segments.
-						regex.append('/.*')
+						output.append('/.*')
 					else:
 						# A pattern with inner double-asterisks ('**') will match
 						# multiple (or zero) inner path segments.
-						regex.append('(?:/.+)?')
+						output.append('(?:/.+)?')
 						need_slash = True
 				elif seg == '*':
 					# Match single path segment.
 					if need_slash:
-						regex.append('/')
-					regex.append('[^/]+')
+						output.append('/')
+					output.append('[^/]+')
 					need_slash = True
 				else:
 					# Match segment glob pattern.
 					if need_slash:
-						regex.append('/')
-					regex.append(self._translate_segment_glob(seg))
-					if i == end and include == True:
+						output.append('/')
+					output.append(cls._translate_segment_glob(seg))
+					if i == end and include is True:
 						# A pattern ending without a slash ('/') will match a file
-						# or a directory (with paths underneath it).
-						# e.g. foo matches: foo, foo/bar, foo/bar/baz, etc.
+						# or a directory (with paths underneath it). E.g., "foo"
+						# matches "foo", "foo/bar", "foo/bar/baz", etc.
 						# EDGE CASE: However, this does not hold for exclusion cases
 						# according to `git check-ignore` (v2.4.1).
-						regex.append('(?:/.*)?')
+						output.append('(?:/.*)?')
 					need_slash = True
-			regex.append('$')
-			regex = ''.join(regex)
+			output.append('$')
+			regex = ''.join(output)
 
 		else:
 			# A blank pattern is a null-operation (neither includes nor
@@ -150,7 +156,7 @@ class GitIgnorePattern(RegexPattern):
 			regex = None
 			include = None
 
-		super(GitIgnorePattern, self).__init__(regex, include)
+		return regex, include
 
 	@staticmethod
 	def _translate_segment_glob(pattern):
