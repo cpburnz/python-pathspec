@@ -1,19 +1,21 @@
 # encoding: utf-8
 """
-This module implements gitignore style pattern matching which
-incorporates POSIX glob patterns.
+This module implements Git's wildmatch pattern matching which itself is
+derived from Rsync's wildmatch. Git uses wildmatch for its ".gitignore"
+files.
 """
 
 import re
+import warnings
 
-from . import util
-from .compat import string_types
-from .pattern import RegexPattern
+from .. import util
+from ..compat import string_types
+from ..pattern import RegexPattern
 
 
-class GitIgnorePattern(RegexPattern):
+class GitWildMatchPattern(RegexPattern):
 	"""
-	The ``GitIgnorePattern`` class represents a compiled gitignore
+	The ``GitWildMatchPattern`` class represents a compiled git wildmatch
 	pattern.
 	"""
 
@@ -45,8 +47,8 @@ class GitIgnorePattern(RegexPattern):
 			include = None
 
 		elif pattern == '/':
-			# EDGE CASE: According to git check-ignore (v2.4.1), a single '/'
-			# does not match any file.
+			# EDGE CASE: According to `git check-ignore` (v2.4.1), a single
+			# '/' does not match any file.
 			regex = None
 			include = None
 
@@ -264,4 +266,38 @@ class GitIgnorePattern(RegexPattern):
 
 		return regex
 
+util.register_pattern('gitwildmatch', GitWildMatchPattern)
+
+
+class GitIgnorePattern(GitWildMatchPattern):
+	"""
+	The ``GitIgnorePattern`` class is deprecated by
+	``GitWildMatchPattern``. This class only exists to maintain
+	compatibility with v0.4.
+	"""
+
+	def __init__(self, *args, **kw):
+		"""
+		Warn about deprecation.
+		"""
+		self._deprecated()
+		return super(GitIgnorePattern, self).__init__(*args, **kw)
+
+	@staticmethod
+	def _deprecated():
+		"""
+		Warn about deprecation.
+		"""
+		warnings.warn("GitIgnorePattern ('gitignore') is deprecated. Use GitWildMatchPattern ('gitwildmatch') instead.", DeprecationWarning, stacklevel=3)
+
+	@classmethod
+	def pattern_to_regex(cls, *args, **kw):
+		"""
+		Warn about deprecation.
+		"""
+		cls._deprecated()
+		return super(GitIgnorePattern, cls).pattern_to_regex(*args, **kw)
+
+# Register `GitIgnorePattern` as "gitignore" for backward compatibility
+# with v0.4.
 util.register_pattern('gitignore', GitIgnorePattern)

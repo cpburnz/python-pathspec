@@ -17,7 +17,7 @@ class PathSpecTest(unittest.TestCase):
 		Tests that matching files one at a time yields the same results as
 		matching multiples files at once.
 		"""
-		spec = pathspec.PathSpec.from_lines('gitignore', [
+		spec = pathspec.PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
 			'!test1/',
 		])
@@ -37,7 +37,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Tests that Windows paths will be properly normalized and matched.
 		"""
-		spec = pathspec.PathSpec.from_lines('gitignore', [
+		spec = pathspec.PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
 			'!test1/',
 		])

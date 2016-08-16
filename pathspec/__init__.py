@@ -1,7 +1,8 @@
 # encoding: utf-8
 """
 The *pathspec* package provides pattern matching for file paths. So far
-this only includes gitignore style pattern matching.
+this only includes git wildmatch pattern matching (the style used for
+".gitignore" files).
 
 See "README.rst" or <https://github.com/cpburnz/python-path-specification>
 for more information. Or you can always scour the source code.
@@ -18,6 +19,7 @@ __credits__ = [
 	"mikexstudios <https://github.com/mikexstudios>",
 	"nhumrich <https://github.com/nhumrich>",
 	"davidfraser <https://github.com/davidfraser>",
+	"demurgos <https://github.com/demurgos>",
 ]
 __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
@@ -26,7 +28,14 @@ __status__ = "Development"
 __updated__ = "2016-08-15"
 __version__ = "0.4.1.dev1"
 
-from .gitignore import GitIgnorePattern
 from .pathspec import PathSpec
 from .pattern import Pattern, RegexPattern
 from .util import iter_tree, match_files, RecursionError
+
+# Load pattern implementations.
+from . import patterns
+
+# Expose `gitignore` module and `GitIgnorePattern` class in the root
+# module for backward compatibility with v0.4.
+from .patterns import gitwildmatch as gitignore
+from .patterns.gitwildmatch import GitIgnorePattern

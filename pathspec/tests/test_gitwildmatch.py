@@ -1,16 +1,16 @@
 # encoding: utf-8
 """
-This script tests ``GitIgnorePattern``.
+This script tests ``GitWildMatchPattern``.
 """
 
 import unittest
 
 import pathspec.util
-from pathspec import GitIgnorePattern
+from pathspec.patterns.gitwildmatch import GitWildMatchPattern
 
-class GitIgnoreTest(unittest.TestCase):
+class GitWildMatchTest(unittest.TestCase):
 	"""
-	The ``GitIgnoreTest`` class tests the ``GitIgnorePattern``
+	The ``GitWildMatchTest`` class tests the ``GitWildMatchPattern``
 	implementation.
 	"""
 
@@ -18,7 +18,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		Tests an empty pattern.
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('')
+		regex, include = GitWildMatchPattern.pattern_to_regex('')
 		self.assertIsNone(include)
 		self.assertIsNone(regex)
 
@@ -29,7 +29,7 @@ class GitIgnoreTest(unittest.TestCase):
 		This should NOT match any file (according to git check-ignore
 		(v2.4.1)).
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('/')
+		regex, include = GitWildMatchPattern.pattern_to_regex('/')
 		self.assertIsNone(include)
 		self.assertIsNone(regex)
 
@@ -46,7 +46,7 @@ class GitIgnoreTest(unittest.TestCase):
 
 			foo/an/absolute/file/path
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('/an/absolute/file/path')
+		regex, include = GitWildMatchPattern.pattern_to_regex('/an/absolute/file/path')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^an/absolute/file/path(?:/.*)?$')
 
@@ -62,7 +62,7 @@ class GitIgnoreTest(unittest.TestCase):
 			spam/foo
 			foo/spam/bar
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('spam')
+		regex, include = GitWildMatchPattern.pattern_to_regex('spam')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^(?:.+/)?spam(?:/.*)?$')
 
@@ -79,7 +79,7 @@ class GitIgnoreTest(unittest.TestCase):
 
 			bar/foo/spam
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('foo/spam')
+		regex, include = GitWildMatchPattern.pattern_to_regex('foo/spam')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^foo/spam(?:/.*)?$')
 
@@ -87,7 +87,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		Tests a comment pattern.
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('# Cork soakers.')
+		regex, include = GitWildMatchPattern.pattern_to_regex('# Cork soakers.')
 		self.assertIsNone(include)
 		self.assertIsNone(regex)
 
@@ -99,7 +99,7 @@ class GitIgnoreTest(unittest.TestCase):
 
 			temp/foo
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('!temp')
+		regex, include = GitWildMatchPattern.pattern_to_regex('!temp')
 		self.assertIsNotNone(include)
 		self.assertFalse(include)
 		self.assertEqual(regex, '^(?:.+/)?temp$')
@@ -117,7 +117,7 @@ class GitIgnoreTest(unittest.TestCase):
 
 			foo/spam/bar
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('spam/**')
+		regex, include = GitWildMatchPattern.pattern_to_regex('spam/**')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^spam/.*$')
 
@@ -135,7 +135,7 @@ class GitIgnoreTest(unittest.TestCase):
 
 			foo/left/bar/right
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('left/**/right')
+		regex, include = GitWildMatchPattern.pattern_to_regex('left/**/right')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^left(?:/.+)?/right(?:/.*)?$')
 
@@ -143,7 +143,7 @@ class GitIgnoreTest(unittest.TestCase):
 		"""
 		Tests a double-asterisk pattern which matches everything.
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('**')
+		regex, include = GitWildMatchPattern.pattern_to_regex('**')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^.+$')
 
@@ -156,7 +156,7 @@ class GitIgnoreTest(unittest.TestCase):
 			foo/spam
 			foo/spam/bar
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('**/spam')
+		regex, include = GitWildMatchPattern.pattern_to_regex('**/spam')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^(?:.+/)?spam(?:/.*)?$')
 
@@ -172,7 +172,7 @@ class GitIgnoreTest(unittest.TestCase):
 			foo-hello-bar/b
 			a/foo-hello-bar/b
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('foo-*-bar')
+		regex, include = GitWildMatchPattern.pattern_to_regex('foo-*-bar')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^(?:.+/)?foo\\-[^/]*\\-bar(?:/.*)?$')
 
@@ -188,7 +188,7 @@ class GitIgnoreTest(unittest.TestCase):
 			foo/~temp-bar
 			foo/~temp-bar/baz
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('~temp-*')
+		regex, include = GitWildMatchPattern.pattern_to_regex('~temp-*')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^(?:.+/)?\\~temp\\-[^/]*(?:/.*)?$')
 
@@ -203,7 +203,7 @@ class GitIgnoreTest(unittest.TestCase):
 			foo/bar.py
 			foo/bar.py/baz
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('*.py')
+		regex, include = GitWildMatchPattern.pattern_to_regex('*.py')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^(?:.+/)?[^/]*\\.py(?:/.*)?$')
 
@@ -221,17 +221,26 @@ class GitIgnoreTest(unittest.TestCase):
 
 			dir
 		"""
-		regex, include = GitIgnorePattern.pattern_to_regex('dir/')
+		regex, include = GitWildMatchPattern.pattern_to_regex('dir/')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^(?:.+/)?dir/.*$')
 
-	def test_05_registered(self):
+	def test_06_registered(self):
 		"""
 		Tests that the pattern is registered.
 		"""
-		self.assertIs(pathspec.util.lookup_pattern('gitignore'), GitIgnorePattern)
+		self.assertIs(pathspec.util.lookup_pattern('gitwildmatch'), GitWildMatchPattern)
 
+	def test_06_access_deprecated(self):
+		"""
+		Tests that the pattern is accessible from the root module using the
+		deprecated alias.
+		"""
+		self.assertTrue(hasattr(pathspec, 'GitIgnorePattern'))
+		self.assertTrue(issubclass(pathspec.GitIgnorePattern, GitWildMatchPattern))
 
-if __name__ == '__main__':
-	suite = unittest.TestLoader().loadTestsFromTestCase(GitIgnoreTest)
-	unittest.TextTestRunner(verbosity=2).run(suite)
+	def test_06_registered_deprecated(self):
+		"""
+		Tests that the pattern is registered under the deprecated alias.
+		"""
+		self.assertIs(pathspec.util.lookup_pattern('gitignore'), pathspec.GitIgnorePattern)

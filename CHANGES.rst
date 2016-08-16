@@ -7,6 +7,8 @@ Change History
 -----------
 
 - Issue #12: Add `PathSpec.match_file`.
+- Renamed `gitignore.GitIgnorePattern` to `patterns.gitwildmatch.GitWildMatchPattern`.
+- Deprecated `gitignore.GitIgnorePattern`.
 
 
 0.4.0 (2016-07-15)
