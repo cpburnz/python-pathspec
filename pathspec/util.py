@@ -101,7 +101,7 @@ def match_file(patterns, file):
 	*patterns* (``collections.Iterable`` of ``pathspec.Pattern``) contains
 	the patterns to use.
 
-	*file* (``str``) is the normalized file to be matched against
+	*file* (``str``) is the normalized file path to be matched against
 	*patterns*.
 
 	Returns ``True`` if *file* matched; otherwise, ``False``.
@@ -121,7 +121,7 @@ def match_files(patterns, files):
 	the patterns to use.
 
 	*files* (``collections.Iterable`` of ``str``) contains the normalized
-	files to be matched against *patterns*.
+	file paths to be matched against *patterns*.
 
 	Returns the matched files (``set`` of ``str``).
 	"""

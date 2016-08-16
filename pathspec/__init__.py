@@ -25,17 +25,16 @@ __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
-__updated__ = "2016-08-15"
-__version__ = "0.4.1.dev1"
+__updated__ = "2016-08-16"
+__version__ = "0.5.0.dev1"
 
 from .pathspec import PathSpec
 from .pattern import Pattern, RegexPattern
-from .util import iter_tree, match_files, RecursionError
+from .util import iter_tree, lookup_pattern, match_files, RecursionError
 
 # Load pattern implementations.
 from . import patterns
 
-# Expose `gitignore` module and `GitIgnorePattern` class in the root
-# module for backward compatibility with v0.4.
-from .patterns import gitwildmatch as gitignore
+# Expose `GitIgnorePattern` class in the root module for backward
+# compatibility with v0.4.
 from .patterns.gitwildmatch import GitIgnorePattern

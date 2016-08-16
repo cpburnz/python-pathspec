@@ -3,10 +3,10 @@ Change History
 ==============
 
 
-0.4.1 (TBD)
+0.5.0 (TBD)
 -----------
 
-- Issue #12: Add `PathSpec.match_file`.
+- Issue #12: Add `PathSpec.match_file()`.
 - Renamed `gitignore.GitIgnorePattern` to `patterns.gitwildmatch.GitWildMatchPattern`.
 - Deprecated `gitignore.GitIgnorePattern`.
 
@@ -39,7 +39,7 @@ Change History
 
 - Improved documentation.
 - Issue #6: Fixed matching Windows paths.
-- API change: `spec.match_tree` and `spec.match_files` now return iterators instead of sets.
+- API change: `spec.match_tree()` and `spec.match_files()` now return iterators instead of sets.
 
 
 0.3.1 (2014-09-17)
@@ -59,7 +59,7 @@ Change History
 0.2.2 (2013-12-17)
 ------------------
 
-- Fixed setup.py
+- Fixed setup.py.
 
 
 0.2.1 (2013-12-17)

@@ -87,8 +87,8 @@ class PathSpec(object):
 		"""
 		Matches the files to this path-spec.
 
-		*files* (``collections.Iterable`` of ``str``) contains the files to
-		be matched against *patterns*.
+		*files* (``collections.Iterable`` of ``str``) contains the file
+		paths to be matched against *patterns*.
 
 		*separators* (``collections.Container`` of ``str``) optionally
 		contains the path separators to normalize. This does not need to
