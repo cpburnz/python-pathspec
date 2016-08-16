@@ -63,6 +63,26 @@ class PathSpec(object):
 		lines = [pattern_factory(line) for line in lines if line]
 		return cls(lines)
 
+	def match_file(self, file, separators=None):
+		"""
+		Matches the file to this path-spec.
+
+		*file* (``str``) is the file path to be matched against
+		`self.patterns`.
+
+		*separators* (``collections.Container`` of ``str``) optionally
+		contains the path separators to normalize. This does not need to
+		include the POSIX path separator (`/`), but including it will not
+		affect the results. Default is ``None`` to determine the separators
+		based upon the current operating system by examining `os.sep` and
+		`os.altsep`. To prevent normalization, pass an empty container
+		(e.g., an empty tuple `()`).
+
+		Returns ``True`` if *file* matched; otherwise, ``False``.
+		"""
+		norm_file = util.normalize_file(file, separators=separators)
+		return util.match_file(self.patterns, norm_file)
+
 	def match_files(self, files, separators=None):
 		"""
 		Matches the files to this path-spec.

@@ -94,6 +94,25 @@ def lookup_pattern(name):
 	"""
 	return _registered_patterns[name]
 
+def match_file(patterns, file):
+	"""
+	Matches the file to the patterns.
+
+	*patterns* (``collections.Iterable`` of ``pathspec.Pattern``) contains
+	the patterns to use.
+
+	*file* (``str``) is the normalized file to be matched against
+	*patterns*.
+
+	Returns ``True`` if *file* matched; otherwise, ``False``.
+	"""
+	matched = False
+	for pattern in patterns:
+		if pattern.include is not None:
+			if file in pattern.match((file,)):
+				matched = pattern.include
+	return matched
+
 def match_files(patterns, files):
 	"""
 	Matches the files to the patterns.
@@ -117,6 +136,21 @@ def match_files(patterns, files):
 				return_files.difference_update(result_files)
 	return return_files
 
+def normalize_file(file, separators=None):
+	"""
+	Normalizes the file path to use the POSIX path separator (i.e., `/`).
+
+	*file* (``str``) is the file path.
+
+	Returns the normalized file path (``str``).
+	"""
+	if separators is None:
+		separators = NORMALIZE_PATH_SEPS
+	norm_file = file
+	for sep in separators:
+		norm_file = norm_file.replace(sep, posixpath.sep)
+	return norm_file
+
 def normalize_files(files, separators=None):
 	"""
 	Normalizes the file paths to use the POSIX path separator (i.e., `/`).
@@ -130,15 +164,7 @@ def normalize_files(files, separators=None):
 	Returns a ``dict`` mapping the normalized file path (``str``) to the
 	original file path (``str``)
 	"""
-	if separators is None:
-		separators = NORMALIZE_PATH_SEPS
-	file_map = {}
-	for path in files:
-		norm = path
-		for sep in separators:
-			norm = norm.replace(sep, posixpath.sep)
-		file_map[norm] = path
-	return file_map
+	return {normalize_file(path, separators=separators): path for path in files}
 
 def register_pattern(name, pattern_factory, override=None):
 	"""
