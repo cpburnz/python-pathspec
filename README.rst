@@ -3,11 +3,11 @@
 ==============================
 
 *pathspec* is a utility library for pattern matching of file paths. So
-far this only includes `gitignore`_ style pattern matching which itself
-incorporates POSIX `glob`_ patterns.
+far this only includes Git's wildmatch pattern matching which itself is
+derived from Rsync's wildmatch. Git uses wildmatch for its `gitignore`_
+files.
 
 .. _`gitignore`: http://git-scm.com/docs/gitignore
-.. _`glob`: http://man7.org/linux/man-pages/man7/glob.7.html
 
 
 Tutorial
@@ -48,32 +48,32 @@ certain files, and ignore others depending on certain conditions::
 	...
 	... """
 
-We want to use the ``GitIgnorePattern`` class to compile our patterns, and the
-``PathSpec`` to provide an iterface around them::
+We want to use the ``GitWildMatchPattern`` class to compile our patterns. The
+``PathSpec`` class provides an interface around pattern implementations::
 
-	>>> spec = pathspec.PathSpec.from_lines(pathspec.GitIgnorePattern, spec.splitlines())
+	>>> spec = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, spec.splitlines())
 
 That may be a mouthful but it allows for additional patterns to be implemented
 in the future without them having to deal with anything but matching the paths
-sent to them. ``GitIgnorePattern`` is the implementation of the actual pattern
-which internally gets converted into a regular expression. ``PathSpec`` is a
-simple wrapper around a list of compiled patterns.
+sent to them. ``GitWildMatchPattern`` is the implementation of the actual
+pattern which internally gets converted into a regular expression.
+``PathSpec`` is a simple wrapper around a list of compiled patterns.
 
 To make things simpler, we can use the registered name for a pattern class
 instead of always having to provide a reference to the class itself. The
-``GitIgnorePattern`` class is registered as **gitignore**::
+``GitWildMatchPattern`` class is registered as **gitwildmatch**::
 
-	>>> spec = pathspec.PathSpec.from_lines('gitignore', spec.splitlines())
+	>>> spec = pathspec.PathSpec.from_lines('gitwildmatch', spec.splitlines())
 
 If we wanted to manually compile the patterns we can just do the following::
 
-	>>> patterns = map(pathspec.GitIgnorePattern, spec.splitlines())
+	>>> patterns = map(pathspec.patterns.GitWildMatchPattern, spec.splitlines())
 	>>> spec = PathSpec(patterns)
 
-``PathSpec.from_lines()`` is simply a simple class method to do just that.
+``PathSpec.from_lines()`` is simply a class method which does just that.
 
-If you want to load the patterns from file, you can pass the instance directly
-as well::
+If you want to load the patterns from file, you can pass the file instance
+directly as well::
 
 	>>> with open('patterns.list', 'r') as fh:
 	>>>     spec = pathspec.PathSpec.from_lines('gitignore', fh)
@@ -86,6 +86,9 @@ Or you can perform matching on a specific set of file paths with::
 
 	>>> matches = spec.match_files(file_paths)
 
+Or check to see if an individual file matches::
+
+	>>> is_matched = spec.match_file(file_path)
 
 
 License
