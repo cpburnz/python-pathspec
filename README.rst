@@ -135,8 +135,3 @@ Installation
 
 .. _`setuptools`: https://pypi.python.org/pypi/setuptools
 .. _`PyPI`: http://pypi.python.org/pypi/pathspec
-
-
-.. image:: https://d2weczhvl823v0.cloudfront.net/cpburnz/python-path-specification/trend.png
-   :alt: Bitdeli badge
-   :target: https://bitdeli.com/free
