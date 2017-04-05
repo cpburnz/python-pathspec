@@ -2,8 +2,14 @@
 Change History
 ==============
 
-0.5.1 (TBD)
------------
+0.5.2 (2017-04-04)
+------------------
+
+- Fixed change log.
+
+
+0.5.1 (2017-04-04)
+------------------
 
 - Issue #13: Add equality method to `PathSpec`.
 
