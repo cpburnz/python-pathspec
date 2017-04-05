@@ -11,7 +11,7 @@ Change History
 0.5.1 (2017-04-04)
 ------------------
 
-- Issue #13: Add equality method to `PathSpec`.
+- Issue #13: Add equality methods to `PathSpec` and `RegexPattern`.
 
 
 0.5.0 (2016-08-22)
