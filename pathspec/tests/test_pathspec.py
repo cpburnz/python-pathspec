@@ -59,12 +59,24 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Tests equality.
 		"""
-		first = pathspec.PathSpec.from_lines('gitwildmatch', [
+		first_spec = pathspec.PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
 			'!test1/',
 		])
-		second = pathspec.PathSpec.from_lines('gitwildmatch', [
+		second_spec = pathspec.PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
 			'!test1/',
 		])
-		self.assertEqual(first, second)
+		self.assertEqual(first_spec, second_spec)
+
+	def test_02_ne(self):
+		"""
+		Tests equality.
+		"""
+		first_spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+			'*.txt',
+		])
+		second_spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+			'!*.txt',
+		])
+		self.assertNotEqual(first_spec, second_spec)
