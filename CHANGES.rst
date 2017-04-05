@@ -2,6 +2,11 @@
 Change History
 ==============
 
+0.5.1 (TBD)
+-----------
+
+- Issue #13: Add equality method to `PathSpec`.
+
 
 0.5.0 (2016-08-22)
 ------------------

@@ -5,10 +5,9 @@ of files.
 """
 
 import collections
-from itertools import izip_longest
 
 from . import util
-from .compat import string_types, viewkeys
+from .compat import izip_longest, string_types, viewkeys
 
 
 class PathSpec(object):
@@ -31,14 +30,17 @@ class PathSpec(object):
 		"""
 
 		self.patterns = patterns if isinstance(patterns, collections.Container) else list(patterns)
-		
+
 	def __eq__(self, other):
 		"""
-		Tests equality of this ``PathSpec`` with ``other`` based on the
-		regexs contained in their ``patterns``.
+		Tests equality of this ``PathSpec`` with ``other`` based on their
+		*patterns*.
 		"""
-		paired_patterns = izip_longest(self.patterns, other.patterns)
-		return all(a.regex == b.regex for a, b in paired_patterns)
+		if isinstance(other, PathSpec):
+			paired_patterns = izip_longest(self.patterns, other.patterns)
+			return all(a == b for a, b in paired_patterns)
+		else:
+			return NotImplemented
 
 	def __len__(self):
 		"""

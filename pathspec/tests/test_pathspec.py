@@ -54,3 +54,17 @@ class PathSpecTest(unittest.TestCase):
 			'src\\test2\\b.txt',
 			'src\\test2\\c\\c.txt',
 		})
+
+	def test_02_eq(self):
+		"""
+		Tests equality.
+		"""
+		first = pathspec.PathSpec.from_lines('gitwildmatch', [
+			'*.txt',
+			'!test1/',
+		])
+		second = pathspec.PathSpec.from_lines('gitwildmatch', [
+			'*.txt',
+			'!test1/',
+		])
+		self.assertEqual(first, second)

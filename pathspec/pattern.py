@@ -94,6 +94,21 @@ class RegexPattern(Pattern):
 		super(RegexPattern, self).__init__(include)
 		self.regex = regex
 
+	def __eq__(self, other):
+		"""
+		Tests the equality of this ``RegexPattern`` with *other* based on
+		their *pattern* and *include* attributes.
+
+		*other* (``RegexPattern``) is the other pattern to compare against.
+
+		Returns whether the patterns are equal (``True``), or not
+		(``False``).
+		"""
+		if isinstance(other, RegexPattern):
+			return self.include == other.include and self.regex == other.regex
+		else:
+			return NotImplemented
+
 	def match(self, files):
 		"""
 		Matches this pattern against the specified files.
