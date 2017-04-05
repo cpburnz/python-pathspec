@@ -10,7 +10,7 @@ for more information. Or you can always scour the source code.
 from __future__ import unicode_literals
 
 __author__ = "Caleb P. Burns"
-__copyright__ = "Copyright © 2013-2016 Caleb P. Burns"
+__copyright__ = "Copyright © 2013-2017 Caleb P. Burns"
 __created__ = "2013-10-12"
 __credits__ = [
 	"dahlia <https://github.com/dahlia>",
@@ -20,13 +20,15 @@ __credits__ = [
 	"nhumrich <https://github.com/nhumrich>",
 	"davidfraser <https://github.com/davidfraser>",
 	"demurgos <https://github.com/demurgos>",
+	"ghickman <https://github.com/ghickman>",
+	"nvie <https://github.com/nvie>",
 ]
 __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
-__updated__ = "2016-08-16"
-__version__ = "0.5.0"
+__updated__ = "2017-04-04"
+__version__ = "0.5.1.dev1"
 
 from .pathspec import PathSpec
 from .pattern import Pattern, RegexPattern
