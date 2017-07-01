@@ -2,6 +2,13 @@
 Change History
 ==============
 
+0.5.3 (TBD)
+-----------
+
+- Include "LICENSE" in source package.
+- Support Python 2.6.
+
+
 0.5.2 (2017-04-04)
 ------------------
 

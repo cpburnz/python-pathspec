@@ -7,7 +7,7 @@ of files.
 import collections
 
 from . import util
-from .compat import izip_longest, string_types, viewkeys
+from .compat import iterkeys, izip_longest, string_types
 
 
 class PathSpec(object):
@@ -69,7 +69,7 @@ class PathSpec(object):
 		if isinstance(pattern_factory, string_types):
 			pattern_factory = util.lookup_pattern(pattern_factory)
 		if not callable(pattern_factory):
-			raise TypeError("pattern_factory:{!r} is not callable.".format(pattern_factory))
+			raise TypeError("pattern_factory:{0!r} is not callable.".format(pattern_factory))
 
 		lines = [pattern_factory(line) for line in lines if line]
 		return cls(lines)
@@ -112,7 +112,7 @@ class PathSpec(object):
 		Returns the matched files (``collections.Iterable`` of ``str``).
 		"""
 		file_map = util.normalize_files(files, separators=separators)
-		matched_files = util.match_files(self.patterns, viewkeys(file_map))
+		matched_files = util.match_files(self.patterns, iterkeys(file_map))
 		for path in matched_files:
 			yield file_map[path]
 

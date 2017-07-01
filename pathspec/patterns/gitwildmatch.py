@@ -35,7 +35,7 @@ class GitWildMatchPattern(RegexPattern):
 		(``False``), or if it is a null-operation (``None``).
 		"""
 		if not isinstance(pattern, string_types):
-			raise TypeError("pattern:{!r} is not a string.".format(pattern))
+			raise TypeError("pattern:{0!r} is not a string.".format(pattern))
 
 		pattern = pattern.strip()
 

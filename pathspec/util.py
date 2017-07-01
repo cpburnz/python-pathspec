@@ -164,7 +164,10 @@ def normalize_files(files, separators=None):
 	Returns a ``dict`` mapping the normalized file path (``str``) to the
 	original file path (``str``)
 	"""
-	return {normalize_file(path, separators=separators): path for path in files}
+	norm_files = {}
+	for path in files:
+		norm_files[normalize_file(path, separators=separators)] = path
+	return norm_files
 
 def register_pattern(name, pattern_factory, override=None):
 	"""
@@ -182,9 +185,9 @@ def register_pattern(name, pattern_factory, override=None):
 	for ``False``.
 	"""
 	if not isinstance(name, string_types):
-		raise TypeError("name:{!r} is not a string.".format(name))
+		raise TypeError("name:{0!r} is not a string.".format(name))
 	if not callable(pattern_factory):
-		raise TypeError("pattern_factory:{!r} is not callable.".format(pattern_factory))
+		raise TypeError("pattern_factory:{0!r} is not callable.".format(pattern_factory))
 	if name in _registered_patterns and not override:
 		raise AlreadyRegisteredError(name, _registered_patterns[name])
 	_registered_patterns[name] = pattern_factory
@@ -211,7 +214,7 @@ class AlreadyRegisteredError(Exception):
 		"""
 		*message* (``str``) is the error message.
 		"""
-		return "{name!r} is already registered for pattern factory:{!r}.".format(
+		return "{name!r} is already registered for pattern factory:{pattern_factory!r}.".format(
 			name=self.name,
 			pattern_factory=self.pattern_factory,
 		)

@@ -3,7 +3,10 @@
 This script tests ``GitWildMatchPattern``.
 """
 
-import unittest
+try:
+	import unittest2 as unittest
+except ImportError:
+	import unittest
 
 import pathspec.util
 from pathspec.patterns.gitwildmatch import GitWildMatchPattern

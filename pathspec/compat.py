@@ -14,8 +14,8 @@ if sys.version_info[0] < 3:
 
 	from itertools import izip_longest
 
-	def viewkeys(mapping):
-		return mapping.viewkeys()
+	def iterkeys(mapping):
+		return mapping.iterkeys()
 
 else:
 	# Python 3.
@@ -23,5 +23,5 @@ else:
 
 	from itertools import zip_longest as izip_longest
 
-	def viewkeys(mapping):
+	def iterkeys(mapping):
 		return mapping.keys()

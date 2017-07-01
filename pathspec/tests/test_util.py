@@ -8,7 +8,11 @@ import os.path
 import shutil
 import sys
 import tempfile
-import unittest
+
+try:
+	import unittest2 as unittest
+except ImportError:
+	import unittest
 
 from pathspec.util import iter_tree, RecursionError
 
@@ -98,14 +102,14 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Inner/f',
 		])
 		results = set(iter_tree(self.temp_dir))
-		self.assertEqual(results, set(map(self.ospath, {
+		self.assertEqual(results, set(map(self.ospath, [
 			'a',
 			'b',
 			'Dir/c',
 			'Dir/d',
 			'Dir/Inner/e',
 			'Dir/Inner/f',
-		})))
+		])))
 
 	def test_2_0_check_symlink(self):
 		"""
@@ -160,7 +164,7 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		self.require_symlink()
 		self.make_dirs([
-			'Dir'
+			'Dir',
 		])
 		self.make_files([
 			'a',
@@ -175,7 +179,7 @@ class IterTreeTest(unittest.TestCase):
 			('Dir/dx', 'Dir/d'),
 		])
 		results = set(iter_tree(self.temp_dir))
-		self.assertEqual(results, set(map(self.ospath, {
+		self.assertEqual(results, set(map(self.ospath, [
 			'a',
 			'ax',
 			'b',
@@ -184,7 +188,7 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/cx',
 			'Dir/d',
 			'Dir/dx',
-		})))
+		])))
 
 	def test_2_3_sideways_links(self):
 		"""
@@ -208,7 +212,7 @@ class IterTreeTest(unittest.TestCase):
 			('Dir/Fx', 'Dir/Target'),
 		])
 		results = set(iter_tree(self.temp_dir))
-		self.assertEqual(results, set(map(self.ospath, {
+		self.assertEqual(results, set(map(self.ospath, [
 			'Ax/Ex/file',
 			'Ax/Fx/file',
 			'Ax/Target/file',
@@ -220,7 +224,7 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Ex/file',
 			'Dir/Fx/file',
 			'Dir/Target/file',
-		})))
+		])))
 
 	def test_2_4_recursive_links(self):
 		"""
@@ -256,7 +260,7 @@ class IterTreeTest(unittest.TestCase):
 		self.make_files([
 			'A/d',
 			'B/e',
-			'C/f'
+			'C/f',
 		])
 		self.make_links([
 			('A/Bx', 'B'),
