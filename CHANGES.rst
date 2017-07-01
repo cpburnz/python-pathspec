@@ -2,12 +2,12 @@
 Change History
 ==============
 
-0.5.3 (TBD)
------------
+0.5.3 (2017-07-01)
+------------------
 
 - Include "LICENSE" in source package.
-- Support Python 2.6.
 - Issue #14: Fix byte strings for Python 3.
+- Issue #16: Support Python 2.6.
 
 
 0.5.2 (2017-04-04)

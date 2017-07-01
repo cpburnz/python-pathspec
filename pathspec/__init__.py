@@ -23,13 +23,14 @@ __credits__ = [
 	"ghickman <https://github.com/ghickman>",
 	"nvie <https://github.com/nvie>",
 	"adrienverge <https://github.com/adrienverge>",
+	"AndersBlomdell <https://github.com/AndersBlomdell>",
 ]
 __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
 __updated__ = "2017-07-01"
-__version__ = "0.5.3.dev1"
+__version__ = "0.5.3"
 
 from .pathspec import PathSpec
 from .pattern import Pattern, RegexPattern
