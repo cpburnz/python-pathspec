@@ -7,6 +7,7 @@ Change History
 
 - Include "LICENSE" in source package.
 - Support Python 2.6.
+- Issue #14: Fix byte strings for Python 3.
 
 
 0.5.2 (2017-04-04)

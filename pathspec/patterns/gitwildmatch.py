@@ -4,13 +4,17 @@ This module implements Git's wildmatch pattern matching which itself is
 derived from Rsync's wildmatch. Git uses wildmatch for its ".gitignore"
 files.
 """
+from __future__ import unicode_literals
 
 import re
 import warnings
 
 from .. import util
-from ..compat import string_types
+from ..compat import unicode
 from ..pattern import RegexPattern
+
+#: The encoding to use when parsing a byte string pattern.
+_BYTES_ENCODING = 'CP1252'
 
 
 class GitWildMatchPattern(RegexPattern):
@@ -27,15 +31,21 @@ class GitWildMatchPattern(RegexPattern):
 		"""
 		Convert the pattern into a regular expression.
 
-		*pattern* (``str``) is the pattern to convert into a regular
-		expression.
+		*pattern* (``unicode`` or ``bytes``) is the pattern to convert into
+		a regular expression.
 
-		Returns the uncompiled regular expression (``str`` or ``None``), and
-		whether matched files should be included (``True``), excluded
-		(``False``), or if it is a null-operation (``None``).
+		Returns the uncompiled regular expression (``unicode``, ``bytes``,
+		or ``None``), and whether matched files should be included
+		(``True``), excluded (``False``), or if it is a null-operation
+		(``None``).
 		"""
-		if not isinstance(pattern, string_types):
-			raise TypeError("pattern:{0!r} is not a string.".format(pattern))
+		if isinstance(pattern, unicode):
+			return_type = unicode
+		elif isinstance(pattern, bytes):
+			return_type = bytes
+			pattern = pattern.decode(_BYTES_ENCODING)
+		else:
+			raise TypeError("pattern:{0!r} is not a unicode or byte string.".format(pattern))
 
 		pattern = pattern.strip()
 
@@ -157,6 +167,9 @@ class GitWildMatchPattern(RegexPattern):
 			# excludes files).
 			regex = None
 			include = None
+
+		if regex is not None and return_type is bytes:
+			regex = regex.encode(_BYTES_ENCODING)
 
 		return regex, include
 

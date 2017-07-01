@@ -10,6 +10,7 @@ import sys
 
 if sys.version_info[0] < 3:
 	# Python 2.
+	unicode = unicode
 	string_types = (basestring,)
 
 	from itertools import izip_longest
@@ -19,7 +20,8 @@ if sys.version_info[0] < 3:
 
 else:
 	# Python 3.
-	string_types = (str,)
+	unicode = str
+	string_types = (unicode,)
 
 	from itertools import zip_longest as izip_longest
 

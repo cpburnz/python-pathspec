@@ -5,7 +5,7 @@ This module provides the base definition for patterns.
 
 import re
 
-from .compat import string_types
+from .compat import unicode
 
 
 class Pattern(object):
@@ -56,8 +56,8 @@ class RegexPattern(Pattern):
 		"""
 		Initializes the ``RegexPattern`` instance.
 
-		*pattern* (``str``, ``re.RegexObject``, or ``None``) is the pattern
-		to compile into a regular expression.
+		*pattern* (``unicode``, ``bytess, ``re.RegexObject``, or ``None``)
+		is the pattern to compile into a regular expression.
 
 		*include* (``bool`` or ``None``) must be ``None`` unless *pattern*
 		is a precompiled regular expression (``re.RegexObject``) in which
@@ -73,7 +73,7 @@ class RegexPattern(Pattern):
 		pattern.
 		"""
 
-		if isinstance(pattern, string_types):
+		if isinstance(pattern, (unicode, bytes)):
 			assert include is None, "include:{0!r} must be null when pattern:{1!r} is a string.".format(include, pattern)
 			regex, include = self.pattern_to_regex(pattern)
 			# NOTE: Make sure to allow a null regular expression to be
@@ -81,7 +81,7 @@ class RegexPattern(Pattern):
 			if include is not None:
 				regex = re.compile(regex)
 
-		elif pattern is not None:
+		elif pattern is not None and hasattr(pattern, 'match'):
 			# Assume pattern is a precompiled regular expression.
 			# - NOTE: Used specified *include*.
 			regex = pattern
@@ -90,6 +90,9 @@ class RegexPattern(Pattern):
 			# NOTE: Make sure to allow a null pattern to be passed for a
 			# null-operation.
 			assert include is None, "include:{0!r} must be null when pattern:{1!r} is null.".format(include, pattern)
+
+		else:
+			raise TypeError("pattern:{0!r} is not a string, RegexObject, or None.".format(pattern))
 
 		super(RegexPattern, self).__init__(include)
 		self.regex = regex

@@ -2,6 +2,9 @@
 """
 This script tests ``GitWildMatchPattern``.
 """
+from __future__ import unicode_literals
+
+import sys
 
 try:
 	import unittest2 as unittest
@@ -247,3 +250,57 @@ class GitWildMatchTest(unittest.TestCase):
 		Tests that the pattern is registered under the deprecated alias.
 		"""
 		self.assertIs(pathspec.util.lookup_pattern('gitignore'), pathspec.GitIgnorePattern)
+
+	def test_07_match_bytes_and_bytes(self):
+		"""
+		Test byte string patterns matching byte string paths.
+		"""
+		pattern = GitWildMatchPattern(b'*.py')
+		results = set(pattern.match([b'a.py']))
+		self.assertEqual(results, set([b'a.py']))
+
+	@unittest.skipIf(sys.version_info[0] >= 3, "Python 3 is strict")
+	def test_07_match_bytes_and_unicode(self):
+		"""
+		Test byte string patterns matching byte string paths.
+		"""
+		pattern = GitWildMatchPattern(b'*.py')
+		results = set(pattern.match(['a.py']))
+		self.assertEqual(results, set(['a.py']))
+
+	@unittest.skipIf(sys.version_info[0] == 2, "Python 2 is lenient")
+	def test_07_match_bytes_and_unicode_fail(self):
+		"""
+		Test byte string patterns matching byte string paths.
+		"""
+		pattern = GitWildMatchPattern(b'*.py')
+		with self.assertRaises(TypeError):
+			for _ in pattern.match(['a.py']):
+				pass
+
+	@unittest.skipIf(sys.version_info[0] >= 3, "Python 3 is strict")
+	def test_07_match_unicode_and_bytes(self):
+		"""
+		Test unicode patterns with byte paths.
+		"""
+		pattern = GitWildMatchPattern('*.py')
+		results = set(pattern.match([b'a.py']))
+		self.assertEqual(results, set([b'a.py']))
+
+	@unittest.skipIf(sys.version_info[0] == 2, "Python 2 is lenient")
+	def test_07_match_unicode_and_bytes_fail(self):
+		"""
+		Test unicode patterns with byte paths.
+		"""
+		pattern = GitWildMatchPattern('*.py')
+		with self.assertRaises(TypeError):
+			for _ in pattern.match([b'a.py']):
+				pass
+
+	def test_07_match_unicode_and_unicode(self):
+		"""
+		Test unicode patterns with unicode paths.
+		"""
+		pattern = GitWildMatchPattern('*.py')
+		results = set(pattern.match(['a.py']))
+		self.assertEqual(results, set(['a.py']))
