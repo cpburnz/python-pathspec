@@ -2,6 +2,13 @@
 Change History
 ==============
 
+
+0.5.4 (TBD)
+-----------
+
+- Add link to Ruby implementation of *pathspec*.
+
+
 0.5.3 (2017-07-01)
 ------------------
 
