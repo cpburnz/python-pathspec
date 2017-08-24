@@ -135,3 +135,11 @@ Installation
 
 .. _`setuptools`: https://pypi.python.org/pypi/setuptools
 .. _`PyPI`: http://pypi.python.org/pypi/pathspec
+
+Other Languages
+---------------
+
+*pathspec* is also available as a `Ruby gem`_.
+
+.. _`Ruby gem`: https://github.com/highb/pathspec-ruby
+
