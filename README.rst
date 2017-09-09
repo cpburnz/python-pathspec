@@ -137,6 +137,14 @@ Installation
 .. _`PyPI`: http://pypi.python.org/pypi/pathspec
 
 
+Documentation
+-------------
+
+Documentation for *pathspec* is available on `Read the Docs`_.
+
+.. _`Read the Docs`: http://python-path-specification.readthedocs.io
+
+
 Other Languages
 ---------------
 
