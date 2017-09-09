@@ -1,11 +1,25 @@
 # encoding: utf-8
 """
 The *pathspec* package provides pattern matching for file paths. So far
-this only includes git wildmatch pattern matching (the style used for
+this only includes Git's wildmatch pattern matching (the style used for
 ".gitignore" files).
 
-See "README.rst" or <https://github.com/cpburnz/python-path-specification>
-for more information. Or you can always scour the source code.
+The following classes are imported and made available from the root of
+the `pathspec` package:
+
+- :class:`pathspec.pathspec.PathSpec`
+
+- :class:`pathspec.pattern.Pattern`
+
+- :class:`pathspec.pattern.RegexPattern`
+
+- :class:`pathspec.util.RecursionError`
+
+The following functions are also imported:
+
+- :func:`pathspec.util.iter_tree`
+- :func:`pathspec.util.lookup_pattern`
+- :func:`pathspec.util.match_files`
 """
 from __future__ import unicode_literals
 
@@ -30,8 +44,8 @@ __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
-__updated__ = "2017-08-24"
-__version__ = "0.5.4.dev1"
+__updated__ = "2017-09-09"
+__version__ = "0.5.4"
 
 from .pathspec import PathSpec
 from .pattern import Pattern, RegexPattern

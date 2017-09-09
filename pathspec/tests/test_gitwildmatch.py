@@ -14,6 +14,7 @@ except ImportError:
 import pathspec.util
 from pathspec.patterns.gitwildmatch import GitWildMatchPattern
 
+
 class GitWildMatchTest(unittest.TestCase):
 	"""
 	The ``GitWildMatchTest`` class tests the ``GitWildMatchPattern``

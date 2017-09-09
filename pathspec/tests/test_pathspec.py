@@ -10,6 +10,7 @@ except ImportError:
 
 import pathspec
 
+
 class PathSpecTest(unittest.TestCase):
 	"""
 	The ``PathSpecTest`` class tests the ``PathSpec`` class.

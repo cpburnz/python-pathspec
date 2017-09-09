@@ -44,7 +44,7 @@ certain files, and ignore others depending on certain conditions::
 	...
 	... # Ignore the build directories but only directly under the project
 	... # directories.
-	... !/*/build/q
+	... !/*/build/
 	...
 	... """
 
@@ -136,10 +136,10 @@ Installation
 .. _`setuptools`: https://pypi.python.org/pypi/setuptools
 .. _`PyPI`: http://pypi.python.org/pypi/pathspec
 
+
 Other Languages
 ---------------
 
 *pathspec* is also available as a `Ruby gem`_.
 
 .. _`Ruby gem`: https://github.com/highb/pathspec-ruby
-

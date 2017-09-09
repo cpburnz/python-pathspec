@@ -10,7 +10,7 @@ from .compat import unicode
 
 class Pattern(object):
 	"""
-	The ``Pattern`` class is the abstract definition of a pattern.
+	The :class:`Pattern` class is the abstract definition of a pattern.
 	"""
 
 	# Make the class dict-less.
@@ -18,35 +18,37 @@ class Pattern(object):
 
 	def __init__(self, include):
 		"""
-		Initializes the ``Pattern`` instance.
+		Initializes the :class:`Pattern` instance.
 
-		*include* (``bool``) is whether the matched files should be included
-		(``True``), excluded (``False``), or is a null-operation (``None``).
+		*include* (:class:`bool` or :data:`None`) is whether the matched
+		files should be included (:data:`True`), excluded (:data:`False`),
+		or is a null-operation (:data:`None`).
 		"""
 
 		self.include = include
 		"""
-		*include* (``bool``) is whether the matched files should be included
-		(``True``), excluded (``False``), or is a null-operation (``None``).
+		*include* (:class:`bool` or :data:`None`) is whether the matched
+		files should be included (:data:`True`), excluded (:data:`False`),
+		or is a null-operation (:data:`None`).
 		"""
 
 	def match(self, files):
 		"""
 		Matches this pattern against the specified files.
 
-		*files* (``collections.Iterable``) contains each file (``str``)
-		relative to the root directory (e.g., "relative/path/to/file").
+		*files* (:class:`~collections.Iterable` of :class:`str`) contains
+		each file relative to the root directory (e.g., ``"relative/path/to/file"``).
 
-		Returns an ``collections.Iterable`` yielding each matched file path
-		(``str``).
+		Returns an :class:`~collections.Iterable` yielding each matched file
+		path (:class:`str`).
 		"""
 		raise NotImplementedError("{0}.{1} must override match().".format(self.__class__.__module__, self.__class__.__name__))
 
 
 class RegexPattern(Pattern):
 	"""
-	The ``RegexPattern`` class is an implementation of a pattern using
-	regular expressions.
+	The :class:`RegexPattern` class is an implementation of a pattern
+	using regular expressions.
 	"""
 
 	# Make the class dict-less.
@@ -54,22 +56,25 @@ class RegexPattern(Pattern):
 
 	def __init__(self, pattern, include=None):
 		"""
-		Initializes the ``RegexPattern`` instance.
+		Initializes the :class:`RegexPattern` instance.
 
-		*pattern* (``unicode``, ``bytess, ``re.RegexObject``, or ``None``)
-		is the pattern to compile into a regular expression.
+		*pattern* (:class:`unicode`, :class:`bytes`, :class:`re.RegexObject`,
+		or :data:`None`) is the pattern to compile into a regular
+		expression.
 
-		*include* (``bool`` or ``None``) must be ``None`` unless *pattern*
-		is a precompiled regular expression (``re.RegexObject``) in which
-		case it is whether matched files should be included (``True``),
-		excluded (``False``), or is a null operation.
+		*include* (:class:`bool` or :data:`None`) must be :data:`None`
+		unless *pattern* is a precompiled regular expression (:class:`re.RegexObject`)
+		in which case it is whether matched files should be included
+		(:data:`True`), excluded (:data:`False`), or is a null operation
+		(:data:`None`).
 
-		.. NOTE:: Subclasses do not need to support the *include* parameter.
+			.. NOTE:: Subclasses do not need to support the *include*
+			   parameter.
 		"""
 
 		self.regex = None
 		"""
-		*regex* (``re.RegexObject``) is the regular expression for the
+		*regex* (:class:`re.RegexObject`) is the regular expression for the
 		pattern.
 		"""
 
@@ -99,13 +104,9 @@ class RegexPattern(Pattern):
 
 	def __eq__(self, other):
 		"""
-		Tests the equality of this ``RegexPattern`` with *other* based on
-		their *pattern* and *include* attributes.
-
-		*other* (``RegexPattern``) is the other pattern to compare against.
-
-		Returns whether the patterns are equal (``True``), or not
-		(``False``).
+		Tests the equality of this regex pattern with *other* (:class:`RegexPattern`)
+		by comparing their :attr:`~Pattern.include` and :attr:`~RegexPattern.regex`
+		attributes.
 		"""
 		if isinstance(other, RegexPattern):
 			return self.include == other.include and self.regex == other.regex
@@ -116,11 +117,11 @@ class RegexPattern(Pattern):
 		"""
 		Matches this pattern against the specified files.
 
-		*files* (``collections.Iterable``) contains each file (``str``)
-		relative to the root directory (e.g., "relative/path/to/file").
+		*files* (:class:`~collections.Iterable` of :class:`str`) contains
+		each file relative to the root directory (e.g., "relative/path/to/file").
 
-		Returns an ``collections.Iterable`` yielding each matched file path
-		(``str``).
+		Returns an :class:`~collections.Iterable` yielding each matched file
+		path (:class:`str`).
 		"""
 		if self.include is not None:
 			for path in files:
@@ -132,14 +133,14 @@ class RegexPattern(Pattern):
 		"""
 		Convert the pattern into an uncompiled regular expression.
 
-		*pattern* (``str``) is the pattern to convert into a regular
+		*pattern* (:class:`str`) is the pattern to convert into a regular
 		expression.
 
-		Returns the uncompiled regular expression (``str`` or ``None``), and
-		whether matched files should be included (``True``), excluded
-		(``False``), or is a null-operation (``None``).
+		Returns the uncompiled regular expression (:class:`str` or :data:`None`),
+		and whether matched files should be included (:data:`True`),
+		excluded (:data:`False`), or is a null-operation (:data:`None`).
 
-		.. NOTE:: The default implementation simply returns *pattern* and
-		   ``True``.
+			.. NOTE:: The default implementation simply returns *pattern* and
+			   :data:`True`.
 		"""
 		return pattern, True

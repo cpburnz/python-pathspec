@@ -19,8 +19,8 @@ _BYTES_ENCODING = 'CP1252'
 
 class GitWildMatchPattern(RegexPattern):
 	"""
-	The ``GitWildMatchPattern`` class represents a compiled git wildmatch
-	pattern.
+	The :class:`GitWildMatchPattern` class represents a compiled Git
+	wildmatch pattern.
 	"""
 
 	# Keep the dict-less class hierarchy.
@@ -31,13 +31,13 @@ class GitWildMatchPattern(RegexPattern):
 		"""
 		Convert the pattern into a regular expression.
 
-		*pattern* (``unicode`` or ``bytes``) is the pattern to convert into
-		a regular expression.
+		*pattern* (:class:`unicode` or :class:`bytes`) is the pattern to
+		convert into a regular expression.
 
-		Returns the uncompiled regular expression (``unicode``, ``bytes``,
-		or ``None``), and whether matched files should be included
-		(``True``), excluded (``False``), or if it is a null-operation
-		(``None``).
+		Returns the uncompiled regular expression (:class:`unicode`, :class:`bytes`,
+		or :data:`None`), and whether matched files should be included
+		(:data:`True`), excluded (:data:`False`), or if it is a
+		null-operation (:data:`None`).
 		"""
 		if isinstance(pattern, unicode):
 			return_type = unicode
@@ -180,9 +180,9 @@ class GitWildMatchPattern(RegexPattern):
 		the constructor to translate a path segment glob pattern to its
 		corresponding regular expression.
 
-		*pattern* (``str``) is the glob pattern.
+		*pattern* (:class:`str`) is the glob pattern.
 
-		Returns the regular expression (``str``).
+		Returns the regular expression (:class:`str`).
 		"""
 		# NOTE: This is derived from `fnmatch.translate()` and is similar to
 		# the POSIX function `fnmatch()` with the `FNM_PATHNAME` flag set.
@@ -284,9 +284,8 @@ util.register_pattern('gitwildmatch', GitWildMatchPattern)
 
 class GitIgnorePattern(GitWildMatchPattern):
 	"""
-	The ``GitIgnorePattern`` class is deprecated by
-	``GitWildMatchPattern``. This class only exists to maintain
-	compatibility with v0.4.
+	The :class:`GitIgnorePattern` class is deprecated by :class:`GitWildMatchPattern`.
+	This class only exists to maintain compatibility with v0.4.
 	"""
 
 	def __init__(self, *args, **kw):

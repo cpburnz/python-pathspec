@@ -16,6 +16,7 @@ except ImportError:
 
 from pathspec.util import iter_tree, RecursionError
 
+
 class IterTreeTest(unittest.TestCase):
 	"""
 	The ``IterTreeTest`` class tests `pathspec.util.iter_tree()`.
