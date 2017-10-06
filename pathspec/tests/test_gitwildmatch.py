@@ -4,6 +4,7 @@ This script tests ``GitWildMatchPattern``.
 """
 from __future__ import unicode_literals
 
+import re
 import sys
 
 try:
@@ -29,17 +30,6 @@ class GitWildMatchTest(unittest.TestCase):
 		self.assertIsNone(include)
 		self.assertIsNone(regex)
 
-	def test_01_absolute_root(self):
-		"""
-		Tests a single root absolute path pattern.
-
-		This should NOT match any file (according to git check-ignore
-		(v2.4.1)).
-		"""
-		regex, include = GitWildMatchPattern.pattern_to_regex('/')
-		self.assertIsNone(include)
-		self.assertIsNone(regex)
-
 	def test_01_absolute(self):
 		"""
 		Tests an absolute path pattern.
@@ -57,6 +47,28 @@ class GitWildMatchTest(unittest.TestCase):
 		self.assertTrue(include)
 		self.assertEqual(regex, '^an/absolute/file/path(?:/.*)?$')
 
+		pattern = GitWildMatchPattern(re.compile(regex), include)
+		results = set(pattern.match([
+			'an/absolute/file/path',
+			'an/absolute/file/path/foo',
+			'foo/an/absolute/file/path',
+		]))
+		self.assertEqual(results, set([
+			'an/absolute/file/path',
+			'an/absolute/file/path/foo',
+		]))
+
+	def test_01_absolute_root(self):
+		"""
+		Tests a single root absolute path pattern.
+
+		This should NOT match any file (according to git check-ignore
+		(v2.4.1)).
+		"""
+		regex, include = GitWildMatchPattern.pattern_to_regex('/')
+		self.assertIsNone(include)
+		self.assertIsNone(regex)
+
 	def test_01_relative(self):
 		"""
 		Tests a relative path pattern.
@@ -72,6 +84,22 @@ class GitWildMatchTest(unittest.TestCase):
 		regex, include = GitWildMatchPattern.pattern_to_regex('spam')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^(?:.+/)?spam(?:/.*)?$')
+
+		pattern = GitWildMatchPattern(re.compile(regex), include)
+		results = set(pattern.match([
+			'spam',
+			'spam/',
+			'foo/spam',
+			'spam/foo',
+			'foo/spam/bar',
+		]))
+		self.assertEqual(results, set([
+			'spam',
+			'spam/',
+			'foo/spam',
+			'spam/foo',
+			'foo/spam/bar',
+		]))
 
 	def test_01_relative_nested(self):
 		"""
@@ -89,6 +117,17 @@ class GitWildMatchTest(unittest.TestCase):
 		regex, include = GitWildMatchPattern.pattern_to_regex('foo/spam')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^foo/spam(?:/.*)?$')
+
+		pattern = GitWildMatchPattern(re.compile(regex), include)
+		results = set(pattern.match([
+			'foo/spam',
+			'foo/spam/bar',
+			'bar/foo/spam',
+		]))
+		self.assertEqual(results, set([
+			'foo/spam',
+			'foo/spam/bar',
+		]))
 
 	def test_02_comment(self):
 		"""
@@ -111,6 +150,10 @@ class GitWildMatchTest(unittest.TestCase):
 		self.assertFalse(include)
 		self.assertEqual(regex, '^(?:.+/)?temp$')
 
+		pattern = GitWildMatchPattern(re.compile(regex), include)
+		results = set(pattern.match(['temp/foo']))
+		self.assertEqual(results, set())
+
 	def test_03_child_double_asterisk(self):
 		"""
 		Tests a directory name with a double-asterisk child
@@ -127,6 +170,13 @@ class GitWildMatchTest(unittest.TestCase):
 		regex, include = GitWildMatchPattern.pattern_to_regex('spam/**')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^spam/.*$')
+
+		pattern = GitWildMatchPattern(re.compile(regex), include)
+		results = set(pattern.match([
+			'spam/bar',
+			'foo/spam/bar',
+		]))
+		self.assertEqual(results, set(['spam/bar']))
 
 	def test_03_inner_double_asterisk(self):
 		"""
@@ -145,6 +195,19 @@ class GitWildMatchTest(unittest.TestCase):
 		regex, include = GitWildMatchPattern.pattern_to_regex('left/**/right')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^left(?:/.+)?/right(?:/.*)?$')
+
+		pattern = GitWildMatchPattern(re.compile(regex), include)
+		results = set(pattern.match([
+			'left/bar/right',
+			'left/foo/bar/right',
+			'left/bar/right/foo',
+			'foo/left/bar/right',
+		]))
+		self.assertEqual(results, set([
+			'left/bar/right',
+			'left/foo/bar/right',
+			'left/bar/right/foo',
+		]))
 
 	def test_03_only_double_asterisk(self):
 		"""
@@ -167,6 +230,16 @@ class GitWildMatchTest(unittest.TestCase):
 		self.assertTrue(include)
 		self.assertEqual(regex, '^(?:.+/)?spam(?:/.*)?$')
 
+		pattern = GitWildMatchPattern(re.compile(regex), include)
+		results = set(pattern.match([
+			'foo/spam',
+			'foo/spam/bar',
+		]))
+		self.assertEqual(results, set([
+			'foo/spam',
+			'foo/spam/bar',
+		]))
+
 	def test_04_infix_wildcard(self):
 		"""
 		Tests a pattern with an infix wildcard.
@@ -182,6 +255,22 @@ class GitWildMatchTest(unittest.TestCase):
 		regex, include = GitWildMatchPattern.pattern_to_regex('foo-*-bar')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^(?:.+/)?foo\\-[^/]*\\-bar(?:/.*)?$')
+
+		pattern = GitWildMatchPattern(re.compile(regex), include)
+		results = set(pattern.match([
+			'foo--bar',
+			'foo-hello-bar',
+			'a/foo-hello-bar',
+			'foo-hello-bar/b',
+			'a/foo-hello-bar/b',
+		]))
+		self.assertEqual(results, set([
+			'foo--bar',
+			'foo-hello-bar',
+			'a/foo-hello-bar',
+			'foo-hello-bar/b',
+			'a/foo-hello-bar/b',
+		]))
 
 	def test_04_postfix_wildcard(self):
 		"""
@@ -199,6 +288,22 @@ class GitWildMatchTest(unittest.TestCase):
 		self.assertTrue(include)
 		self.assertEqual(regex, '^(?:.+/)?\\~temp\\-[^/]*(?:/.*)?$')
 
+		pattern = GitWildMatchPattern(re.compile(regex), include)
+		results = set(pattern.match([
+			'~temp-',
+			'~temp-foo',
+			'~temp-foo/bar',
+			'foo/~temp-bar',
+			'foo/~temp-bar/baz',
+		]))
+		self.assertEqual(results, set([
+			'~temp-',
+			'~temp-foo',
+			'~temp-foo/bar',
+			'foo/~temp-bar',
+			'foo/~temp-bar/baz',
+		]))
+
 	def test_04_prefix_wildcard(self):
 		"""
 		Tests a pattern with a prefix wildcard.
@@ -213,6 +318,20 @@ class GitWildMatchTest(unittest.TestCase):
 		regex, include = GitWildMatchPattern.pattern_to_regex('*.py')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^(?:.+/)?[^/]*\\.py(?:/.*)?$')
+
+		pattern = GitWildMatchPattern(re.compile(regex), include)
+		results = set(pattern.match([
+			'bar.py',
+			'bar.py/',
+			'foo/bar.py',
+			'foo/bar.py/baz',
+		]))
+		self.assertEqual(results, set([
+			'bar.py',
+			'bar.py/',
+			'foo/bar.py',
+			'foo/bar.py/baz',
+		]))
 
 	def test_05_directory(self):
 		"""
@@ -231,6 +350,19 @@ class GitWildMatchTest(unittest.TestCase):
 		regex, include = GitWildMatchPattern.pattern_to_regex('dir/')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^(?:.+/)?dir/.*$')
+
+		pattern = GitWildMatchPattern(re.compile(regex), include)
+		results = set(pattern.match([
+			'dir/',
+			'foo/dir/',
+			'foo/dir/bar',
+			'dir',
+		]))
+		self.assertEqual(results, set([
+			'dir/',
+			'foo/dir/',
+			'foo/dir/bar',
+		]))
 
 	def test_06_registered(self):
 		"""
