@@ -3,6 +3,14 @@ Change History
 ==============
 
 
+0.5.6 (TBD)
+-----------
+
+- Improved unit tests.
+- Improved type checking.
+
+
+
 0.5.5 (2017-09-09)
 ------------------
 
