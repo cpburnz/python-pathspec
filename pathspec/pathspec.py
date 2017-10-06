@@ -7,7 +7,7 @@ of files.
 import collections
 
 from . import util
-from .compat import iterkeys, izip_longest, string_types
+from .compat import iterkeys, izip_longest, string_types, unicode
 
 
 class PathSpec(object):
@@ -69,6 +69,9 @@ class PathSpec(object):
 			pattern_factory = util.lookup_pattern(pattern_factory)
 		if not callable(pattern_factory):
 			raise TypeError("pattern_factory:{0!r} is not callable.".format(pattern_factory))
+
+		if isinstance(lines, (bytes, unicode)):
+			raise TypeError("lines:{0!r} is not an iterable.".format(lines))
 
 		lines = [pattern_factory(line) for line in lines if line]
 		return cls(lines)
