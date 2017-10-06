@@ -107,6 +107,9 @@ class PathSpec(object):
 		Returns the matched files (:class:`~collections.Iterable` of
 		:class:`str`).
 		"""
+		if isinstance(files, (bytes, unicode)):
+			raise TypeError("files:{0!r} is not an iterable.".format(files))
+
 		file_map = util.normalize_files(files, separators=separators)
 		matched_files = util.match_files(self.patterns, iterkeys(file_map))
 		for path in matched_files:
