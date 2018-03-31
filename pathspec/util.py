@@ -153,11 +153,17 @@ def normalize_file(file, separators=None):
 
 	Returns the normalized file path (:class:`str`).
 	"""
+	# Normalize path separators.
 	if separators is None:
 		separators = NORMALIZE_PATH_SEPS
 	norm_file = file
 	for sep in separators:
 		norm_file = norm_file.replace(sep, posixpath.sep)
+
+	# Remove current directory prefix.
+	if norm_file.startswith('./'):
+		norm_file = norm_file[2:]
+
 	return norm_file
 
 def normalize_files(files, separators=None):

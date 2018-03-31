@@ -8,7 +8,9 @@ Change History
 
 - Improved unit tests.
 - Improved type checking.
+- `Issue #20`_: Support current directory prefix.
 
+.. _`Issue #20`: https://github.com/cpburnz/python-path-specification/issues/20
 
 
 0.5.5 (2017-09-09)
