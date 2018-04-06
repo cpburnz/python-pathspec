@@ -44,8 +44,8 @@ __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
-__updated__ = "2018-03-30"
-__version__ = "0.5.6.dev1"
+__updated__ = "2018-04-06"
+__version__ = "0.5.6"
 
 from .pathspec import PathSpec
 from .pattern import Pattern, RegexPattern
