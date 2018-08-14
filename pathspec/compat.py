@@ -27,3 +27,10 @@ else:
 
 	def iterkeys(mapping):
 		return mapping.keys()
+
+try:
+	# Python 3.3+
+	import collections.abc as collections_abc
+except ImportError:
+	# Python 2.6 - 3.2
+	import collections as collections_abc

@@ -3,6 +3,14 @@ Change History
 ==============
 
 
+0.5.7 (TBD)
+-----------
+
+- -Issue #21`_: Fix collections deprecation warning.
+
+.. _`Issue #21`: https://github.com/cpburnz/python-path-specification/issues/21
+
+
 0.5.6 (2018-04-06)
 ------------------
 
