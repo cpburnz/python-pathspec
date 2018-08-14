@@ -3,8 +3,8 @@ Change History
 ==============
 
 
-0.5.7 (TBD)
------------
+0.5.7 (2018-08-14)
+------------------
 
 - -Issue #21`_: Fix collections deprecation warning.
 
