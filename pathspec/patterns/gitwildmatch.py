@@ -14,7 +14,7 @@ from ..compat import unicode
 from ..pattern import RegexPattern
 
 #: The encoding to use when parsing a byte string pattern.
-_BYTES_ENCODING = 'CP1252'
+_BYTES_ENCODING = 'latin1'
 
 
 class GitWildMatchPattern(RegexPattern):
