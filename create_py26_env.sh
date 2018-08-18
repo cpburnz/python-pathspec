@@ -8,10 +8,11 @@
 #
 set -e
 
-if ! which python2.66 > /dev/null; then
-	echo "Command 'python2.6' not found."
-	echo "Please install Python 2.6. On Ubuntu, you can download and install Python 2.6"
-	echo "from the deadsnakes PPA by executing the following:"
+if ! which python2.6 > /dev/null; then
+	echo "Command 'python2.6' not found. Please install Python 2.6."
+	echo
+	echo "On Ubuntu, you can download and install Python 2.6 from the deadsnakes PPA by"
+	echo "executing the following:"
 	echo
 	echo "sudo add-apt-repository ppa:deadsnakes/ppa"
 	echo "sudo apt-get update"
@@ -22,9 +23,9 @@ if ! which python2.66 > /dev/null; then
 fi
 
 if python2.6 -c 'import virtualenv' 2>&1 | grep -q 'No module named virtualenv'; then
-	echo "Module 'virtualenv' not found."
-	echo "Please install virtualenv 15.2.0 for Python 2.6. You can download and install"
-	echo "virtualenv from PyPI by executing the following:"
+	echo "Module 'virtualenv' not found. Please install virtualenv 15.2.0 for Python 2.6."
+	echo
+	echo "You can download and install virtualenv from PyPI by executing the following:"
 	echo
 	echo "wget https://files.pythonhosted.org/packages/b1/72/2d70c5a1de409ceb3a27ff2ec007ecdd5cc52239e7c74990e32af57affe9/virtualenv-15.2.0.tar.gz"
 	echo "tar -xzf virtualenv-15.2.0.tar.gz"
