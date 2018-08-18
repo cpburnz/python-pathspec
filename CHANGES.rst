@@ -7,6 +7,7 @@ Change History
 -----------
 
 - Improved type checking.
+- Created scripts to test Python 2.6 because Tox removed support for it.
 
 
 0.5.7 (2018-08-14)
