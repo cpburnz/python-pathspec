@@ -8,13 +8,13 @@
 #
 set -e
 
-if ! which python2.6 > /dev/null; then
+if ! which python2.66 > /dev/null; then
 	echo "Command 'python2.6' not found."
-	echo "Please install Python 2.6. You can download and install Python 2.6 from the"
-	echo "deadsnakes PPA by executing the following:"
+	echo "Please install Python 2.6. On Ubuntu, you can download and install Python 2.6"
+	echo "from the deadsnakes PPA by executing the following:"
 	echo
 	echo "sudo add-apt-repository ppa:deadsnakes/ppa"
-	echo "sudp apt-get update"
+	echo "sudo apt-get update"
 	echo "sudo apt-get install python2.6"
 	echo
 	echo "Once Python 2.6 is installed, please run this script again."
