@@ -8,7 +8,7 @@ import os.path
 import posixpath
 import stat
 
-from .compat import collections_abc, string_types
+from .compat import collection_type, string_types
 
 NORMALIZE_PATH_SEPS = [sep for sep in [os.sep, os.altsep] if sep and sep != posixpath.sep]
 """
@@ -32,7 +32,7 @@ def iter_tree(root):
 
 	Raises :exc:`RecursionError` if recursion is detected.
 
-	Returns an :class:`~collections_abc.Iterable` yielding the path to
+	Returns an :class:`~collections.abc.Iterable` yielding the path to
 	each file (:class:`str`) relative to *root*.
 	"""
 	for file_rel in _iter_tree_next(os.path.abspath(root), '', {}):
@@ -90,7 +90,7 @@ def lookup_pattern(name):
 
 	*name* (:class:`str`) is the name of the pattern factory.
 
-	Returns the registered pattern factory (:class:`~collections_abc.Callable`).
+	Returns the registered pattern factory (:class:`~collections.abc.Callable`).
 	If no pattern factory is registered, raises :exc:`KeyError`.
 	"""
 	return _registered_patterns[name]
@@ -99,7 +99,7 @@ def match_file(patterns, file):
 	"""
 	Matches the file to the patterns.
 
-	*patterns* (:class:`~collections_abc.Iterable` of :class:`~pathspec.pattern.Pattern`)
+	*patterns* (:class:`~collections.abc.Iterable` of :class:`~pathspec.pattern.Pattern`)
 	contains the patterns to use.
 
 	*file* (:class:`str`) is the normalized file path to be matched
@@ -118,15 +118,15 @@ def match_files(patterns, files):
 	"""
 	Matches the files to the patterns.
 
-	*patterns* (:class:`~collections_abc.Iterable` of :class:`~pathspec.pattern.Pattern`)
+	*patterns* (:class:`~collections.abc.Iterable` of :class:`~pathspec.pattern.Pattern`)
 	contains the patterns to use.
 
-	*files* (:class:`~collections_abc.Iterable` of :class:`str`) contains
+	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
 	the normalized file paths to be matched against *patterns*.
 
 	Returns the matched files (:class:`set` of :class:`str`).
 	"""
-	all_files = files if isinstance(files, collections_abc.Container) else list(files)
+	all_files = files if isinstance(files, collection_type) else list(files)
 	return_files = set()
 	for pattern in patterns:
 		if pattern.include is not None:
@@ -143,7 +143,7 @@ def normalize_file(file, separators=None):
 
 	*file* (:class:`str`) is the file path.
 
-	*separators* (:class:`~collections_abc.Container` of :class:`str`)
+	*separators* (:class:`~collections.abc.Collection` of :class:`str`)
 	optionally contains the path separators to normalize. This does not
 	need to include the POSIX path separator (``'/'``), but including it
 	will not affect the results. Default is :data:`None` for :data:`NORMALIZE_PATH_SEPS`.
@@ -169,10 +169,10 @@ def normalize_files(files, separators=None):
 	"""
 	Normalizes the file paths to use the POSIX path separator.
 
-	*files* (:class:`~collections_abc.Iterable` of :class:`str`) contains
+	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
 	the file paths to be normalized.
 
-	*separators* (:class:`~collections_abc.Container` of :class:`str`)
+	*separators* (:class:`~collections.abc.Collection` of :class:`str`)
 	optionally contains the path separators to normalize. See :func:`normalize_file`
 	for more information.
 
@@ -191,7 +191,7 @@ def register_pattern(name, pattern_factory, override=None):
 	*name* (:class:`str`) is the name to register the pattern factory
 	under.
 
-	*pattern_factory* (:class:`~collections_abc.Callable`) is used to
+	*pattern_factory* (:class:`~collections.abc.Callable`) is used to
 	compile patterns. It must accept an uncompiled pattern (:class:`str`)
 	and return the compiled pattern (:class:`.Pattern`).
 
@@ -221,7 +221,7 @@ class AlreadyRegisteredError(Exception):
 
 		*name* (:class:`str`) is the name of the registered pattern.
 
-		*pattern_factory* (:class:`~collections_abc.Callable`) is the
+		*pattern_factory* (:class:`~collections.abc.Callable`) is the
 		registered pattern factory.
 		"""
 		super(AlreadyRegisteredError, self).__init__(name, pattern_factory)
@@ -246,7 +246,7 @@ class AlreadyRegisteredError(Exception):
 	@property
 	def pattern_factory(self):
 		"""
-		*pattern_factory* (:class:`~collections_abc.Callable`) is the
+		*pattern_factory* (:class:`~collections.abc.Callable`) is the
 		registered pattern factory.
 		"""
 		return self.args[1]

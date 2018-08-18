@@ -5,7 +5,7 @@ of files.
 """
 
 from . import util
-from .compat import collections_abc, iterkeys, izip_longest, string_types, unicode
+from .compat import collection_type, iterkeys, izip_longest, string_types, unicode
 
 
 class PathSpec(object):
@@ -18,13 +18,13 @@ class PathSpec(object):
 		"""
 		Initializes the :class:`PathSpec` instance.
 
-		*patterns* (:class:`~collections_abc.Container` or :class:`~collections_abc.Iterable`)
+		*patterns* (:class:`~collections.abc.Collection` or :class:`~collections.abc.Iterable`)
 		yields each compiled pattern (:class:`.Pattern`).
 		"""
 
-		self.patterns = patterns if isinstance(patterns, collections_abc.Container) else list(patterns)
+		self.patterns = patterns if isinstance(patterns, collection_type) else list(patterns)
 		"""
-		*patterns* (:class:`~collections_abc.Container` of :class:`.Pattern`)
+		*patterns* (:class:`~collections.abc.Collection` of :class:`.Pattern`)
 		contains the compiled patterns.
 		"""
 
@@ -52,11 +52,11 @@ class PathSpec(object):
 		Compiles the pattern lines.
 
 		*pattern_factory* can be either the name of a registered pattern
-		factory (:class:`str`), or a :class:`~collections_abc.Callable` used
+		factory (:class:`str`), or a :class:`~collections.abc.Callable` used
 		to compile patterns. It must accept an uncompiled pattern (:class:`str`)
 		and return the compiled pattern (:class:`.Pattern`).
 
-		*lines* (:class:`~collections_abc.Iterable`) yields each uncompiled
+		*lines* (:class:`~collections.abc.Iterable`) yields each uncompiled
 		pattern (:class:`str`). This simply has to yield each line so it can
 		be a :class:`file` (e.g., from :func:`open` or :class:`io.StringIO`)
 		or the result from :meth:`str.splitlines`.
@@ -81,7 +81,7 @@ class PathSpec(object):
 		*file* (:class:`str`) is the file path to be matched against
 		:attr:`self.patterns <PathSpec.patterns>`.
 
-		*separators* (:class:`~collections_abc.Container` of :class:`str`)
+		*separators* (:class:`~collections.abc.Collection` of :class:`str`)
 		optionally contains the path separators to normalize. See
 		:func:`~pathspec.util.normalize_file` for more information.
 
@@ -94,15 +94,15 @@ class PathSpec(object):
 		"""
 		Matches the files to this path-spec.
 
-		*files* (:class:`~collections_abc.Iterable` of :class:`str`)
-		contains the file paths to be matched against :attr:`self.patterns
+		*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
+		the file paths to be matched against :attr:`self.patterns
 		<PathSpec.patterns>`.
 
-		*separators* (:class:`~collections_abc.Container` of :class:`str`)
+		*separators* (:class:`~collections.abc.Collection` of :class:`str`)
 		optionally contains the path separators to normalize. See
 		:func:`~pathspec.util.normalize_file` for more information.
 
-		Returns the matched files (:class:`~collections_abc.Iterable` of
+		Returns the matched files (:class:`~collections.abc.Iterable` of
 		:class:`str`).
 		"""
 		if isinstance(files, (bytes, unicode)):
@@ -120,7 +120,7 @@ class PathSpec(object):
 
 		*root* (:class:`str`) is the root directory to search for files.
 
-		Returns the matched files (:class:`~collections_abc.Iterable` of
+		Returns the matched files (:class:`~collections.abc.Iterable` of
 		:class:`str`).
 		"""
 		files = util.iter_tree(root)

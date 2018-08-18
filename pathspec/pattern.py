@@ -36,11 +36,11 @@ class Pattern(object):
 		"""
 		Matches this pattern against the specified files.
 
-		*files* (:class:`~collections.Iterable` of :class:`str`) contains
+		*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
 		each file relative to the root directory (e.g., ``"relative/path/to/file"``).
 
-		Returns an :class:`~collections.Iterable` yielding each matched file
-		path (:class:`str`).
+		Returns an :class:`~collections.abc.Iterable` yielding each matched
+		file path (:class:`str`).
 		"""
 		raise NotImplementedError("{0}.{1} must override match().".format(self.__class__.__module__, self.__class__.__name__))
 
@@ -117,11 +117,11 @@ class RegexPattern(Pattern):
 		"""
 		Matches this pattern against the specified files.
 
-		*files* (:class:`~collections.Iterable` of :class:`str`) contains
-		each file relative to the root directory (e.g., "relative/path/to/file").
+		*files* (:class:`~collections.abc.Iterable` of :class:`str`)
+		contains each file relative to the root directory (e.g., "relative/path/to/file").
 
-		Returns an :class:`~collections.Iterable` yielding each matched file
-		path (:class:`str`).
+		Returns an :class:`~collections.abc.Iterable` yielding each matched
+		file path (:class:`str`).
 		"""
 		if self.include is not None:
 			for path in files:

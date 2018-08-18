@@ -3,10 +3,16 @@ Change History
 ==============
 
 
+0.5.8 (TDB)
+-----------
+
+- Improved type checking.
+
+
 0.5.7 (2018-08-14)
 ------------------
 
-- -Issue #21`_: Fix collections deprecation warning.
+- `Issue #21`_: Fix collections deprecation warning.
 
 .. _`Issue #21`: https://github.com/cpburnz/python-path-specification/issues/21
 

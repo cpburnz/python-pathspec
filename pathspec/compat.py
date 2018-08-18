@@ -29,8 +29,8 @@ else:
 		return mapping.keys()
 
 try:
-	# Python 3.3+
-	import collections.abc as collections_abc
+	# Python 3.6+.
+	from collections.abc import Collection as collection_type
 except ImportError:
-	# Python 2.6 - 3.2
-	import collections as collections_abc
+	# Python 2.6 - 3.5.
+	from collections import Container as collection_type
