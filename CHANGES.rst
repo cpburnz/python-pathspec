@@ -3,8 +3,8 @@ Change History
 ==============
 
 
-0.5.8 (TBD)
------------
+0.5.8 (2018-09-15)
+------------------
 
 - Improved type checking.
 - Created scripts to test Python 2.6 because Tox removed support for it.
