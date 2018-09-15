@@ -94,8 +94,7 @@ def _iter_tree_next(root_full, dir_rel, memo, on_error, follow_links):
 		except OSError as e:
 			if on_error is not None:
 				on_error(e)
-			else:
-				continue
+			continue
 
 		if stat.S_ISLNK(node_stat.st_mode):
 			# Child node is a link, inspect the target node.
@@ -105,8 +104,7 @@ def _iter_tree_next(root_full, dir_rel, memo, on_error, follow_links):
 			except OSError as e:
 				if on_error is not None:
 					on_error(e)
-				else:
-					continue
+				continue
 		else:
 			is_link = False
 
