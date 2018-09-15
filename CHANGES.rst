@@ -3,12 +3,15 @@ Change History
 ==============
 
 
-0.5.8 (TDB)
+0.5.8 (TBD)
 -----------
 
 - Improved type checking.
 - Created scripts to test Python 2.6 because Tox removed support for it.
 - Improved byte string handling in Python 3.
+- `Issue #22`_: Handle dangling symlinks.
+
+.. _`Issue #22`: https://github.com/cpburnz/python-path-specification/issues/22
 
 
 0.5.7 (2018-08-14)

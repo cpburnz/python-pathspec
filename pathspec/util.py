@@ -24,21 +24,37 @@ _registered_patterns = {}
 registered pattern factory (``callable``).
 """
 
-def iter_tree(root):
+def iter_tree(root, on_error=None, follow_links=None):
 	"""
 	Walks the specified directory for all files.
 
 	*root* (:class:`str`) is the root directory to search for files.
+
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
+	optionally is the error handler for file-system exceptions. It will be
+	called with the exception (:exc:`OSError`). Reraise the exception to
+	abort the walk. Default is :data:`None` to ignore file-system
+	exceptions.
+
+	*follow_links* (:class:`bool` or :data:`None`) optionally is whether
+	to walk symbolik links that resolve to directories. Default is
+	:data:`None` for :data:`True`.
 
 	Raises :exc:`RecursionError` if recursion is detected.
 
 	Returns an :class:`~collections.abc.Iterable` yielding the path to
 	each file (:class:`str`) relative to *root*.
 	"""
-	for file_rel in _iter_tree_next(os.path.abspath(root), '', {}):
+	if on_error is not None and not callable(on_error):
+		raise TypeError("on_error:{0!r} is not callable.".format(on_error))
+
+	if follow_links is None:
+		follow_links = True
+
+	for file_rel in _iter_tree_next(os.path.abspath(root), '', {}, on_error, follow_links):
 		yield file_rel
 
-def _iter_tree_next(root_full, dir_rel, memo):
+def _iter_tree_next(root_full, dir_rel, memo, on_error, follow_links):
 	"""
 	Scan the directory for all descendant files.
 
@@ -50,6 +66,12 @@ def _iter_tree_next(root_full, dir_rel, memo):
 	*memo* (:class:`dict`) keeps track of ancestor directories
 	encountered. Maps each ancestor real path (:class:`str``) to relative
 	path (:class:`str`).
+
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
+	optionally is the error handler for file-system exceptions.
+
+	*follow_links* (:class:`bool`) is whether to walk symbolik links that
+	resolve to directories.
 	"""
 	dir_full = os.path.join(root_full, dir_rel)
 	dir_real = os.path.realpath(dir_full)
@@ -65,12 +87,33 @@ def _iter_tree_next(root_full, dir_rel, memo):
 	for node in os.listdir(dir_full):
 		node_rel = os.path.join(dir_rel, node)
 		node_full = os.path.join(root_full, node_rel)
-		node_stat = os.stat(node_full)
 
-		if stat.S_ISDIR(node_stat.st_mode):
+		# Inspect child node.
+		try:
+			node_stat = os.lstat(node_full)
+		except OSError as e:
+			if on_error is not None:
+				on_error(e)
+			else:
+				continue
+
+		if stat.S_ISLNK(node_stat.st_mode):
+			# Child node is a link, inspect the target node.
+			is_link = True
+			try:
+				node_stat = os.stat(node_full)
+			except OSError as e:
+				if on_error is not None:
+					on_error(e)
+				else:
+					continue
+		else:
+			is_link = False
+
+		if stat.S_ISDIR(node_stat.st_mode) and (follow_links or not is_link):
 			# Child node is a directory, recurse into it and yield its
 			# decendant files.
-			for file_rel in _iter_tree_next(root_full, node_rel, memo):
+			for file_rel in _iter_tree_next(root_full, node_rel, memo, on_error, follow_links):
 				yield file_rel
 
 		elif stat.S_ISREG(node_stat.st_mode):
@@ -143,12 +186,12 @@ def normalize_file(file, separators=None):
 
 	*file* (:class:`str`) is the file path.
 
-	*separators* (:class:`~collections.abc.Collection` of :class:`str`)
-	optionally contains the path separators to normalize. This does not
-	need to include the POSIX path separator (``'/'``), but including it
-	will not affect the results. Default is :data:`None` for :data:`NORMALIZE_PATH_SEPS`.
-	To prevent normalization, pass an empty container (e.g., an empty
-	tuple ``()``).
+	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
+	:data:`None`) optionally contains the path separators to normalize.
+	This does not need to include the POSIX path separator (``'/'``), but
+	including it will not affect the results. Default is :data:`None` for
+	:data:`NORMALIZE_PATH_SEPS`. To prevent normalization, pass an empty
+	container (e.g., an empty tuple ``()``).
 
 	Returns the normalized file path (:class:`str`).
 	"""
@@ -172,9 +215,9 @@ def normalize_files(files, separators=None):
 	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
 	the file paths to be normalized.
 
-	*separators* (:class:`~collections.abc.Collection` of :class:`str`)
-	optionally contains the path separators to normalize. See :func:`normalize_file`
-	for more information.
+	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
+	:data:`None`) optionally contains the path separators to normalize.
+	See :func:`normalize_file` for more information.
 
 	Returns a :class:`dict` mapping the each normalized file path (:class:`str`)
 	to the original file path (:class:`str`)
@@ -195,10 +238,10 @@ def register_pattern(name, pattern_factory, override=None):
 	compile patterns. It must accept an uncompiled pattern (:class:`str`)
 	and return the compiled pattern (:class:`.Pattern`).
 
-	*override* (:class:`bool`) optionally is whether to allow overriding
-	an already registered pattern under the same name (:data:`True`),
-	instead of raising an :exc:`AlreadyRegisteredError` (:data:`False`).
-	Default is :data:`None` for :data:`False`.
+	*override* (:class:`bool` or :data:`None`) optionally is whether to
+	allow overriding an already registered pattern under the same name
+	(:data:`True`), instead of raising an :exc:`AlreadyRegisteredError`
+	(:data:`False`). Default is :data:`None` for :data:`False`.
 	"""
 	if not isinstance(name, string_types):
 		raise TypeError("name:{0!r} is not a string.".format(name))

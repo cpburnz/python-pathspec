@@ -98,9 +98,10 @@ class PathSpec(object):
 		the file paths to be matched against :attr:`self.patterns
 		<PathSpec.patterns>`.
 
-		*separators* (:class:`~collections.abc.Collection` of :class:`str`)
-		optionally contains the path separators to normalize. See
-		:func:`~pathspec.util.normalize_file` for more information.
+		*separators* (:class:`~collections.abc.Collection` of :class:`str`;
+		or :data:`None`) optionally contains the path separators to
+		normalize. See :func:`~pathspec.util.normalize_file` for more
+		information.
 
 		Returns the matched files (:class:`~collections.abc.Iterable` of
 		:class:`str`).
@@ -113,15 +114,24 @@ class PathSpec(object):
 		for path in matched_files:
 			yield file_map[path]
 
-	def match_tree(self, root):
+	def match_tree(self, root, on_error=None, follow_links=None):
 		"""
 		Walks the specified root path for all files and matches them to this
 		path-spec.
 
 		*root* (:class:`str`) is the root directory to search for files.
 
+		*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
+		optionally is the error handler for file-system exceptions. See
+		:func:`~pathspec.util.iter_tree` for more information.
+
+
+		*follow_links* (:class:`bool` or :data:`None`) optionally is whether
+		to walk symbolik links that resolve to directories. See
+		:func:`~pathspec.util.iter_tree` for more information.
+
 		Returns the matched files (:class:`~collections.abc.Iterable` of
 		:class:`str`).
 		"""
-		files = util.iter_tree(root)
+		files = util.iter_tree(root, on_error=on_error, follow_links=follow_links)
 		return self.match_files(files)

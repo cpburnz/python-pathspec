@@ -3,6 +3,7 @@
 This script tests utility functions.
 """
 
+import errno
 import os
 import os.path
 import shutil
@@ -178,6 +179,7 @@ class IterTreeTest(unittest.TestCase):
 			('bx', 'b'),
 			('Dir/cx', 'Dir/c'),
 			('Dir/dx', 'Dir/d'),
+			('DirX', 'Dir'),
 		])
 		results = set(iter_tree(self.temp_dir))
 		self.assertEqual(results, set(map(self.ospath, [
@@ -189,6 +191,10 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/cx',
 			'Dir/d',
 			'Dir/dx',
+			'DirX/c',
+			'DirX/cx',
+			'DirX/d',
+			'DirX/dx',
 		])))
 
 	def test_2_3_sideways_links(self):
@@ -276,3 +282,62 @@ class IterTreeTest(unittest.TestCase):
 			'B': self.ospath('B/Cx/Ax/Bx'),
 			'C': self.ospath('C/Ax/Bx/Cx'),
 		}[context.exception.first_path])
+
+	def test_2_6_detect_broken_links(self):
+		"""
+		Tests that broken links are detected
+		"""
+		def reraise(e):
+			raise e
+
+		self.require_symlink()
+		self.make_links([
+			('A', 'DOES_NOT_EXIST')
+		])
+		with self.assertRaises(OSError) as context:
+			set(iter_tree(self.temp_dir, on_error=reraise))
+		self.assertEqual(context.exception.errno, errno.ENOENT)
+
+	def test_2_7_ignore_broken_links(self):
+		"""
+		Tests that broken links are ignored.
+		"""
+		self.require_symlink()
+		self.make_links([
+			('A', 'DOES_NOT_EXIST')
+		])
+		results = set(iter_tree(self.temp_dir))
+		self.assertEqual(results, set())
+
+	def test_2_8_no_follow_links(self):
+		"""
+		Tests to make sure directory links can be ignored.
+		"""
+		self.require_symlink()
+		self.make_dirs([
+			'Dir',
+		])
+		self.make_files([
+			'A',
+			'B',
+			'Dir/C',
+			'Dir/D',
+		])
+		self.make_links([
+			('Ax', 'A'),
+			('Bx', 'B'),
+			('Dir/Cx', 'Dir/C'),
+			('Dir/Dx', 'Dir/D'),
+			('DirX', 'Dir'),
+		])
+		results = set(iter_tree(self.temp_dir, follow_links=False))
+		self.assertEqual(results, set(map(self.ospath, [
+			'A',
+			'Ax',
+			'B',
+			'Bx',
+			'Dir/C',
+			'Dir/Cx',
+			'Dir/D',
+			'Dir/Dx',
+		])))
