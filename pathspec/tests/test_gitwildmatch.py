@@ -6,12 +6,7 @@ from __future__ import unicode_literals
 
 import re
 import sys
-
-try:
-	# Python 2.6.
-	import unittest2 as unittest
-except ImportError:
-	import unittest
+import unittest
 
 import pathspec.patterns.gitwildmatch
 import pathspec.util

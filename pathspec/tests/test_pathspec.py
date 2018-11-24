@@ -3,10 +3,7 @@
 This script tests ``PathSpec``.
 """
 
-try:
-	import unittest2 as unittest
-except ImportError:
-	import unittest
+import unittest
 
 import pathspec
 

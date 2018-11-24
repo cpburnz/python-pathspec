@@ -32,5 +32,5 @@ try:
 	# Python 3.6+.
 	from collections.abc import Collection as collection_type
 except ImportError:
-	# Python 2.6 - 3.5.
+	# Python 2.7 - 3.5.
 	from collections import Container as collection_type
