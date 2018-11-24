@@ -53,10 +53,10 @@ class GitWildMatchTest(unittest.TestCase):
 			'an/absolute/file/path/foo',
 			'foo/an/absolute/file/path',
 		]))
-		self.assertEqual(results, set([
+		self.assertEqual(results, {
 			'an/absolute/file/path',
 			'an/absolute/file/path/foo',
-		]))
+		})
 
 	def test_01_absolute_root(self):
 		"""
@@ -93,13 +93,13 @@ class GitWildMatchTest(unittest.TestCase):
 			'spam/foo',
 			'foo/spam/bar',
 		]))
-		self.assertEqual(results, set([
+		self.assertEqual(results, {
 			'spam',
 			'spam/',
 			'foo/spam',
 			'spam/foo',
 			'foo/spam/bar',
-		]))
+		})
 
 	def test_01_relative_nested(self):
 		"""
@@ -124,10 +124,10 @@ class GitWildMatchTest(unittest.TestCase):
 			'foo/spam/bar',
 			'bar/foo/spam',
 		]))
-		self.assertEqual(results, set([
+		self.assertEqual(results, {
 			'foo/spam',
 			'foo/spam/bar',
-		]))
+		})
 
 	def test_02_comment(self):
 		"""
@@ -176,7 +176,7 @@ class GitWildMatchTest(unittest.TestCase):
 			'spam/bar',
 			'foo/spam/bar',
 		]))
-		self.assertEqual(results, set(['spam/bar']))
+		self.assertEqual(results, {'spam/bar'})
 
 	def test_03_inner_double_asterisk(self):
 		"""
@@ -203,11 +203,11 @@ class GitWildMatchTest(unittest.TestCase):
 			'left/bar/right/foo',
 			'foo/left/bar/right',
 		]))
-		self.assertEqual(results, set([
+		self.assertEqual(results, {
 			'left/bar/right',
 			'left/foo/bar/right',
 			'left/bar/right/foo',
-		]))
+		})
 
 	def test_03_only_double_asterisk(self):
 		"""
@@ -235,10 +235,10 @@ class GitWildMatchTest(unittest.TestCase):
 			'foo/spam',
 			'foo/spam/bar',
 		]))
-		self.assertEqual(results, set([
+		self.assertEqual(results, {
 			'foo/spam',
 			'foo/spam/bar',
-		]))
+		})
 
 	def test_04_infix_wildcard(self):
 		"""
@@ -264,13 +264,13 @@ class GitWildMatchTest(unittest.TestCase):
 			'foo-hello-bar/b',
 			'a/foo-hello-bar/b',
 		]))
-		self.assertEqual(results, set([
+		self.assertEqual(results, {
 			'foo--bar',
 			'foo-hello-bar',
 			'a/foo-hello-bar',
 			'foo-hello-bar/b',
 			'a/foo-hello-bar/b',
-		]))
+		})
 
 	def test_04_postfix_wildcard(self):
 		"""
@@ -296,13 +296,13 @@ class GitWildMatchTest(unittest.TestCase):
 			'foo/~temp-bar',
 			'foo/~temp-bar/baz',
 		]))
-		self.assertEqual(results, set([
+		self.assertEqual(results, {
 			'~temp-',
 			'~temp-foo',
 			'~temp-foo/bar',
 			'foo/~temp-bar',
 			'foo/~temp-bar/baz',
-		]))
+		})
 
 	def test_04_prefix_wildcard(self):
 		"""
@@ -326,12 +326,12 @@ class GitWildMatchTest(unittest.TestCase):
 			'foo/bar.py',
 			'foo/bar.py/baz',
 		]))
-		self.assertEqual(results, set([
+		self.assertEqual(results, {
 			'bar.py',
 			'bar.py/',
 			'foo/bar.py',
 			'foo/bar.py/baz',
-		]))
+		})
 
 	def test_05_directory(self):
 		"""
@@ -358,11 +358,11 @@ class GitWildMatchTest(unittest.TestCase):
 			'foo/dir/bar',
 			'dir',
 		]))
-		self.assertEqual(results, set([
+		self.assertEqual(results, {
 			'dir/',
 			'foo/dir/',
 			'foo/dir/bar',
-		]))
+		})
 
 	def test_06_registered(self):
 		"""
@@ -406,7 +406,7 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		pattern = GitWildMatchPattern(b'*.py')
 		results = set(pattern.match([b'a.py']))
-		self.assertEqual(results, set([b'a.py']))
+		self.assertEqual(results, {b'a.py'})
 
 	def test_07_match_bytes_and_bytes_complete(self):
 		"""
@@ -416,7 +416,7 @@ class GitWildMatchTest(unittest.TestCase):
 		escaped = b"".join(b"\\" + encoded[i:i+1] for i in range(len(encoded)))
 		pattern = GitWildMatchPattern(escaped)
 		results = set(pattern.match([encoded]))
-		self.assertEqual(results, set([encoded]))
+		self.assertEqual(results, {encoded})
 
 	@unittest.skipIf(sys.version_info[0] >= 3, "Python 3 is strict")
 	def test_07_match_bytes_and_unicode(self):
@@ -425,7 +425,7 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		pattern = GitWildMatchPattern(b'*.py')
 		results = set(pattern.match(['a.py']))
-		self.assertEqual(results, set(['a.py']))
+		self.assertEqual(results, {'a.py'})
 
 	@unittest.skipIf(sys.version_info[0] == 2, "Python 2 is lenient")
 	def test_07_match_bytes_and_unicode_fail(self):
@@ -444,7 +444,7 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		pattern = GitWildMatchPattern('*.py')
 		results = set(pattern.match([b'a.py']))
-		self.assertEqual(results, set([b'a.py']))
+		self.assertEqual(results, {b'a.py'})
 
 	@unittest.skipIf(sys.version_info[0] == 2, "Python 2 is lenient")
 	def test_07_match_unicode_and_bytes_fail(self):
@@ -462,4 +462,4 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		pattern = GitWildMatchPattern('*.py')
 		results = set(pattern.match(['a.py']))
-		self.assertEqual(results, set(['a.py']))
+		self.assertEqual(results, {'a.py'})

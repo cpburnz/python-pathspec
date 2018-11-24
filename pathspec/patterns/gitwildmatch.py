@@ -45,7 +45,7 @@ class GitWildMatchPattern(RegexPattern):
 			return_type = bytes
 			pattern = pattern.decode(_BYTES_ENCODING)
 		else:
-			raise TypeError("pattern:{0!r} is not a unicode or byte string.".format(pattern))
+			raise TypeError("pattern:{!r} is not a unicode or byte string.".format(pattern))
 
 		pattern = pattern.strip()
 

@@ -46,7 +46,7 @@ def iter_tree(root, on_error=None, follow_links=None):
 	each file (:class:`str`) relative to *root*.
 	"""
 	if on_error is not None and not callable(on_error):
-		raise TypeError("on_error:{0!r} is not callable.".format(on_error))
+		raise TypeError("on_error:{!r} is not callable.".format(on_error))
 
 	if follow_links is None:
 		follow_links = True
@@ -242,9 +242,9 @@ def register_pattern(name, pattern_factory, override=None):
 	(:data:`False`). Default is :data:`None` for :data:`False`.
 	"""
 	if not isinstance(name, string_types):
-		raise TypeError("name:{0!r} is not a string.".format(name))
+		raise TypeError("name:{!r} is not a string.".format(name))
 	if not callable(pattern_factory):
-		raise TypeError("pattern_factory:{0!r} is not callable.".format(pattern_factory))
+		raise TypeError("pattern_factory:{!r} is not callable.".format(pattern_factory))
 	if name in _registered_patterns and not override:
 		raise AlreadyRegisteredError(name, _registered_patterns[name])
 	_registered_patterns[name] = pattern_factory

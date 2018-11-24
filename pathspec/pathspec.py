@@ -66,10 +66,10 @@ class PathSpec(object):
 		if isinstance(pattern_factory, string_types):
 			pattern_factory = util.lookup_pattern(pattern_factory)
 		if not callable(pattern_factory):
-			raise TypeError("pattern_factory:{0!r} is not callable.".format(pattern_factory))
+			raise TypeError("pattern_factory:{!r} is not callable.".format(pattern_factory))
 
 		if isinstance(lines, (bytes, unicode)):
-			raise TypeError("lines:{0!r} is not an iterable.".format(lines))
+			raise TypeError("lines:{!r} is not an iterable.".format(lines))
 
 		lines = [pattern_factory(line) for line in lines if line]
 		return cls(lines)
@@ -107,7 +107,7 @@ class PathSpec(object):
 		:class:`str`).
 		"""
 		if isinstance(files, (bytes, unicode)):
-			raise TypeError("files:{0!r} is not an iterable.".format(files))
+			raise TypeError("files:{!r} is not an iterable.".format(files))
 
 		file_map = util.normalize_files(files, separators=separators)
 		matched_files = util.match_files(self.patterns, iterkeys(file_map))
