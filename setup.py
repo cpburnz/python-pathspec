@@ -19,6 +19,7 @@ setup(
 	url="https://github.com/cpburnz/python-path-specification",
 	description="Utility library for gitignore style pattern matching of file paths.",
 	long_description=readme + "\n\n" + changes,
+	python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
 	classifiers=[
 		"Development Status :: 4 - Beta",
 		"Intended Audience :: Developers",
