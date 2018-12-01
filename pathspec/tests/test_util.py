@@ -280,14 +280,14 @@ class IterTreeTest(unittest.TestCase):
 
 	def test_2_6_detect_broken_links(self):
 		"""
-		Tests that broken links are detected
+		Tests that broken links are detected.
 		"""
 		def reraise(e):
 			raise e
 
 		self.require_symlink()
 		self.make_links([
-			('A', 'DOES_NOT_EXIST')
+			('A', 'DOES_NOT_EXIST'),
 		])
 		with self.assertRaises(OSError) as context:
 			set(iter_tree(self.temp_dir, on_error=reraise))
@@ -299,7 +299,7 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		self.require_symlink()
 		self.make_links([
-			('A', 'DOES_NOT_EXIST')
+			('A', 'DOES_NOT_EXIST'),
 		])
 		results = set(iter_tree(self.temp_dir))
 		self.assertEqual(results, set())
