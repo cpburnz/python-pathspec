@@ -42,7 +42,7 @@ class Pattern(object):
 		Returns an :class:`~collections.abc.Iterable` yielding each matched
 		file path (:class:`str`).
 		"""
-		raise NotImplementedError("{0}.{1} must override match().".format(self.__class__.__module__, self.__class__.__name__))
+		raise NotImplementedError("{}.{} must override match().".format(self.__class__.__module__, self.__class__.__name__))
 
 
 class RegexPattern(Pattern):
@@ -79,7 +79,7 @@ class RegexPattern(Pattern):
 		"""
 
 		if isinstance(pattern, (unicode, bytes)):
-			assert include is None, "include:{0!r} must be null when pattern:{1!r} is a string.".format(include, pattern)
+			assert include is None, "include:{!r} must be null when pattern:{!r} is a string.".format(include, pattern)
 			regex, include = self.pattern_to_regex(pattern)
 			# NOTE: Make sure to allow a null regular expression to be
 			# returned for a null-operation.
@@ -94,10 +94,10 @@ class RegexPattern(Pattern):
 		elif pattern is None:
 			# NOTE: Make sure to allow a null pattern to be passed for a
 			# null-operation.
-			assert include is None, "include:{0!r} must be null when pattern:{1!r} is null.".format(include, pattern)
+			assert include is None, "include:{!r} must be null when pattern:{!r} is null.".format(include, pattern)
 
 		else:
-			raise TypeError("pattern:{0!r} is not a string, RegexObject, or None.".format(pattern))
+			raise TypeError("pattern:{!r} is not a string, RegexObject, or None.".format(pattern))
 
 		super(RegexPattern, self).__init__(include)
 		self.regex = regex

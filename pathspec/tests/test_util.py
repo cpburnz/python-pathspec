@@ -7,13 +7,8 @@ import errno
 import os
 import os.path
 import shutil
-import sys
 import tempfile
-
-try:
-	import unittest2 as unittest
-except ImportError:
-	import unittest
+import unittest
 
 from pathspec.util import iter_tree, RecursionError
 

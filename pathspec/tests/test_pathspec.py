@@ -3,10 +3,7 @@
 This script tests ``PathSpec``.
 """
 
-try:
-	import unittest2 as unittest
-except ImportError:
-	import unittest
+import unittest
 
 import pathspec
 
@@ -33,11 +30,11 @@ class PathSpecTest(unittest.TestCase):
 			'./src/test2/b.txt',
 			'./src/test2/c/c.txt',
 		]))
-		self.assertEqual(results, set([
+		self.assertEqual(results, {
 			'./src/test2/a.txt',
 			'./src/test2/b.txt',
 			'./src/test2/c/c.txt',
-		]))
+		})
 
 	def test_01_match_files(self):
 		"""
@@ -77,11 +74,11 @@ class PathSpecTest(unittest.TestCase):
 			'.\\src\\test2\\b.txt',
 			'.\\src\\test2\\c\\c.txt',
 		], separators=('\\',)))
-		self.assertEqual(results, set([
+		self.assertEqual(results, {
 			'.\\src\\test2\\a.txt',
 			'.\\src\\test2\\b.txt',
 			'.\\src\\test2\\c\\c.txt',
-		]))
+		})
 
 	def test_01_windows_paths(self):
 		"""
@@ -99,11 +96,11 @@ class PathSpecTest(unittest.TestCase):
 			'src\\test2\\b.txt',
 			'src\\test2\\c\\c.txt',
 		], separators=('\\',)))
-		self.assertEqual(results, set([
+		self.assertEqual(results, {
 			'src\\test2\\a.txt',
 			'src\\test2\\b.txt',
 			'src\\test2\\c\\c.txt',
-		]))
+		})
 
 	def test_02_eq(self):
 		"""
