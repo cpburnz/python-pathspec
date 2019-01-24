@@ -7,8 +7,10 @@ Change History
 -----------
 
 - `Issue #24`_: Drop support for Python 2.6, 3.2, and 3.3.
+- `Issue #25`_: Update README.rst.
 
 .. _`Issue #24`: https://github.com/cpburnz/python-path-specification/pull/24
+.. _`Issue #25`: https://github.com/cpburnz/python-path-specification/pull/25
 
 
 0.5.9 (2018-09-15)
