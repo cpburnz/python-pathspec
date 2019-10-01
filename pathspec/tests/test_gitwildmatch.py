@@ -463,3 +463,12 @@ class GitWildMatchTest(unittest.TestCase):
 		pattern = GitWildMatchPattern('*.py')
 		results = set(pattern.match(['a.py']))
 		self.assertEqual(results, {'a.py'})
+
+	def test_08_escape(self):
+		"""
+		Test escaping a string with meta-characters
+		"""
+		fname = "file!with*weird#naming_[1].t?t"
+		escaped = r"file\!with\*weird\#naming_\[1\].t\?t"
+		result = GitWildMatchPattern.escape(fname)
+		self.assertEqual(result, escaped)
