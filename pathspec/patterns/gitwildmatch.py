@@ -279,6 +279,21 @@ class GitWildMatchPattern(RegexPattern):
 
 		return regex
 
+	@staticmethod
+	def escape(s):
+		"""
+		Escape special characters in the given string.
+
+		*s* (:class:`unicode` or :class:`bytes`) a filename or a string
+		that you want to escape, usually before adding it to a `.gitignore`
+
+		Returns the escaped string (:class:`unicode`, :class:`bytes`)
+		"""
+		# Reference: https://git-scm.com/docs/gitignore#_pattern_format
+		meta_characters = r"[]!*#?"
+
+		return "".join("\\" + x if x in meta_characters else x for x in s)
+
 util.register_pattern('gitwildmatch', GitWildMatchPattern)
 
 
