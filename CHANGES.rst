@@ -3,14 +3,16 @@ Change History
 ==============
 
 
-0.6.0 (TBD)
------------
+0.6.0 (2019-10-03)
+------------------
 
 - `Issue #24`_: Drop support for Python 2.6, 3.2, and 3.3.
 - `Issue #25`_: Update README.rst.
+- `Issue #26`_: Method to escape gitwildmatch.
 
 .. _`Issue #24`: https://github.com/cpburnz/python-path-specification/pull/24
 .. _`Issue #25`: https://github.com/cpburnz/python-path-specification/pull/25
+.. _`Issue #26`: https://github.com/cpburnz/python-path-specification/pull/26
 
 
 0.5.9 (2018-09-15)
