@@ -7,8 +7,10 @@ Change History
 -----------
 
 - `Issue #28`_: Add support for Python 3.8, and drop Python 3.4.
+- `Issue #29`_: Publish bdist wheel.
 
 .. _`Issue #28`: https://github.com/cpburnz/python-path-specification/pull/28
+.. _`Issue #29`: https://github.com/cpburnz/python-path-specification/pull/29
 
 
 0.6.0 (2019-10-03)

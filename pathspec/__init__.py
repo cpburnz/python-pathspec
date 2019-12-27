@@ -45,6 +45,7 @@ __credits__ = [
 	"dcecile <https://github.com/dcecile>",
 	"mroutis <https://github.com/mroutis>",
 	"jdufresne <https://github.com/jdufresne>",
+	"groodt <https://github.com/groodt>",
 ]
 __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
