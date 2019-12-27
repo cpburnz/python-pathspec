@@ -3,6 +3,14 @@ Change History
 ==============
 
 
+0.7.0 (TBD)
+-----------
+
+- `Issue #28`_: Add support for Python 3.8, and drop Python 3.4.
+
+.. _`Issue #28`: https://github.com/cpburnz/python-path-specification/pull/28
+
+
 0.6.0 (2019-10-03)
 ------------------
 
