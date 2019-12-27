@@ -52,7 +52,7 @@ __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
 __updated__ = "2019-12-27"
-__version__ = "0.7.0.dev1"
+__version__ = "0.7.0"
 
 from .pathspec import PathSpec
 from .pattern import Pattern, RegexPattern

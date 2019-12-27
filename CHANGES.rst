@@ -3,8 +3,8 @@ Change History
 ==============
 
 
-0.7.0 (TBD)
------------
+0.7.0 (2019-12-27)
+------------------
 
 - `Issue #28`_: Add support for Python 3.8, and drop Python 3.4.
 - `Issue #29`_: Publish bdist wheel.
