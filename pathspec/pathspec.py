@@ -125,7 +125,6 @@ class PathSpec(object):
 		optionally is the error handler for file-system exceptions. See
 		:func:`~pathspec.util.iter_tree` for more information.
 
-
 		*follow_links* (:class:`bool` or :data:`None`) optionally is whether
 		to walk symbolik links that resolve to directories. See
 		:func:`~pathspec.util.iter_tree` for more information.
