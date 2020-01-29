@@ -190,7 +190,6 @@ def _iter_tree_next(root_full, dir_rel, memo, on_error, follow_links):
 	# a recursion. See <https://github.com/cpburnz/python-path-specification/pull/7>.
 	del memo[dir_real]
 
-
 def _iter_tree_entries_next(root_full, dir_rel, memo, on_error, follow_links):
 	"""
 	Scan the directory for all descendant files.
@@ -256,8 +255,8 @@ def _iter_tree_entries_next(root_full, dir_rel, memo, on_error, follow_links):
 			for entry in _iter_tree_entries_next(root_full, node_rel, memo, on_error, follow_links):
 				yield entry
 
-		elif stat.S_ISREG(node_stat.st_mode):
-			# Child node is a file, yield it.
+		elif stat.S_ISREG(node_stat.st_mode) or is_link:
+			# Child node is either a file or an unfollowed link, yield it.
 			yield TreeEntry(node_name, node_rel, node_lstat, node_stat)
 
 	# NOTE: Make sure to remove the canonical (real) path of the directory
@@ -539,7 +538,7 @@ class TreeEntry(object):
 		entry.
 		"""
 
-	def is_dir(follow_symlinks=None):
+	def is_dir(self, follow_symlinks=None):
 		"""
 		Get whether the entry is a directory.
 
@@ -556,7 +555,7 @@ class TreeEntry(object):
 		node_stat = self._stat if follow_symlinks else self._lstat
 		return stat.S_ISDIR(node_stat.st_mode)
 
-	def is_file(follow_symlinks=None):
+	def is_file(self, follow_symlinks=None):
 		"""
 		Get whether the entry is a regular file.
 
@@ -573,13 +572,13 @@ class TreeEntry(object):
 		node_stat = self._stat if follow_symlinks else self._lstat
 		return stat.S_ISREG(node_stat.st_mode)
 
-	def is_symlink():
+	def is_symlink(self):
 		"""
 		Returns whether the entry is a symbolic link (:class:`bool`).
 		"""
 		return stat.S_ISLNK(self._lstat.st_mode)
 
-	def stat(follow_symlinks=None):
+	def stat(self, follow_symlinks=None):
 		"""
 		Get the cached stat result for the entry.
 
