@@ -114,8 +114,8 @@ def _iter_tree_next(root_full, dir_rel, memo, on_error, follow_links):
 			for file_rel in _iter_tree_next(root_full, node_rel, memo, on_error, follow_links):
 				yield file_rel
 
-		elif stat.S_ISREG(node_stat.st_mode):
-			# Child node is a file, yield it.
+		elif stat.S_ISREG(node_stat.st_mode) or is_link:
+			# Child node is a file or unfollowed link, yield it.
 			yield node_rel
 
 	# NOTE: Make sure to remove the canonical (real) path of the directory

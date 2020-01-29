@@ -3,6 +3,14 @@ Change History
 ==============
 
 
+0.8.0 (TDB)
+-----------
+
+- `Issue #31`_: match_tree doesn't return symlink.
+
+.. _`Issue #31`: https://github.com/cpburnz/python-path-specification/issues/31
+
+
 0.7.0 (2019-12-27)
 ------------------
 
