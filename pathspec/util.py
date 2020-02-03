@@ -20,8 +20,8 @@ current operating system. The separators are determined by examining
 
 _registered_patterns = {}
 """
-*_registered_patterns* (``dict``) maps a name (``str``) to the
-registered pattern factory (``callable``).
+*_registered_patterns* (:class:`dict`) maps a name (:class:`str`) to the
+registered pattern factory (:class:`~collections.abc.Callable`).
 """
 
 def detailed_match_files(patterns, files):
@@ -59,7 +59,37 @@ def detailed_match_files(patterns, files):
 
 	return return_files
 
-def iter_tree(root, on_error=None, follow_links=None):
+def iter_tree_entries(root, on_error=None, follow_links=None):
+	"""
+	Walks the specified directory for all files.
+
+	*root* (:class:`str`) is the root directory to search for files.
+
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
+	optionally is the error handler for file-system exceptions. It will be
+	called with the exception (:exc:`OSError`). Reraise the exception to
+	abort the walk. Default is :data:`None` to ignore file-system
+	exceptions.
+
+	*follow_links* (:class:`bool` or :data:`None`) optionally is whether
+	to walk symbolic links that resolve to directories. Default is
+	:data:`None` for :data:`True`.
+
+	Raises :exc:`RecursionError` if recursion is detected.
+
+	Returns an :class:`~collections.abc.Iterable` yielding each file or
+	directory entry (:class:`.TreeEntry`) relative to *root*.
+	"""
+	if on_error is not None and not callable(on_error):
+		raise TypeError("on_error:{!r} is not callable.".format(on_error))
+
+	if follow_links is None:
+		follow_links = True
+
+	for entry in _iter_tree_entries_next(os.path.abspath(root), '', {}, on_error, follow_links):
+		yield entry
+
+def iter_tree_files(root, on_error=None, follow_links=None):
 	"""
 	Walks the specified directory for all files.
 
@@ -86,8 +116,12 @@ def iter_tree(root, on_error=None, follow_links=None):
 	if follow_links is None:
 		follow_links = True
 
-	for file_rel in _iter_tree_next(os.path.abspath(root), '', {}, on_error, follow_links):
-		yield file_rel
+	for entry in _iter_tree_entries_next(os.path.abspath(root), '', {}, on_error, follow_links):
+		if not entry.is_dir(follow_links):
+			yield entry.path
+
+# Alias `iter_tree_files()` as `iter_tree()`.
+iter_tree = iter_tree_files
 
 def iter_tree_entries(root, on_error=None, follow_links=None):
 	"""
@@ -119,77 +153,6 @@ def iter_tree_entries(root, on_error=None, follow_links=None):
 	for file_rel in _iter_tree_entries_next(os.path.abspath(root), '', {}, on_error, follow_links):
 		yield file_rel
 
-def _iter_tree_next(root_full, dir_rel, memo, on_error, follow_links):
-	"""
-	Scan the directory for all descendant files.
-
-	*root_full* (:class:`str`) the absolute path to the root directory.
-
-	*dir_rel* (:class:`str`) the path to the directory to scan relative to
-	*root_full*.
-
-	*memo* (:class:`dict`) keeps track of ancestor directories
-	encountered. Maps each ancestor real path (:class:`str``) to relative
-	path (:class:`str`).
-
-	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
-	optionally is the error handler for file-system exceptions.
-
-	*follow_links* (:class:`bool`) is whether to walk symbolik links that
-	resolve to directories.
-	"""
-	dir_full = os.path.join(root_full, dir_rel)
-	dir_real = os.path.realpath(dir_full)
-
-	# Remember each encountered ancestor directory and its canonical
-	# (real) path. If a canonical path is encountered more than once,
-	# recursion has occurred.
-	if dir_real not in memo:
-		memo[dir_real] = dir_rel
-	else:
-		raise RecursionError(real_path=dir_real, first_path=memo[dir_real], second_path=dir_rel)
-
-	for node in os.listdir(dir_full):
-		node_rel = os.path.join(dir_rel, node)
-		node_full = os.path.join(root_full, node_rel)
-
-		# Inspect child node.
-		try:
-			node_stat = os.lstat(node_full)
-		except OSError as e:
-			if on_error is not None:
-				on_error(e)
-			continue
-
-		if stat.S_ISLNK(node_stat.st_mode):
-			# Child node is a link, inspect the target node.
-			is_link = True
-			try:
-				node_stat = os.stat(node_full)
-			except OSError as e:
-				if on_error is not None:
-					on_error(e)
-				continue
-		else:
-			is_link = False
-
-		if stat.S_ISDIR(node_stat.st_mode) and (follow_links or not is_link):
-			# Child node is a directory, recurse into it and yield its
-			# decendant files.
-			for file_rel in _iter_tree_next(root_full, node_rel, memo, on_error, follow_links):
-				yield file_rel
-
-		elif stat.S_ISREG(node_stat.st_mode) or is_link:
-			# Child node is a file or unfollowed link, yield it.
-			yield node_rel
-
-	# NOTE: Make sure to remove the canonical (real) path of the directory
-	# from the ancestors memo once we are done with it. This allows the
-	# same directory to appear multiple times. If this is not done, the
-	# second occurance of the directory will be incorrectly interpreted as
-	# a recursion. See <https://github.com/cpburnz/python-path-specification/pull/7>.
-	del memo[dir_real]
-
 def _iter_tree_entries_next(root_full, dir_rel, memo, on_error, follow_links):
 	"""
 	Scan the directory for all descendant files.
@@ -200,7 +163,7 @@ def _iter_tree_entries_next(root_full, dir_rel, memo, on_error, follow_links):
 	*root_full*.
 
 	*memo* (:class:`dict`) keeps track of ancestor directories
-	encountered. Maps each ancestor real path (:class:`str``) to relative
+	encountered. Maps each ancestor real path (:class:`str`) to relative
 	path (:class:`str`).
 
 	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
@@ -265,7 +228,6 @@ def _iter_tree_entries_next(root_full, dir_rel, memo, on_error, follow_links):
 	# second occurance of the directory will be incorrectly interpreted as
 	# a recursion. See <https://github.com/cpburnz/python-path-specification/pull/7>.
 	del memo[dir_real]
-
 
 def lookup_pattern(name):
 	"""
@@ -503,7 +465,7 @@ class TreeEntry(object):
 
 	def __init__(self, name, path, lstat, stat):
 		"""
-		Initialize the :class:`.TreeEntry` instancel.
+		Initialize the :class:`.TreeEntry` instance.
 
 		*name* (:class:`str`) is the base name of the entry.
 
@@ -538,38 +500,36 @@ class TreeEntry(object):
 		entry.
 		"""
 
-	def is_dir(self, follow_symlinks=None):
+	def is_dir(self, follow_links=None):
 		"""
 		Get whether the entry is a directory.
 
-		*follow_symlinks* (:class:`bool` or :data:`None`) is whether to
-		follow symbolic links. If this is :data:`True`, a symlink to a
-		directory will result in :data:`True`. Default is :data:`None` for
-		:data:`True`.
+		*follow_links* (:class:`bool` or :data:`None`) is whether to follow
+		symbolic links. If this is :data:`True`, a symlink to a directory
+		will result in :data:`True`. Default is :data:`None` for :data:`True`.
 
 		Returns whether the entry is a directory (:class:`bool`).
 		"""
-		if follow_symlinks is None:
-			follow_symlinks = True
+		if follow_links is None:
+			follow_links = True
 
-		node_stat = self._stat if follow_symlinks else self._lstat
+		node_stat = self._stat if follow_links else self._lstat
 		return stat.S_ISDIR(node_stat.st_mode)
 
-	def is_file(self, follow_symlinks=None):
+	def is_file(self, follow_links=None):
 		"""
 		Get whether the entry is a regular file.
 
-		*follow_symlinks* (:class:`bool` or :data:`None`) is whether to
-		follow symbolic links. If this is :data:`True`, a symlink to a
-		regular file will result in :data:`True`. Default is :data:`None`
-		for :data:`True`.
+		*follow_links* (:class:`bool` or :data:`None`) is whether to follow
+		symbolic links. If this is :data:`True`, a symlink to a regular file
+		will result in :data:`True`. Default is :data:`None` for :data:`True`.
 
 		Returns whether the entry is a regular file (:class:`bool`).
 		"""
-		if follow_symlinks is None:
-			follow_symlinks = True
+		if follow_links is None:
+			follow_links = True
 
-		node_stat = self._stat if follow_symlinks else self._lstat
+		node_stat = self._stat if follow_links else self._lstat
 		return stat.S_ISREG(node_stat.st_mode)
 
 	def is_symlink(self):
@@ -578,18 +538,18 @@ class TreeEntry(object):
 		"""
 		return stat.S_ISLNK(self._lstat.st_mode)
 
-	def stat(self, follow_symlinks=None):
+	def stat(self, follow_links=None):
 		"""
 		Get the cached stat result for the entry.
 
-		*follow_symlinks* (:class:`bool` or :data:`None`) is whether to
-		follow symbolic links. If this is :data:`True`, the stat result of
-		the linked file will be returned. Default is :data:`None` for
-		:data:`True`.
+		*follow_links* (:class:`bool` or :data:`None`) is whether to follow
+		symbolic links. If this is :data:`True`, the stat result of the
+		linked file will be returned. Default is :data:`None` for :data:`True`.
 
 		Returns that stat result (:class:`~os.stat_result`).
 		"""
-		if follow_symlinks is None:
+		if follow_links is None:
 			follow_links = True
 
-		return self._stat if follow_symlinks else self._lstat
+		return self._stat if follow_links else self._lstat
+

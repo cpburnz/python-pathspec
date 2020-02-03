@@ -114,7 +114,7 @@ class PathSpec(object):
 		for path in matched_files:
 			yield file_map[path]
 
-	def match_tree(self, root, on_error=None, follow_links=None):
+	def match_tree_files(self, root, on_error=None, follow_links=None):
 		"""
 		Walks the specified root path for all files and matches them to this
 		path-spec.
@@ -123,14 +123,17 @@ class PathSpec(object):
 
 		*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
 		optionally is the error handler for file-system exceptions. See
-		:func:`~pathspec.util.iter_tree` for more information.
+		:func:`~pathspec.util.iter_tree_files` for more information.
 
 		*follow_links* (:class:`bool` or :data:`None`) optionally is whether
 		to walk symbolik links that resolve to directories. See
-		:func:`~pathspec.util.iter_tree` for more information.
+		:func:`~pathspec.util.iter_tree_files` for more information.
 
 		Returns the matched files (:class:`~collections.abc.Iterable` of
 		:class:`str`).
 		"""
-		files = util.iter_tree(root, on_error=on_error, follow_links=follow_links)
+		files = util.iter_tree_files(root, on_error=on_error, follow_links=follow_links)
 		return self.match_files(files)
+
+	# Alias `match_tree_files()` as `match_tree()`.
+	match_tree = match_tree_files
