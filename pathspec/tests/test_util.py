@@ -10,12 +10,12 @@ import shutil
 import tempfile
 import unittest
 
-from pathspec.util import iter_tree, RecursionError
+from pathspec.util import iter_tree_entries, iter_tree_files, RecursionError
 
 
 class IterTreeTest(unittest.TestCase):
 	"""
-	The ``IterTreeTest`` class tests `pathspec.util.iter_tree()`.
+	The ``IterTreeTest`` class tests `pathspec.util.iter_tree_files()`.
 	"""
 
 	def make_dirs(self, dirs):
@@ -98,7 +98,7 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Inner/e',
 			'Dir/Inner/f',
 		])
-		results = set(iter_tree(self.temp_dir))
+		results = set(iter_tree_files(self.temp_dir))
 		self.assertEqual(results, set(map(self.ospath, [
 			'a',
 			'b',
@@ -176,7 +176,7 @@ class IterTreeTest(unittest.TestCase):
 			('Dir/dx', 'Dir/d'),
 			('DirX', 'Dir'),
 		])
-		results = set(iter_tree(self.temp_dir))
+		results = set(iter_tree_files(self.temp_dir))
 		self.assertEqual(results, set(map(self.ospath, [
 			'a',
 			'ax',
@@ -213,7 +213,7 @@ class IterTreeTest(unittest.TestCase):
 			('Dir/Ex', 'Dir/Target'),
 			('Dir/Fx', 'Dir/Target'),
 		])
-		results = set(iter_tree(self.temp_dir))
+		results = set(iter_tree_files(self.temp_dir))
 		self.assertEqual(results, set(map(self.ospath, [
 			'Ax/Ex/file',
 			'Ax/Fx/file',
@@ -244,7 +244,7 @@ class IterTreeTest(unittest.TestCase):
 			('Dir/Self', 'Dir'),
 		])
 		with self.assertRaises(RecursionError) as context:
-			set(iter_tree(self.temp_dir))
+			set(iter_tree_files(self.temp_dir))
 		self.assertEqual(context.exception.first_path, 'Dir')
 		self.assertEqual(context.exception.second_path, self.ospath('Dir/Self'))
 
@@ -270,7 +270,7 @@ class IterTreeTest(unittest.TestCase):
 			('C/Ax', 'A'),
 		])
 		with self.assertRaises(RecursionError) as context:
-			set(iter_tree(self.temp_dir))
+			set(iter_tree_files(self.temp_dir))
 		self.assertIn(context.exception.first_path, ('A', 'B', 'C'))
 		self.assertEqual(context.exception.second_path, {
 			'A': self.ospath('A/Bx/Cx/Ax'),
@@ -290,7 +290,7 @@ class IterTreeTest(unittest.TestCase):
 			('A', 'DOES_NOT_EXIST'),
 		])
 		with self.assertRaises(OSError) as context:
-			set(iter_tree(self.temp_dir, on_error=reraise))
+			set(iter_tree_files(self.temp_dir, on_error=reraise))
 		self.assertEqual(context.exception.errno, errno.ENOENT)
 
 	def test_2_7_ignore_broken_links(self):
@@ -301,7 +301,7 @@ class IterTreeTest(unittest.TestCase):
 		self.make_links([
 			('A', 'DOES_NOT_EXIST'),
 		])
-		results = set(iter_tree(self.temp_dir))
+		results = set(iter_tree_files(self.temp_dir))
 		self.assertEqual(results, set())
 
 	def test_2_8_no_follow_links(self):
@@ -325,7 +325,7 @@ class IterTreeTest(unittest.TestCase):
 			('Dir/Dx', 'Dir/D'),
 			('DirX', 'Dir'),
 		])
-		results = set(iter_tree(self.temp_dir, follow_links=False))
+		results = set(iter_tree_files(self.temp_dir, follow_links=False))
 		self.assertEqual(results, set(map(self.ospath, [
 			'A',
 			'Ax',
@@ -335,4 +335,35 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Cx',
 			'Dir/D',
 			'Dir/Dx',
+			'DirX',
+		])))
+
+	def test_3_entries(self):
+		"""
+		Tests to make sure all files are found.
+		"""
+		self.make_dirs([
+			'Empty',
+			'Dir',
+			'Dir/Inner',
+		])
+		self.make_files([
+			'a',
+			'b',
+			'Dir/c',
+			'Dir/d',
+			'Dir/Inner/e',
+			'Dir/Inner/f',
+		])
+		results = {entry.path for entry in iter_tree_entries(self.temp_dir)}
+		self.assertEqual(results, set(map(self.ospath, [
+			'a',
+			'b',
+			'Dir',
+			'Dir/c',
+			'Dir/d',
+			'Dir/Inner',
+			'Dir/Inner/e',
+			'Dir/Inner/f',
+			'Empty',
 		])))
