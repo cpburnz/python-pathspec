@@ -39,7 +39,7 @@ def detailed_match_files(patterns, files, all_matches=None):
 	matches patterns (:data:`True`), or only the last matched pattern
 	(:data:`False`). Default is :data:`None` for :data:`False`.
 
-	Returns the matched files (:class:`dict`) which maps each mapped file
+	Returns the matched files (:class:`dict`) which maps each matched file
 	(:class:`str`) to the patterns that matched in order (:class:`.MatchDetail`).
 	"""
 	all_files = files if isinstance(files, collection_type) else list(files)
