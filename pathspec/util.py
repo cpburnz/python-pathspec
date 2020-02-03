@@ -24,7 +24,7 @@ _registered_patterns = {}
 registered pattern factory (:class:`~collections.abc.Callable`).
 """
 
-def detailed_match_files(patterns, files):
+def detailed_match_files(patterns, files, all_matches=None):
 	"""
 	Matches the files to the patterns, and returns which patterns matched
 	the files.
@@ -35,9 +35,12 @@ def detailed_match_files(patterns, files):
 	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
 	the normalized file paths to be matched against *patterns*.
 
+	*all_matches* (:class:`boot` or :data:`None`) is whether to return all
+	matches patterns (:data:`True`), or only the last matched pattern
+	(:data:`False`). Default is :data:`None` for :data:`False`.
+
 	Returns the matched files (:class:`dict`) which maps each mapped file
-	(:class:`str`) to the patterns that matched in order (:class:`list` of
-	:class:`~pathspec.pattern.Pattern`).
+	(:class:`str`) to the patterns that matched in order (:class:`.MatchDetail`).
 	"""
 	all_files = files if isinstance(files, collection_type) else list(files)
 	return_files = {}
@@ -48,9 +51,12 @@ def detailed_match_files(patterns, files):
 				# Add files and record pattern.
 				for result_file in result_files:
 					if result_file in return_files:
-						return_files[result_file].append(pattern)
+						if all_matches:
+							return_files[result_file].patterns.append(pattern)
+						else:
+							return_files[result_file].patterns[0] = pattern
 					else:
-						return_files[result_file] = [pattern]
+						return_files[result_file] = MatchDetail([pattern])
 
 			else:
 				# Remove files.
@@ -122,36 +128,6 @@ def iter_tree_files(root, on_error=None, follow_links=None):
 
 # Alias `iter_tree_files()` as `iter_tree()`.
 iter_tree = iter_tree_files
-
-def iter_tree_entries(root, on_error=None, follow_links=None):
-	"""
-	Walks the specified directory for all files.
-
-	*root* (:class:`str`) is the root directory to search for files.
-
-	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
-	optionally is the error handler for file-system exceptions. It will be
-	called with the exception (:exc:`OSError`). Reraise the exception to
-	abort the walk. Default is :data:`None` to ignore file-system
-	exceptions.
-
-	*follow_links* (:class:`bool` or :data:`None`) optionally is whether
-	to walk symbolic links that resolve to directories. Default is
-	:data:`None` for :data:`True`.
-
-	Raises :exc:`RecursionError` if recursion is detected.
-
-	Returns an :class:`~collections.abc.Iterable` yielding each file or
-	directory entry (:class:`.TreeEntry`) relative to *root*.
-	"""
-	if on_error is not None and not callable(on_error):
-		raise TypeError("on_error:{!r} is not callable.".format(on_error))
-
-	if follow_links is None:
-		follow_links = True
-
-	for file_rel in _iter_tree_entries_next(os.path.abspath(root), '', {}, on_error, follow_links):
-		yield file_rel
 
 def _iter_tree_entries_next(root_full, dir_rel, memo, on_error, follow_links):
 	"""
@@ -454,6 +430,31 @@ class RecursionError(Exception):
 		return self.args[2]
 
 
+class MatchDetail(object):
+	"""
+	The :class:`.MatchDetail` class contains information about
+	"""
+
+	#: Make the class dict-less.
+	__slots__ = ('patterns',)
+
+	def __init__(self, patterns):
+		"""
+		Initialize the :class:`.MatchDetail` instance.
+
+		*patterns* (:class:`~collections.abc.Sequence` of :class:`~pathspec.pattern.Pattern`)
+		contains the patterns that matched the file in the order they were
+		encountered.
+		"""
+
+		self.patterns = patterns
+		"""
+		*patterns* (:class:`~collections.abc.Sequence` of :class:`~pathspec.pattern.Pattern`)
+		contains the patterns that matched the file in the order they were
+		encountered.
+		"""
+
+
 class TreeEntry(object):
 	"""
 	The :class:`.TreeEntry` class contains information about a file-system
@@ -552,4 +553,3 @@ class TreeEntry(object):
 			follow_links = True
 
 		return self._stat if follow_links else self._lstat
-
