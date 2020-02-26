@@ -47,6 +47,7 @@ __credits__ = [
 	"jdufresne <https://github.com/jdufresne>",
 	"groodt <https://github.com/groodt>",
 	"ftrofin <https://github.com/ftrofin>",
+	"pykong <https://github.com/pykong>"
 ]
 __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
