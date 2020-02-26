@@ -10,7 +10,7 @@ import shutil
 import tempfile
 import unittest
 
-from pathspec.util import iter_tree_entries, iter_tree_files, RecursionError
+from pathspec.util import iter_tree_entries, iter_tree_files, RecursionError, normalize_file
 
 
 class IterTreeTest(unittest.TestCase):
@@ -367,3 +367,12 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Inner/f',
 			'Empty',
 		])))
+
+	def test_4_normalizing_pathlib_paths(self):
+		"""
+		Tests passing pathlib.Path as argument.
+		"""
+		from pathlib import Path
+		first_spec = normalize_file([Path('a.txt')])
+		second_spec = normalize_file(['a.txt'])
+		self.assertNotEqual(first_spec, second_spec)
