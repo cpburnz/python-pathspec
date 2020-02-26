@@ -7,6 +7,7 @@ import errno
 import os
 import os.path
 import shutil
+import sys
 import tempfile
 import unittest
 
@@ -368,6 +369,7 @@ class IterTreeTest(unittest.TestCase):
 			'Empty',
 		])))
 
+	@unittest.skipIf(sys.version_info < (3, 4), "pathlib entered stdlib in Python 3.4")
 	def test_4_normalizing_pathlib_paths(self):
 		"""
 		Tests passing pathlib.Path as argument.
@@ -375,4 +377,4 @@ class IterTreeTest(unittest.TestCase):
 		from pathlib import Path
 		first_spec = normalize_file([Path('a.txt')])
 		second_spec = normalize_file(['a.txt'])
-		self.assertNotEqual(first_spec, second_spec)
+		self.assertEqual(first_spec, second_spec)
