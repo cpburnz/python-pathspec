@@ -262,7 +262,7 @@ def normalize_file(file, separators=None):
 	"""
 	Normalizes the file path to use the POSIX path separator (i.e., ``'/'``).
 
-	*file* (:class:`str` or :class: `Path`) is the file path.
+	*file* (:class:`str`; or :class: `Path`) is the file path.
 
 	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
 	:data:`None`) optionally contains the path separators to normalize.
@@ -276,7 +276,7 @@ def normalize_file(file, separators=None):
 	# Normalize path separators.
 	if separators is None:
 		separators = NORMALIZE_PATH_SEPS
-	norm_file = str(file)
+	norm_file = str(file)  # stringify pathlib.Path
 	for sep in separators:
 		norm_file = norm_file.replace(sep, posixpath.sep)
 
@@ -290,8 +290,8 @@ def normalize_files(files, separators=None):
 	"""
 	Normalizes the file paths to use the POSIX path separator.
 
-	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
-	the file paths to be normalized.
+	*files* (:class:`~collections.abc.Iterable` of :class:`str`;
+	or :class: `Path`) contains the file paths to be normalized.
 
 	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
 	:data:`None`) optionally contains the path separators to normalize.
