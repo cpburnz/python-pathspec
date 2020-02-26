@@ -78,7 +78,7 @@ class PathSpec(object):
 		"""
 		Matches the file to this path-spec.
 
-		*file* (:class:`str` or :class: `Path`) is the file path to be
+		*file* (:class:`str`; or :class: `Path`) is the file path to be
 		matched against :attr:`self.patterns <PathSpec.patterns>`.
 
 		*separators* (:class:`~collections.abc.Collection` of :class:`str`)
@@ -95,7 +95,7 @@ class PathSpec(object):
 		Matches the files to this path-spec.
 
 		*files* (:class:`~collections.abc.Iterable` of
-		(:class:`str` or :class: `Path`)) contains the file paths to be
+		(:class:`str`; or :class: `Path`)) contains the file paths to be
 		matched against :attr:`self.patterns <PathSpec.patterns>`.
 
 		*separators* (:class:`~collections.abc.Collection` of :class:`str`;
@@ -119,7 +119,7 @@ class PathSpec(object):
 		Walks the specified root path for all files and matches them to this
 		path-spec.
 
-		*root* (:class:`str` or :class: `Path`) is the root directory to
+		*root* (:class:`str`; or :class: `Path`) is the root directory to
 		search for files.
 
 		*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
