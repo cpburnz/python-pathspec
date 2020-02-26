@@ -375,6 +375,6 @@ class IterTreeTest(unittest.TestCase):
 		Tests passing pathlib.Path as argument.
 		"""
 		from pathlib import Path
-		first_spec = normalize_file([Path('a.txt')])
-		second_spec = normalize_file(['a.txt'])
+		first_spec = normalize_file(Path('a.txt'))
+		second_spec = normalize_file('a.txt')
 		self.assertEqual(first_spec, second_spec)
