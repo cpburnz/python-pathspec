@@ -78,8 +78,8 @@ class PathSpec(object):
 		"""
 		Matches the file to this path-spec.
 
-		*file* (:class:`str`) is the file path to be matched against
-		:attr:`self.patterns <PathSpec.patterns>`.
+		*file* (:class:`str` or :class: `Path`) is the file path to be
+		matched against :attr:`self.patterns <PathSpec.patterns>`.
 
 		*separators* (:class:`~collections.abc.Collection` of :class:`str`)
 		optionally contains the path separators to normalize. See
@@ -94,9 +94,9 @@ class PathSpec(object):
 		"""
 		Matches the files to this path-spec.
 
-		*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
-		the file paths to be matched against :attr:`self.patterns
-		<PathSpec.patterns>`.
+		*files* (:class:`~collections.abc.Iterable` of
+		(:class:`str` or :class: `Path`)) contains the file paths to be
+		matched against :attr:`self.patterns <PathSpec.patterns>`.
 
 		*separators* (:class:`~collections.abc.Collection` of :class:`str`;
 		or :data:`None`) optionally contains the path separators to
@@ -119,7 +119,8 @@ class PathSpec(object):
 		Walks the specified root path for all files and matches them to this
 		path-spec.
 
-		*root* (:class:`str`) is the root directory to search for files.
+		*root* (:class:`str` or :class: `Path`) is the root directory to
+		search for files.
 
 		*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
 		optionally is the error handler for file-system exceptions. See
@@ -132,6 +133,7 @@ class PathSpec(object):
 		Returns the matched files (:class:`~collections.abc.Iterable` of
 		:class:`str`).
 		"""
+		root = str(root)  # stringify pathlib.Path
 		files = util.iter_tree_files(root, on_error=on_error, follow_links=follow_links)
 		return self.match_files(files)
 
