@@ -133,7 +133,6 @@ class PathSpec(object):
 		Returns the matched files (:class:`~collections.abc.Iterable` of
 		:class:`str`).
 		"""
-		root = str(root)  # stringify pathlib.Path
 		files = util.iter_tree_files(root, on_error=on_error, follow_links=follow_links)
 		return self.match_files(files)
 

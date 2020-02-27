@@ -370,7 +370,7 @@ class IterTreeTest(unittest.TestCase):
 		])))
 
 	@unittest.skipIf(sys.version_info < (3, 4), "pathlib entered stdlib in Python 3.4")
-	def test_4_normalizing_pathlib_paths(self):
+	def test_4_normalizing_pathlib_path(self):
 		"""
 		Tests passing pathlib.Path as argument.
 		"""
