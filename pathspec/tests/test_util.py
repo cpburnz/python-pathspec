@@ -7,10 +7,11 @@ import errno
 import os
 import os.path
 import shutil
+import sys
 import tempfile
 import unittest
 
-from pathspec.util import iter_tree_entries, iter_tree_files, RecursionError
+from pathspec.util import iter_tree_entries, iter_tree_files, RecursionError, normalize_file
 
 
 class IterTreeTest(unittest.TestCase):
@@ -367,3 +368,13 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Inner/f',
 			'Empty',
 		])))
+
+	@unittest.skipIf(sys.version_info < (3, 4), "pathlib entered stdlib in Python 3.4")
+	def test_4_normalizing_pathlib_path(self):
+		"""
+		Tests passing pathlib.Path as argument.
+		"""
+		from pathlib import Path
+		first_spec = normalize_file(Path('a.txt'))
+		second_spec = normalize_file('a.txt')
+		self.assertEqual(first_spec, second_spec)
