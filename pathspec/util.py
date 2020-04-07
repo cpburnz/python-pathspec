@@ -8,7 +8,7 @@ import os.path
 import posixpath
 import stat
 
-from .compat import collection_type, string_types
+from .compat import Collection, Iterable, string_types, unicode
 
 NORMALIZE_PATH_SEPS = [sep for sep in [os.sep, os.altsep] if sep and sep != posixpath.sep]
 """
@@ -23,6 +23,7 @@ _registered_patterns = {}
 *_registered_patterns* (:class:`dict`) maps a name (:class:`str`) to the
 registered pattern factory (:class:`~collections.abc.Callable`).
 """
+
 
 def detailed_match_files(patterns, files, all_matches=None):
 	"""
@@ -42,7 +43,7 @@ def detailed_match_files(patterns, files, all_matches=None):
 	Returns the matched files (:class:`dict`) which maps each matched file
 	(:class:`str`) to the patterns that matched in order (:class:`.MatchDetail`).
 	"""
-	all_files = files if isinstance(files, collection_type) else list(files)
+	all_files = files if isinstance(files, Collection) else list(files)
 	return_files = {}
 	for pattern in patterns:
 		if pattern.include is not None:
@@ -65,11 +66,23 @@ def detailed_match_files(patterns, files, all_matches=None):
 
 	return return_files
 
+
+def _is_iterable(value):
+	"""
+	Check whether the value is an iterable (excludes strings).
+
+	*value* is the value to check,
+
+	Returns whether *value* is a iterable (:class:`bool`).
+	"""
+	return isinstance(value, Iterable) and not isinstance(value, (unicode, bytes))
+
+
 def iter_tree_entries(root, on_error=None, follow_links=None):
 	"""
-	Walks the specified directory for all files.
+	Walks the specified directory for all files and directories.
 
-	*root* (:class:`str`) is the root directory to search for files.
+	*root* (:class:`str`) is the root directory to search.
 
 	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
 	optionally is the error handler for file-system exceptions. It will be
@@ -95,6 +108,7 @@ def iter_tree_entries(root, on_error=None, follow_links=None):
 	for entry in _iter_tree_entries_next(os.path.abspath(root), '', {}, on_error, follow_links):
 		yield entry
 
+
 def iter_tree_files(root, on_error=None, follow_links=None):
 	"""
 	Walks the specified directory for all files.
@@ -108,7 +122,7 @@ def iter_tree_files(root, on_error=None, follow_links=None):
 	exceptions.
 
 	*follow_links* (:class:`bool` or :data:`None`) optionally is whether
-	to walk symbolik links that resolve to directories. Default is
+	to walk symbolic links that resolve to directories. Default is
 	:data:`None` for :data:`True`.
 
 	Raises :exc:`RecursionError` if recursion is detected.
@@ -126,8 +140,10 @@ def iter_tree_files(root, on_error=None, follow_links=None):
 		if not entry.is_dir(follow_links):
 			yield entry.path
 
+
 # Alias `iter_tree_files()` as `iter_tree()`.
 iter_tree = iter_tree_files
+
 
 def _iter_tree_entries_next(root_full, dir_rel, memo, on_error, follow_links):
 	"""
@@ -145,7 +161,7 @@ def _iter_tree_entries_next(root_full, dir_rel, memo, on_error, follow_links):
 	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
 	optionally is the error handler for file-system exceptions.
 
-	*follow_links* (:class:`bool`) is whether to walk symbolik links that
+	*follow_links* (:class:`bool`) is whether to walk symbolic links that
 	resolve to directories.
 
 	Yields each entry (:class:`.TreeEntry`).
@@ -188,7 +204,7 @@ def _iter_tree_entries_next(root_full, dir_rel, memo, on_error, follow_links):
 
 		if stat.S_ISDIR(node_stat.st_mode) and (follow_links or not is_link):
 			# Child node is a directory, recurse into it and yield its
-			# decendant files.
+			# descendant files.
 			yield TreeEntry(node_name, node_rel, node_lstat, node_stat)
 
 			for entry in _iter_tree_entries_next(root_full, node_rel, memo, on_error, follow_links):
@@ -201,9 +217,10 @@ def _iter_tree_entries_next(root_full, dir_rel, memo, on_error, follow_links):
 	# NOTE: Make sure to remove the canonical (real) path of the directory
 	# from the ancestors memo once we are done with it. This allows the
 	# same directory to appear multiple times. If this is not done, the
-	# second occurance of the directory will be incorrectly interpreted as
-	# a recursion. See <https://github.com/cpburnz/python-path-specification/pull/7>.
+	# second occurrence of the directory will be incorrectly interpreted
+	# as a recursion. See <https://github.com/cpburnz/python-path-specification/pull/7>.
 	del memo[dir_real]
+
 
 def lookup_pattern(name):
 	"""
@@ -215,6 +232,7 @@ def lookup_pattern(name):
 	If no pattern factory is registered, raises :exc:`KeyError`.
 	"""
 	return _registered_patterns[name]
+
 
 def match_file(patterns, file):
 	"""
@@ -235,6 +253,7 @@ def match_file(patterns, file):
 				matched = pattern.include
 	return matched
 
+
 def match_files(patterns, files):
 	"""
 	Matches the files to the patterns.
@@ -247,7 +266,7 @@ def match_files(patterns, files):
 
 	Returns the matched files (:class:`set` of :class:`str`).
 	"""
-	all_files = files if isinstance(files, collection_type) else list(files)
+	all_files = files if isinstance(files, Collection) else list(files)
 	return_files = set()
 	for pattern in patterns:
 		if pattern.include is not None:
@@ -258,11 +277,32 @@ def match_files(patterns, files):
 				return_files.difference_update(result_files)
 	return return_files
 
+
+def _normalize_entries(entries, separators=None):
+	"""
+	Normalizes the entry paths to use the POSIX path separator.
+
+	*entries* (:class:`~collections.abc.Iterable` of :class:`.TreeEntry`)
+	contains the entries to be normalized.
+
+	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
+	:data:`None`) optionally contains the path separators to normalize.
+	See :func:`normalize_file` for more information.
+
+	Returns a :class:`dict` mapping the each normalized file path (:class:`str`)
+	to the entry (:class:`.TreeEntry`)
+	"""
+	norm_files = {}
+	for entry in entries:
+		norm_files[normalize_file(entry.path, separators=separators)] = entry
+	return norm_files
+
+
 def normalize_file(file, separators=None):
 	"""
 	Normalizes the file path to use the POSIX path separator (i.e., ``'/'``).
 
-	*file* (:class:`str`; or :class: `Path`) is the file path.
+	*file* (:class:`str` or :class:`pathlib.PurePath`) is the file path.
 
 	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
 	:data:`None`) optionally contains the path separators to normalize.
@@ -276,7 +316,10 @@ def normalize_file(file, separators=None):
 	# Normalize path separators.
 	if separators is None:
 		separators = NORMALIZE_PATH_SEPS
-	norm_file = str(file)  # stringify pathlib.Path
+
+	# Convert path object to string.
+	norm_file = str(file)
+
 	for sep in separators:
 		norm_file = norm_file.replace(sep, posixpath.sep)
 
@@ -286,12 +329,13 @@ def normalize_file(file, separators=None):
 
 	return norm_file
 
+
 def normalize_files(files, separators=None):
 	"""
 	Normalizes the file paths to use the POSIX path separator.
 
-	*files* (:class:`~collections.abc.Iterable` of :class:`str`;
-	or :class: `Path`) contains the file paths to be normalized.
+	*files* (:class:`~collections.abc.Iterable` of :class:`str` or
+	:class:`pathlib.PurePath`) contains the file paths to be normalized.
 
 	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
 	:data:`None`) optionally contains the path separators to normalize.
@@ -304,6 +348,7 @@ def normalize_files(files, separators=None):
 	for path in files:
 		norm_files[normalize_file(path, separators=separators)] = path
 	return norm_files
+
 
 def register_pattern(name, pattern_factory, override=None):
 	"""
@@ -470,7 +515,7 @@ class TreeEntry(object):
 
 		*name* (:class:`str`) is the base name of the entry.
 
-		*path* (:class:`str`) is the path of the entry.
+		*path* (:class:`str`) is the relative path of the entry.
 
 		*lstat* (:class:`~os.stat_result`) is the stat result of the direct
 		entry.

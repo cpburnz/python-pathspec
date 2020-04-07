@@ -8,6 +8,7 @@ Change History
 
 - `Issue #30`_: Expose what patterns matched paths. Added `util.detailed_match_files()`.
 - `Issue #31`_: `match_tree()` doesn't return symlinks.
+- Add `PathSpec.match_tree_entries` and `util.iter_tree_entries()` to support directories and symlinks.
 - API change: `match_tree()` has been renamed to `match_tree_files()`. The old name `match_tree()` is still available as an alias.
 - API change: `match_tree_files()` now returns symlinks. This is a bug fix but it will change the returned results.
 
