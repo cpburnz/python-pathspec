@@ -8,12 +8,14 @@ Change History
 
 - `Issue #30`_: Expose what patterns matched paths. Added `util.detailed_match_files()`.
 - `Issue #31`_: `match_tree()` doesn't return symlinks.
+- `Issue #34`_: Support `pathlib.Path`\ s.
 - Add `PathSpec.match_tree_entries` and `util.iter_tree_entries()` to support directories and symlinks.
 - API change: `match_tree()` has been renamed to `match_tree_files()`. The old name `match_tree()` is still available as an alias.
 - API change: `match_tree_files()` now returns symlinks. This is a bug fix but it will change the returned results.
 
 .. _`Issue #30`: https://github.com/cpburnz/python-path-specification/issues/30
 .. _`Issue #31`: https://github.com/cpburnz/python-path-specification/issues/31
+.. _`Issue #34`: https://github.com/cpburnz/python-path-specification/issues/34
 
 
 0.7.0 (2019-12-27)
