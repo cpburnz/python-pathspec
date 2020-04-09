@@ -47,14 +47,14 @@ __credits__ = [
 	"jdufresne <https://github.com/jdufresne>",
 	"groodt <https://github.com/groodt>",
 	"ftrofin <https://github.com/ftrofin>",
-	"pykong <https://github.com/pykong>"
+	"pykong <https://github.com/pykong>",
 ]
 __email__ = "cpburnz@gmail.com"
 __license__ = "MPL 2.0"
 __project__ = "pathspec"
 __status__ = "Development"
-__updated__ = "2020-02-02"
-__version__ = "0.8.0.dev1"
+__updated__ = "2020-04-09"
+__version__ = "0.8.0"
 
 from .pathspec import PathSpec
 from .pattern import Pattern, RegexPattern

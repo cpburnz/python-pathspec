@@ -3,8 +3,8 @@ Change History
 ==============
 
 
-0.8.0 (TDB)
------------
+0.8.0 (2020-04-09)
+------------------
 
 - `Issue #30`_: Expose what patterns matched paths. Added `util.detailed_match_files()`.
 - `Issue #31`_: `match_tree()` doesn't return symlinks.
