@@ -46,6 +46,27 @@ class PathSpec(object):
 		"""
 		return len(self.patterns)
 
+	def __add__(self, other):
+		"""
+		Combines the :attr:`Pathspec.patterns` patterns from two
+		:class:`PathSpec` instances.
+		"""
+		if isinstance(other, PathSpec):
+			return PathSpec(self.patterns + other.patterns)
+		else:
+			return NotImplemented
+
+	def __iadd__(self, other):
+		"""
+		Adds the :attr:`Pathspec.patterns` patterns from one :class:`PathSpec`
+		instance to this instance.
+		"""
+		if isinstance(other, PathSpec):
+			self.patterns += other.patterns
+			return self
+		else:
+			return NotImplemented
+
 	@classmethod
 	def from_lines(cls, pattern_factory, lines):
 		"""
