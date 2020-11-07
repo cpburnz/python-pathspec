@@ -2,6 +2,13 @@
 Change History
 ==============
 
+0.8.1 (2020-11-07)
+------------------
+
+- `Issue #43`_: Add support for addition operator.
+
+.. _`Issue #43`: https://github.com/cpburnz/python-path-specification/pull/43
+
 
 0.8.0 (2020-04-09)
 ------------------
