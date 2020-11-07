@@ -127,3 +127,54 @@ class PathSpecTest(unittest.TestCase):
 			'!*.txt',
 		])
 		self.assertNotEqual(first_spec, second_spec)
+
+	def test_01_addition(self):
+		"""
+		Test pattern addition using + operator
+		"""
+		first_spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+			'test.txt',
+			'test.png'
+		])
+		second_spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+			'test.html',
+			'test.jpg'
+		])
+		combined_spec = first_spec + second_spec
+		results = set(combined_spec.match_files([
+			'test.txt',
+			'test.png',
+			'test.html',
+			'test.jpg'
+		], separators=('\\',)))
+		self.assertEqual(results, {
+			'test.txt',
+			'test.png',
+			'test.html',
+			'test.jpg'
+		})
+
+	def test_02_addition(self):
+		"""
+		Test pattern addition using += operator
+		"""
+		spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+			'test.txt',
+			'test.png'
+		])
+		spec += pathspec.PathSpec.from_lines('gitwildmatch', [
+			'test.html',
+			'test.jpg'
+		])
+		results = set(spec.match_files([
+			'test.txt',
+			'test.png',
+			'test.html',
+			'test.jpg'
+		], separators=('\\',)))
+		self.assertEqual(results, {
+			'test.txt',
+			'test.png',
+			'test.html',
+			'test.jpg'
+		})
