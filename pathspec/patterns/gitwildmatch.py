@@ -83,6 +83,14 @@ class GitWildMatchPattern(RegexPattern):
 			# Split pattern into segments.
 			pattern_segs = pattern.split('/')
 
+			# EDGE CASE: deal with duplicate leading double-asterisk sequences
+			if len(pattern_segs) > 1 and pattern_segs[0] == '**' and pattern_segs[1] == '**':
+				trimmed_segs = ['**']
+				for seg in pattern_segs[1:]:
+					if seg != '**':
+						trimmed_segs.append(seg)
+				pattern_segs = trimmed_segs
+
 			# Normalize pattern to make processing easier.
 
 			if not pattern_segs[0]:

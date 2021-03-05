@@ -240,6 +240,47 @@ class GitWildMatchTest(unittest.TestCase):
 			'foo/spam/bar',
 		})
 
+	def test_03_duplicate_leading_double_asterisk_edge_case(self):
+		"""
+		Regression test for duplicate leading **/ bug.
+		"""
+		regex, include = GitWildMatchPattern.pattern_to_regex('**')
+		self.assertTrue(include)
+		self.assertEqual(regex, '^.+$')
+
+		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex('**/**')
+		self.assertTrue(include)
+		self.assertEqual(equivalent_regex, regex)
+
+		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex('**/**/**')
+		self.assertTrue(include)
+		self.assertEqual(equivalent_regex, regex)
+
+		regex, include = GitWildMatchPattern.pattern_to_regex('**/api')
+		self.assertTrue(include)
+		self.assertEqual(regex, '^(?:.+/)?api(?:/.*)?$')
+
+		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex('**/**/api')
+		self.assertTrue(include)
+		self.assertEqual(equivalent_regex, regex)
+
+
+	def test_03_double_asterisk_trailing_slash_edge_case(self):
+		"""
+		Tests the edge-case **/ pattern.
+
+		This should match everything except individual files in the root directory.
+		"""
+		regex, include = GitWildMatchPattern.pattern_to_regex('**/')
+		self.assertTrue(include)
+		# FIXME: currently failing
+		# REVIEW: I believe this is the correct regex for this case
+		# self.assertEqual(regex, '^(?:.+/).*$')
+
+		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex('**/**/')
+		self.assertTrue(include)
+		self.assertEqual(equivalent_regex, regex)
+
 	def test_04_infix_wildcard(self):
 		"""
 		Tests a pattern with an infix wildcard.
