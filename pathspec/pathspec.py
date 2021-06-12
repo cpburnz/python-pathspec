@@ -155,8 +155,9 @@ class PathSpec(object):
 
 		file_map = util.normalize_files(files, separators=separators)
 		matched_files = util.match_files(self.patterns, iterkeys(file_map))
-		for path in matched_files:
-			yield file_map[path]
+		for norm_file in matched_files:
+			for orig_file in file_map[norm_file]:
+				yield orig_file
 
 	def match_tree_entries(self, root, on_error=None, follow_links=None):
 		"""

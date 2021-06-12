@@ -13,6 +13,52 @@ class PathSpecTest(unittest.TestCase):
 	The ``PathSpecTest`` class tests the ``PathSpec`` class.
 	"""
 
+	def test_01_absolute_dir_paths_1(self):
+		"""
+		Tests that absolute paths will be properly normalized and matched.
+		"""
+		spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+			'foo',
+		])
+		results = set(spec.match_files([
+			'/a.py',
+			'/foo/a.py',
+			'/x/a.py',
+			'/x/foo/a.py',
+			'a.py',
+			'foo/a.py',
+			'x/a.py',
+			'x/foo/a.py',
+		]))
+		self.assertEqual(results, {
+			'/foo/a.py',
+			'/x/foo/a.py',
+			'foo/a.py',
+			'x/foo/a.py',
+		})
+
+	def test_01_absolute_dir_paths_2(self):
+		"""
+		Tests that absolute paths will be properly normalized and matched.
+		"""
+		spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+			'/foo',
+		])
+		results = set(spec.match_files([
+			'/a.py',
+			'/foo/a.py',
+			'/x/a.py',
+			'/x/foo/a.py',
+			'a.py',
+			'foo/a.py',
+			'x/a.py',
+			'x/foo/a.py',
+		]))
+		self.assertEqual(results, {
+			'/foo/a.py',
+			'foo/a.py',
+		})
+
 	def test_01_current_dir_paths(self):
 		"""
 		Tests that paths referencing the current directory will be properly

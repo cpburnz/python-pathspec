@@ -300,7 +300,8 @@ def _normalize_entries(entries, separators=None):
 
 def normalize_file(file, separators=None):
 	"""
-	Normalizes the file path to use the POSIX path separator (i.e., ``'/'``).
+	Normalizes the file path to use the POSIX path separator (i.e.,
+	``'/'``), and make the paths relative (remove leading ``'/'``).
 
 	*file* (:class:`str` or :class:`pathlib.PurePath`) is the file path.
 
@@ -323,8 +324,12 @@ def normalize_file(file, separators=None):
 	for sep in separators:
 		norm_file = norm_file.replace(sep, posixpath.sep)
 
-	# Remove current directory prefix.
-	if norm_file.startswith('./'):
+	if norm_file.startswith('/'):
+		# Make path relative.
+		norm_file = norm_file[1:]
+
+	elif norm_file.startswith('./'):
+		# Remove current directory prefix.
 		norm_file = norm_file[2:]
 
 	return norm_file
@@ -341,12 +346,18 @@ def normalize_files(files, separators=None):
 	:data:`None`) optionally contains the path separators to normalize.
 	See :func:`normalize_file` for more information.
 
-	Returns a :class:`dict` mapping the each normalized file path (:class:`str`)
-	to the original file path (:class:`str`)
+	Returns a :class:`dict` mapping the each normalized file path
+	(:class:`str`) to the original file paths (:class:`list` of
+	:class:`str`).
 	"""
 	norm_files = {}
 	for path in files:
-		norm_files[normalize_file(path, separators=separators)] = path
+		norm_file = normalize_file(path, separators=separators)
+		if norm_file in norm_files:
+			norm_files[norm_file].append(path)
+		else:
+			norm_files[norm_file] = [path]
+
 	return norm_files
 
 

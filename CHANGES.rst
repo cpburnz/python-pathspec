@@ -2,12 +2,15 @@
 Change History
 ==============
 
-0.8.2 (TDB)
+0.9.0 (TDB)
 -----------
 
 - `Issue #45`_: Fix for duplicate leading double-asterisk, and edge cases.
+- `Issue #46`_: Fix matching absolute paths.
+- API change: `util.normalize_files()` now returns a `Dict[str, List[pathlike]]` instead of a `Dict[str, pathlike]`.
 
 .. _`Issue #45`: https://github.com/cpburnz/python-path-specification/pull/45
+.. _`Issue #46`: https://github.com/cpburnz/python-path-specification/issues/46
 
 
 0.8.1 (2020-11-07)
