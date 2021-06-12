@@ -83,15 +83,17 @@ class GitWildMatchPattern(RegexPattern):
 			# Split pattern into segments.
 			pattern_segs = pattern.split('/')
 
-			# EDGE CASE: deal with duplicate leading double-asterisk sequences
-			if len(pattern_segs) > 1 and pattern_segs[0] == '**' and pattern_segs[1] == '**':
-				trimmed_segs = ['**']
-				for seg in pattern_segs[1:]:
-					if seg != '**':
-						trimmed_segs.append(seg)
-				pattern_segs = trimmed_segs
-
 			# Normalize pattern to make processing easier.
+
+			# EDGE CASE: Deal with duplicate double-asterisk sequences.
+			# Collapse each sequence down to one double-asterisk. Iterate over
+			# the segments in reverse and remove the duplicate double
+			# asterisks as we go.
+			for i in range(len(pattern_segs) - 1, 0, -1):
+				prev = pattern_segs[i-1]
+				seg = pattern_segs[i]
+				if prev == '**' and seg == '**':
+					del pattern_segs[i]
 
 			if not pattern_segs[0]:
 				# A pattern beginning with a slash ('/') will only match paths
@@ -120,7 +122,7 @@ class GitWildMatchPattern(RegexPattern):
 			if not pattern_segs[-1] and len(pattern_segs) > 1:
 				# A pattern ending with a slash ('/') will match all descendant
 				# paths if it is a directory but not if it is a regular file.
-				# This is equivilent to "{pattern}/**". So, set last segment to
+				# This is equivalent to "{pattern}/**". So, set last segment to
 				# double asterisks to include all descendants.
 				pattern_segs[-1] = '**'
 
@@ -148,16 +150,19 @@ class GitWildMatchPattern(RegexPattern):
 						# multiple (or zero) inner path segments.
 						output.append('(?:/.+)?')
 						need_slash = True
+
 				elif seg == '*':
 					# Match single path segment.
 					if need_slash:
 						output.append('/')
 					output.append('[^/]+')
 					need_slash = True
+
 				else:
 					# Match segment glob pattern.
 					if need_slash:
 						output.append('/')
+
 					output.append(cls._translate_segment_glob(seg))
 					if i == end and include is True:
 						# A pattern ending without a slash ('/') will match a file
@@ -166,7 +171,9 @@ class GitWildMatchPattern(RegexPattern):
 						# EDGE CASE: However, this does not hold for exclusion cases
 						# according to `git check-ignore` (v2.4.1).
 						output.append('(?:/.*)?')
+
 					need_slash = True
+
 			output.append('$')
 			regex = ''.join(output)
 
