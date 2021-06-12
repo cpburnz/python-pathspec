@@ -2,6 +2,14 @@
 Change History
 ==============
 
+0.8.2 (TDB)
+-----------
+
+- `Issue #45`_: Fix for duplicate leading double-asterisk, and edge cases.
+
+.. _`Issue #45`: https://github.com/cpburnz/python-path-specification/pull/45
+
+
 0.8.1 (2020-11-07)
 ------------------
 

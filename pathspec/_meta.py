@@ -28,7 +28,8 @@ __credits__ = [
 	"ftrofin <https://github.com/ftrofin>",
 	"pykong <https://github.com/pykong>",
 	"nhhollander <https://github.com/nhhollander>",
-	"KOLANICH <https://github.com/KOLANICH>"
+	"KOLANICH <https://github.com/KOLANICH>",
+	"JonjonHays <https://github.com/JonjonHays>",
 ]
 __license__ = "MPL 2.0"
-__version__ = "0.8.1"
+__version__ = "0.8.2.dev1"
