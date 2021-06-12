@@ -63,7 +63,6 @@ class GitWildMatchPattern(RegexPattern):
 			include = None
 
 		elif pattern:
-
 			if pattern.startswith('!'):
 				# A pattern starting with an exclamation mark ('!') negates the
 				# pattern (exclude instead of include). Escape the exclamation
@@ -80,6 +79,10 @@ class GitWildMatchPattern(RegexPattern):
 				# exclamation mark ('!').
 				pattern = pattern[1:]
 
+			# Allow a regex override for edge cases that cannot be handled
+			# through normalization.
+			override_regex = None
+
 			# Split pattern into segments.
 			pattern_segs = pattern.split('/')
 
@@ -94,6 +97,12 @@ class GitWildMatchPattern(RegexPattern):
 				seg = pattern_segs[i]
 				if prev == '**' and seg == '**':
 					del pattern_segs[i]
+
+			if len(pattern_segs) == 2 and pattern_segs[0] == '**' and not pattern_segs[1]:
+				# EDGE CASE: The '**/' pattern should match everything except
+				# individual files in the root directory. This case cannot be
+				# adequately handled through normalization. Use the override.
+				override_regex = '^.+/.*$'
 
 			if not pattern_segs[0]:
 				# A pattern beginning with a slash ('/') will only match paths
@@ -120,62 +129,68 @@ class GitWildMatchPattern(RegexPattern):
 				pass
 
 			if not pattern_segs[-1] and len(pattern_segs) > 1:
-				# A pattern ending with a slash ('/') will match all descendant
-				# paths if it is a directory but not if it is a regular file.
-				# This is equivalent to "{pattern}/**". So, set last segment to
-				# double asterisks to include all descendants.
+				# A pattern ending with a slash ('/') will match all
+				# descendant paths if it is a directory but not if it is a
+				# regular file. This is equivalent to "{pattern}/**". So, set
+				# last segment to a double-asterisk to include all
+				# descendants.
 				pattern_segs[-1] = '**'
 
-			# Build regular expression from pattern.
-			output = ['^']
-			need_slash = False
-			end = len(pattern_segs) - 1
-			for i, seg in enumerate(pattern_segs):
-				if seg == '**':
-					if i == 0 and i == end:
-						# A pattern consisting solely of double-asterisks ('**')
-						# will match every path.
-						output.append('.+')
-					elif i == 0:
-						# A normalized pattern beginning with double-asterisks
-						# ('**') will match any leading path segments.
-						output.append('(?:.+/)?')
-						need_slash = False
-					elif i == end:
-						# A normalized pattern ending with double-asterisks ('**')
-						# will match any trailing path segments.
-						output.append('/.*')
-					else:
-						# A pattern with inner double-asterisks ('**') will match
-						# multiple (or zero) inner path segments.
-						output.append('(?:/.+)?')
+			if override_regex is None:
+				# Build regular expression from pattern.
+				output = ['^']
+				need_slash = False
+				end = len(pattern_segs) - 1
+				for i, seg in enumerate(pattern_segs):
+					if seg == '**':
+						if i == 0 and i == end:
+							# A pattern consisting solely of double-asterisks ('**')
+							# will match every path.
+							output.append('.+')
+						elif i == 0:
+							# A normalized pattern beginning with double-asterisks
+							# ('**') will match any leading path segments.
+							output.append('(?:.+/)?')
+							need_slash = False
+						elif i == end:
+							# A normalized pattern ending with double-asterisks ('**')
+							# will match any trailing path segments.
+							output.append('/.*')
+						else:
+							# A pattern with inner double-asterisks ('**') will match
+							# multiple (or zero) inner path segments.
+							output.append('(?:/.+)?')
+							need_slash = True
+
+					elif seg == '*':
+						# Match single path segment.
+						if need_slash:
+							output.append('/')
+						output.append('[^/]+')
 						need_slash = True
 
-				elif seg == '*':
-					# Match single path segment.
-					if need_slash:
-						output.append('/')
-					output.append('[^/]+')
-					need_slash = True
+					else:
+						# Match segment glob pattern.
+						if need_slash:
+							output.append('/')
 
-				else:
-					# Match segment glob pattern.
-					if need_slash:
-						output.append('/')
+						output.append(cls._translate_segment_glob(seg))
+						if i == end and include is True:
+							# A pattern ending without a slash ('/') will match a file
+							# or a directory (with paths underneath it). E.g., "foo"
+							# matches "foo", "foo/bar", "foo/bar/baz", etc.
+							# EDGE CASE: However, this does not hold for exclusion cases
+							# according to `git check-ignore` (v2.4.1).
+							output.append('(?:/.*)?')
 
-					output.append(cls._translate_segment_glob(seg))
-					if i == end and include is True:
-						# A pattern ending without a slash ('/') will match a file
-						# or a directory (with paths underneath it). E.g., "foo"
-						# matches "foo", "foo/bar", "foo/bar/baz", etc.
-						# EDGE CASE: However, this does not hold for exclusion cases
-						# according to `git check-ignore` (v2.4.1).
-						output.append('(?:/.*)?')
+						need_slash = True
 
-					need_slash = True
+				output.append('$')
+				regex = ''.join(output)
 
-			output.append('$')
-			regex = ''.join(output)
+			else:
+				# Use regex override.
+				regex = override_regex
 
 		else:
 			# A blank pattern is a null-operation (neither includes nor
