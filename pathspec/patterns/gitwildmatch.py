@@ -8,6 +8,14 @@ from __future__ import unicode_literals
 
 import re
 import warnings
+try:
+	from typing import (
+		AnyStr,
+		Optional,
+		Text,
+		Tuple)
+except ImportError:
+	pass
 
 from .. import util
 from ..compat import unicode
@@ -28,6 +36,7 @@ class GitWildMatchPattern(RegexPattern):
 
 	@classmethod
 	def pattern_to_regex(cls, pattern):
+		# type: (AnyStr) -> Tuple[Optional[AnyStr], Optional[bool]]
 		"""
 		Convert the pattern into a regular expression.
 
@@ -205,6 +214,7 @@ class GitWildMatchPattern(RegexPattern):
 
 	@staticmethod
 	def _translate_segment_glob(pattern):
+		# type: (Text) -> Text
 		"""
 		Translates the glob pattern to a regular expression. This is used in
 		the constructor to translate a path segment glob pattern to its
@@ -245,28 +255,28 @@ class GitWildMatchPattern(RegexPattern):
 				regex += '[^/]'
 
 			elif char == '[':
-				# Braket expression wildcard. Except for the beginning
-				# exclamation mark, the whole braket expression can be used
+				# Bracket expression wildcard. Except for the beginning
+				# exclamation mark, the whole bracket expression can be used
 				# directly as regex but we have to find where the expression
 				# ends.
-				# - "[][!]" matchs ']', '[' and '!'.
-				# - "[]-]" matchs ']' and '-'.
-				# - "[!]a-]" matchs any character except ']', 'a' and '-'.
+				# - "[][!]" matches ']', '[' and '!'.
+				# - "[]-]" matches ']' and '-'.
+				# - "[!]a-]" matches any character except ']', 'a' and '-'.
 				j = i
 				# Pass brack expression negation.
 				if j < end and pattern[j] == '!':
 					j += 1
-				# Pass first closing braket if it is at the beginning of the
+				# Pass first closing bracket if it is at the beginning of the
 				# expression.
 				if j < end and pattern[j] == ']':
 					j += 1
-				# Find closing braket. Stop once we reach the end or find it.
+				# Find closing bracket. Stop once we reach the end or find it.
 				while j < end and pattern[j] != ']':
 					j += 1
 
 				if j < end:
-					# Found end of braket expression. Increment j to be one past
-					# the closing braket:
+					# Found end of bracket expression. Increment j to be one past
+					# the closing bracket:
 					#
 					#  [...]
 					#   ^   ^
@@ -280,7 +290,7 @@ class GitWildMatchPattern(RegexPattern):
 						expr += '^'
 						i += 1
 					elif pattern[i] == '^':
-						# POSIX declares that the regex braket expression negation
+						# POSIX declares that the regex bracket expression negation
 						# "[^...]" is undefined in a glob pattern. Python's
 						# `fnmatch.translate()` escapes the caret ('^') as a
 						# literal. To maintain consistency with undefined behavior,
@@ -288,19 +298,19 @@ class GitWildMatchPattern(RegexPattern):
 						expr += '\\^'
 						i += 1
 
-					# Build regex braket expression. Escape slashes so they are
+					# Build regex bracket expression. Escape slashes so they are
 					# treated as literal slashes by regex as defined by POSIX.
 					expr += pattern[i:j].replace('\\', '\\\\')
 
-					# Add regex braket expression to regex result.
+					# Add regex bracket expression to regex result.
 					regex += expr
 
-					# Set i to one past the closing braket.
+					# Set i to one past the closing bracket.
 					i = j
 
 				else:
-					# Failed to find closing braket, treat opening braket as a
-					# braket literal instead of as an expression.
+					# Failed to find closing bracket, treat opening bracket as a
+					# bracket literal instead of as an expression.
 					regex += '\\['
 
 			else:
@@ -311,18 +321,33 @@ class GitWildMatchPattern(RegexPattern):
 
 	@staticmethod
 	def escape(s):
+		# type: (AnyStr) -> AnyStr
 		"""
 		Escape special characters in the given string.
 
 		*s* (:class:`unicode` or :class:`bytes`) a filename or a string
 		that you want to escape, usually before adding it to a `.gitignore`
 
-		Returns the escaped string (:class:`unicode`, :class:`bytes`)
+		Returns the escaped string (:class:`unicode` or :class:`bytes`)
 		"""
+		if isinstance(s, unicode):
+			return_type = unicode
+			string = s
+		elif isinstance(s, bytes):
+			return_type = bytes
+			string = s.decode(_BYTES_ENCODING)
+		else:
+			raise TypeError("s:{!r} is not a unicode or byte string.".format(s))
+
 		# Reference: https://git-scm.com/docs/gitignore#_pattern_format
 		meta_characters = r"[]!*#?"
 
-		return "".join("\\" + x if x in meta_characters else x for x in s)
+		out_string = "".join("\\" + x if x in meta_characters else x for x in string)
+
+		if return_type is bytes:
+			return out_string.encode(_BYTES_ENCODING)
+		else:
+			return out_string
 
 util.register_pattern('gitwildmatch', GitWildMatchPattern)
 
@@ -338,7 +363,7 @@ class GitIgnorePattern(GitWildMatchPattern):
 		Warn about deprecation.
 		"""
 		self._deprecated()
-		return super(GitIgnorePattern, self).__init__(*args, **kw)
+		super(GitIgnorePattern, self).__init__(*args, **kw)
 
 	@staticmethod
 	def _deprecated():
