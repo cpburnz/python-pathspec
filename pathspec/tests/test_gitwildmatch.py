@@ -184,6 +184,7 @@ class GitWildMatchTest(unittest.TestCase):
 
 		This should match:
 
+			left/right
 			left/bar/right
 			left/foo/bar/right
 			left/bar/right/foo
@@ -198,12 +199,14 @@ class GitWildMatchTest(unittest.TestCase):
 
 		pattern = GitWildMatchPattern(re.compile(regex), include)
 		results = set(pattern.match([
+			'left/right',
 			'left/bar/right',
 			'left/foo/bar/right',
 			'left/bar/right/foo',
 			'foo/left/bar/right',
 		]))
 		self.assertEqual(results, {
+			'left/right',
 			'left/bar/right',
 			'left/foo/bar/right',
 			'left/bar/right/foo',
@@ -223,6 +226,7 @@ class GitWildMatchTest(unittest.TestCase):
 
 		This should match:
 
+			spam
 			foo/spam
 			foo/spam/bar
 		"""
@@ -232,10 +236,12 @@ class GitWildMatchTest(unittest.TestCase):
 
 		pattern = GitWildMatchPattern(re.compile(regex), include)
 		results = set(pattern.match([
+			'spam',
 			'foo/spam',
 			'foo/spam/bar',
 		]))
 		self.assertEqual(results, {
+			'spam',
 			'foo/spam',
 			'foo/spam/bar',
 		})
@@ -264,6 +270,17 @@ class GitWildMatchTest(unittest.TestCase):
 		self.assertTrue(include)
 		self.assertEqual(equivalent_regex, regex)
 
+		regex, include = GitWildMatchPattern.pattern_to_regex('**/api/')
+		self.assertTrue(include)
+		self.assertEqual(regex, '^(?:.+/)?api/.*$')
+
+		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex('**/api/**')
+		self.assertTrue(include)
+		self.assertEqual(equivalent_regex, regex)
+
+		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex('**/**/api/**/**')
+		self.assertTrue(include)
+		self.assertEqual(equivalent_regex, regex)
 
 	def test_03_double_asterisk_trailing_slash_edge_case(self):
 		"""
@@ -273,9 +290,7 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('**/')
 		self.assertTrue(include)
-		# FIXME: currently failing
-		# REVIEW: I believe this is the correct regex for this case
-		# self.assertEqual(regex, '^(?:.+/).*$')
+		self.assertEqual(regex, '^.+/.*$')
 
 		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex('**/**/')
 		self.assertTrue(include)
