@@ -10,7 +10,7 @@ import unittest
 
 import pathspec.patterns.gitwildmatch
 import pathspec.util
-from pathspec.patterns.gitwildmatch import GitWildMatchPattern
+from pathspec.patterns.gitwildmatch import GitWildMatchPattern, GitWildMatchPatternError
 
 if sys.version_info[0] >= 3:
 	unichr = chr
@@ -528,3 +528,21 @@ class GitWildMatchTest(unittest.TestCase):
 		escaped = r"file\!with\*weird\#naming_\[1\].t\?t"
 		result = GitWildMatchPattern.escape(fname)
 		self.assertEqual(result, escaped)
+
+	def test_09_single_escape_fail(self):
+		"""
+		Test an escape on a line by itself.
+		"""
+		self._check_invalid_pattern("\\")
+
+	def test_09_single_exclamation_mark_fail(self):
+		"""
+		Test an escape on a line by itself.
+		"""
+		self._check_invalid_pattern("!")
+
+	def _check_invalid_pattern(self, git_ignore_pattern):
+		expected_message_pattern = re.escape(repr(git_ignore_pattern))
+		with self.assertRaisesRegexp(GitWildMatchPatternError, expected_message_pattern):
+			GitWildMatchPattern(git_ignore_pattern)
+
