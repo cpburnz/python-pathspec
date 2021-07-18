@@ -25,6 +25,14 @@ from ..pattern import RegexPattern
 _BYTES_ENCODING = 'latin1'
 
 
+class GitWildMatchPatternError(ValueError):
+	"""
+	The :class:`GitWildMatchPatternError` indicates an invalid git wild match
+	pattern.
+	"""
+	pass
+
+
 class GitWildMatchPattern(RegexPattern):
 	"""
 	The :class:`GitWildMatchPattern` class represents a compiled Git
@@ -56,6 +64,7 @@ class GitWildMatchPattern(RegexPattern):
 		else:
 			raise TypeError("pattern:{!r} is not a unicode or byte string.".format(pattern))
 
+		original_pattern = pattern
 		pattern = pattern.strip()
 
 		if pattern.startswith('#'):
@@ -136,6 +145,12 @@ class GitWildMatchPattern(RegexPattern):
 				# "dir/{pattern}") should not match "**/dir/{pattern}",
 				# according to `git check-ignore` (v2.4.1).
 				pass
+
+			if not pattern_segs:
+				# After resolving the edge cases, we end up with no
+				# pattern at all. This must be because the pattern is
+				# invalid.
+				raise GitWildMatchPatternError("Invalid git pattern: %r" % (original_pattern,))
 
 			if not pattern_segs[-1] and len(pattern_segs) > 1:
 				# A pattern ending with a slash ('/') will match all
