@@ -2,16 +2,19 @@
 Change History
 ==============
 
-0.9.0 (TDB)
------------
+0.9.0 (2021-07-17)
+------------------
 
+- `Issue #44`_/`Issue #50`_: Raise `GitWildMatchPatternError` for invalid git patterns.
 - `Issue #45`_: Fix for duplicate leading double-asterisk, and edge cases.
 - `Issue #46`_: Fix matching absolute paths.
 - API change: `util.normalize_files()` now returns a `Dict[str, List[pathlike]]` instead of a `Dict[str, pathlike]`.
 - Added type hinting.
 
+.. _`Issue #44`: https://github.com/cpburnz/python-path-specification/issues/44
 .. _`Issue #45`: https://github.com/cpburnz/python-path-specification/pull/45
 .. _`Issue #46`: https://github.com/cpburnz/python-path-specification/issues/46
+.. _`Issue #50`: https://github.com/cpburnz/python-path-specification/pull/50
 
 
 0.8.1 (2020-11-07)
