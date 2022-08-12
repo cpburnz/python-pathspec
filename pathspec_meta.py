@@ -1,1 +1,0 @@
-pathspec/_meta.py

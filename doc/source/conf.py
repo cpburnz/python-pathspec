@@ -20,7 +20,7 @@ import sys
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../../'))
-from pathspec import __author__, __copyright__, __project__, __version__
+from pathspec._meta import __author__, __copyright__, __project__, __version__
 
 
 # -- General configuration ------------------------------------------------

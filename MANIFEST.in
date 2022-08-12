@@ -1,3 +1,9 @@
+include *.in
+include *.ini
 include *.py
 include *.rst
 include LICENSE
+recursive-include doc *
+recursive-include tests *
+prune doc/build
+global-exclude *.pyc

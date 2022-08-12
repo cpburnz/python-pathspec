@@ -1,4 +1,6 @@
-# encoding: utf-8
+"""
+This setup script only exists to allow an editable install with pip.
+"""
 
 from setuptools import setup
 
