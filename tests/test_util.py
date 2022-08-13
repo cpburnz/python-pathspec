@@ -113,8 +113,8 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		Tests whether links can be created.
 		"""
-		# NOTE: Windows does not support `os.symlink` for Python 2. Windows
-		# Vista and greater supports `os.symlink` for Python 3.2+.
+		# NOTE: Windows Vista and greater supports `os.symlink` for Python
+		# 3.2+.
 		no_symlink = None
 		try:
 			file = os.path.join(self.temp_dir, 'file')
@@ -123,7 +123,7 @@ class IterTreeTest(unittest.TestCase):
 
 			try:
 				os.symlink(file, link)
-			except (AttributeError, NotImplementedError):
+			except (AttributeError, NotImplementedError, OSError):
 				no_symlink = True
 				raise
 			no_symlink = False

@@ -37,7 +37,9 @@ __credits__ = [
 	"danjer <https://github.com/danjer>",
 	"jhbuhrman <https://github.com/jhbuhrman>",
 	"WPDOrdina <https://github.com/WPDOrdina>",
-	"tirkarthi <https://github.com/tirkarthi>"
+	"tirkarthi <https://github.com/tirkarthi>",
+	"jayvdb <https://github.com/jayvdb>",
+	"jwodder <https://github.com/jwodder>",
 ]
 __license__ = "MPL 2.0"
 __version__ = "0.10.0.dev1"
