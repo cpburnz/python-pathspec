@@ -35,8 +35,8 @@ requires-python = ">=3.7"
 "Documentation" = "https://python-path-specification.readthedocs.io/en/latest/index.html"
 "Issue Tracker" = "https://github.com/cpburnz/python-path-specification/issues"
 
-[tool.setuptools]
-packages = ["pathspec"]
-
 [tool.setuptools.dynamic]
 version = {attr = "pathspec._meta.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["pathspec"]

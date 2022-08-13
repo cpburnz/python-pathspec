@@ -1,10 +1,9 @@
-# encoding: utf-8
 """
 This module contains the project meta-data.
 """
 
 __author__ = "Caleb P. Burns"
-__copyright__ = "Copyright © 2013-2021 Caleb P. Burns"
+__copyright__ = "Copyright © 2013-2022 Caleb P. Burns"
 __credits__ = [
 	"dahlia <https://github.com/dahlia>",
 	"highb <https://github.com/highb>",
@@ -38,6 +37,7 @@ __credits__ = [
 	"danjer <https://github.com/danjer>",
 	"jhbuhrman <https://github.com/jhbuhrman>",
 	"WPDOrdina <https://github.com/WPDOrdina>",
+	"tirkarthi <https://github.com/tirkarthi>"
 ]
 __license__ = "MPL 2.0"
-__version__ = "0.9.0"
+__version__ = "0.10.0.dev1"
