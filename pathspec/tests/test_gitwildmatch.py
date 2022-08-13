@@ -543,6 +543,11 @@ class GitWildMatchTest(unittest.TestCase):
 
 	def _check_invalid_pattern(self, git_ignore_pattern):
 		expected_message_pattern = re.escape(repr(git_ignore_pattern))
-		with self.assertRaisesRegexp(GitWildMatchPatternError, expected_message_pattern):
+		# assertRaisesRegexp was a deprecated alias removed in Python 3.11
+		if hasattr(self, 'assertRaisesRegex'):
+			assertRaisesRegex = self.assertRaisesRegex
+		else:
+			assertRaisesRegex = self.assertRaisesRegexp
+		with assertRaisesRegex(GitWildMatchPatternError, expected_message_pattern):
 			GitWildMatchPattern(git_ignore_pattern)
 
