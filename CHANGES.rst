@@ -9,9 +9,9 @@ Change History
 - GOAL: Clear backlog.
 - TODO: Rename repo to "python-pathspec".
 
-- Dropped support of EOL Python 2.7, 3.5, 3.6.
 - Support Python 3.10, 3.11.
 - Changed build system to `pyproject.toml`_ and build backend to `setuptools.build_meta`_ which may have unforeseen consequences.
+- `Issue #47`_: Dropped support of EOL Python 2.7, 3.5, 3.6.
 - `Issue #51`_: Refactor deprecated unittest aliases for Python 3.11 compatibility.
 - `Issue #53`_: Symlink pathspec_meta.py breaks Windows.
 - `Issue #54`_: test_util.py uses os.symlink which can fail on Windows.
@@ -19,6 +19,7 @@ Change History
 
 .. _`pyproject.toml`: https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/
 .. _`setuptools.build_meta`: https://setuptools.pypa.io/en/latest/build_meta.html
+.. _`Issue #47`: https://github.com/cpburnz/python-path-specification/issues/47
 .. _`Issue #51`: https://github.com/cpburnz/python-path-specification/pull/51
 .. _`Issue #53`: https://github.com/cpburnz/python-path-specification/issues/53
 .. _`Issue #54`: https://github.com/cpburnz/python-path-specification/issues/54

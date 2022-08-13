@@ -40,6 +40,7 @@ __credits__ = [
 	"tirkarthi <https://github.com/tirkarthi>",
 	"jayvdb <https://github.com/jayvdb>",
 	"jwodder <https://github.com/jwodder>",
+	"kloczek <https://github.com/kloczek>",
 ]
 __license__ = "MPL 2.0"
 __version__ = "0.10.0.dev1"
