@@ -13,10 +13,14 @@ Change History
 - Support Python 3.10, 3.11.
 - Changed build system to `pyproject.toml`_ and build backend to `setuptools.build_meta`_ which may have unforeseen consequences.
 - `Issue #51`_: Refactor deprecated unittest aliases for Python 3.11 compatibility.
+- `Issue #53`_: Symlink pathspec_meta.py breaks Windows.
+- `Issue #55`_: Backslashes at start of pattern not handled correctly.
 
 .. _`pyproject.toml`: https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/
 .. _`setuptools.build_meta`: https://setuptools.pypa.io/en/latest/build_meta.html
 .. _`Issue #51`: https://github.com/cpburnz/python-path-specification/pull/51
+.. _`Issue #53`: https://github.com/cpburnz/python-path-specification/issues/53
+.. _`Issue #55`: https://github.com/cpburnz/python-path-specification/issues/55
 
 
 0.9.0 (2021-07-17)
