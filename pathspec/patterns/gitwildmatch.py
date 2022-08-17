@@ -380,7 +380,10 @@ class GitIgnorePattern(GitWildMatchPattern):
 		"""
 		Warn about deprecation.
 		"""
-		warnings.warn("GitIgnorePattern ('gitignore') is deprecated. Use GitWildMatchPattern ('gitwildmatch') instead.", DeprecationWarning, stacklevel=3)
+		warnings.warn((
+			"GitIgnorePattern ('gitignore') is deprecated. Use "
+			"GitWildMatchPattern ('gitwildmatch') instead."
+		), DeprecationWarning, stacklevel=3)
 
 	@classmethod
 	def pattern_to_regex(cls, *args, **kw):

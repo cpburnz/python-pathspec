@@ -2,10 +2,10 @@
 # This Makefile is used to manage development and distribution.
 #
 # Created: 2022-08-11
-# Updated: 2022-08-11
+# Updated: 2022-08-16
 #
 
-.PHONY: build create-venv help prebuild publish test update-venv
+.PHONY: build create-venv help prebuild publish test test-all update-venv
 
 help:
 	@echo "Usage: make [<target>]"
@@ -20,7 +20,8 @@ help:
 	@echo
 	@echo "Development Targets:"
 	@echo "  create-venv  Create the development Python virtual environment."
-	@echo "  test         Run tests using Tox."
+	@echo "  test         Run tests using Tox for the development virtual environment."
+	@echo "  test-all     Run tests using Tox for all virtual environments."
 	@echo "  update-venv  Update the development Python virtual environment."
 
 build: dist-build
@@ -31,7 +32,9 @@ prebuild: dist-prebuild
 
 publish: dist-publish
 
-test: dev-test
+test: dev-test-primary
+
+test-all: dev-test-all
 
 update-venv: dev-venv-install
 
@@ -46,10 +49,13 @@ VENV_DIR := ./dev/venv
 PYTHON := python3
 VENV := ./dev/venv.sh "${VENV_DIR}"
 
-.PHONY: dev-test dev-venv-base dev-venv-create dev-venv-install
+.PHONY: dev-test-all dev-test-primary dev-venv-base dev-venv-create dev-venv-install
 
-dev-test:
+dev-test-all:
 	${VENV} python -m tox
+
+dev-test-primary:
+	${VENV} python -m tox -e "py$(shell ${PYTHON} -c 'import sys;print(*sys.version_info[:2],sep="")')"
 
 dev-venv-base:
 	${PYTHON} -m venv --clear "${VENV_DIR}"

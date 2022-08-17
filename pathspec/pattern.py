@@ -1,23 +1,16 @@
-# encoding: utf-8
 """
 This module provides the base definition for patterns.
 """
 
 import re
-try:
-	from typing import (
-		AnyStr,
-		Iterable,
-		Iterator,
-		Optional,
-		Pattern as RegexHint,
-		Text,
-		Tuple,
-		Union)
-except ImportError:
-	pass
-
-from .compat import unicode
+from typing import (
+	AnyStr,
+	Iterable,
+	Iterator,
+	Optional,
+	Pattern as RegexHint,
+	Tuple,
+	Union)
 
 
 class Pattern(object):
@@ -28,8 +21,7 @@ class Pattern(object):
 	# Make the class dict-less.
 	__slots__ = ('include',)
 
-	def __init__(self, include):
-		# type: (Optional[bool]) -> None
+	def __init__(self, include: Optional[bool]) -> None:
 		"""
 		Initializes the :class:`Pattern` instance.
 
@@ -45,18 +37,19 @@ class Pattern(object):
 		or is a null-operation (:data:`None`).
 		"""
 
-	def match(self, files):
-		# type: (Iterable[Text]) -> Iterator[Text]
+	def match(self, files: Iterable[str]) -> Iterator[str]:
 		"""
 		Matches this pattern against the specified files.
 
 		*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
-		each file relative to the root directory (e.g., ``"relative/path/to/file"``).
+		each file relative to the root directory (e.g., :data:`"relative/path/to/file"`).
 
 		Returns an :class:`~collections.abc.Iterable` yielding each matched
 		file path (:class:`str`).
 		"""
-		raise NotImplementedError("{}.{} must override match().".format(self.__class__.__module__, self.__class__.__name__))
+		raise NotImplementedError((
+			"{0.__module__}.{0.__qualname__} must override match()."
+		).format(self.__class__))
 
 
 class RegexPattern(Pattern):
@@ -68,14 +61,16 @@ class RegexPattern(Pattern):
 	# Make the class dict-less.
 	__slots__ = ('regex',)
 
-	def __init__(self, pattern, include=None):
-		# type: (Union[AnyStr, RegexHint], Optional[bool]) -> None
+	def __init__(
+		self,
+		pattern: Union[AnyStr, RegexHint],
+		include: Optional[bool] = None,
+	) -> None:
 		"""
 		Initializes the :class:`RegexPattern` instance.
 
-		*pattern* (:class:`unicode`, :class:`bytes`, :class:`re.RegexObject`,
-		or :data:`None`) is the pattern to compile into a regular
-		expression.
+		*pattern* (:class:`str`, :class:`bytes`, :class:`re.RegexObject`, or
+		:data:`None`) is the pattern to compile into a regular expression.
 
 		*include* (:class:`bool` or :data:`None`) must be :data:`None`
 		unless *pattern* is a precompiled regular expression (:class:`re.RegexObject`)
@@ -87,14 +82,10 @@ class RegexPattern(Pattern):
 			   parameter.
 		"""
 
-		self.regex = None
-		"""
-		*regex* (:class:`re.RegexObject`) is the regular expression for the
-		pattern.
-		"""
-
-		if isinstance(pattern, (unicode, bytes)):
-			assert include is None, "include:{!r} must be null when pattern:{!r} is a string.".format(include, pattern)
+		if isinstance(pattern, (str, bytes)):
+			assert include is None, (
+				"include:{!r} must be null when pattern:{!r} is a string."
+			).format(include, pattern)
 			regex, include = self.pattern_to_regex(pattern)
 			# NOTE: Make sure to allow a null regular expression to be
 			# returned for a null-operation.
@@ -109,16 +100,22 @@ class RegexPattern(Pattern):
 		elif pattern is None:
 			# NOTE: Make sure to allow a null pattern to be passed for a
 			# null-operation.
-			assert include is None, "include:{!r} must be null when pattern:{!r} is null.".format(include, pattern)
+			assert include is None, (
+				"include:{!r} must be null when pattern:{!r} is null."
+			).format(include, pattern)
 
 		else:
 			raise TypeError("pattern:{!r} is not a string, RegexObject, or None.".format(pattern))
 
 		super(RegexPattern, self).__init__(include)
-		self.regex = regex
 
-	def __eq__(self, other):
-		# type: (RegexPattern) -> bool
+		self.regex: RegexHint = regex
+		"""
+		*regex* (:class:`re.RegexObject`) is the regular expression for the
+		pattern.
+		"""
+
+	def __eq__(self, other: 'RegexPattern') -> bool:
 		"""
 		Tests the equality of this regex pattern with *other* (:class:`RegexPattern`)
 		by comparing their :attr:`~Pattern.include` and :attr:`~RegexPattern.regex`
@@ -129,8 +126,7 @@ class RegexPattern(Pattern):
 		else:
 			return NotImplemented
 
-	def match(self, files):
-		# type: (Iterable[Text]) -> Iterable[Text]
+	def match(self, files: Iterable[str]) -> Iterable[str]:
 		"""
 		Matches this pattern against the specified files.
 
@@ -146,8 +142,7 @@ class RegexPattern(Pattern):
 					yield path
 
 	@classmethod
-	def pattern_to_regex(cls, pattern):
-		# type: (Text) -> Tuple[Text, bool]
+	def pattern_to_regex(cls, pattern: str) -> Tuple[str, bool]:
 		"""
 		Convert the pattern into an uncompiled regular expression.
 
