@@ -12,6 +12,11 @@ Change History
 - Support Python 3.10, 3.11.
 - Changed build system to `pyproject.toml`_ and build backend to `setuptools.build_meta`_ which may have unforeseen consequences.
 - Modernize code to Python 3.7.
+- Deprecated: `pathspec.util.match_files()` is an old function no longer used.
+- Deprecated: `pathspec.match_files()` is an old function no longer used.
+- Deprecated: `pathspec.util.normalize_files()` is no longer used.
+- Deprecated: `pathspec.util.iter_tree()` is an alias for `pathspec.util.iter_tree_files()`.
+- Deprecated: `pathspec.iter_tree()` is an alias for `pathspec.util.iter_tree_files()`.
 - `Issue #47`_: Dropped support of EOL Python 2.7, 3.5, 3.6.
 - `Issue #51`_: Refactor deprecated unittest aliases for Python 3.11 compatibility.
 - `Issue #52`_: match_files() is not a pure generator function, and it impacts tree_*() gravely.

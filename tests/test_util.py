@@ -22,14 +22,13 @@ from pathspec.util import (
 	iter_tree_entries,
 	iter_tree_files,
 	match_file,
-	match_files,
 	normalize_file)
 
 
 class MatchFileTest(unittest.TestCase):
 	"""
-	The :class:`MatchFileTest` class tests the :meth:`.match_file` and
-	:meth:`.match_files` functions.
+	The :class:`MatchFileTest` class tests the :meth:`.match_file`
+	function.
 	"""
 
 	def test_1_match_file(self):
@@ -48,29 +47,6 @@ class MatchFileTest(unittest.TestCase):
 			'Y/b.txt',
 			'Y/Z/c.txt',
 		]))
-		self.assertEqual(results, {
-			'X/a.txt',
-			'X/Z/c.txt',
-			'Y/a.txt',
-			'Y/Z/c.txt',
-		})
-
-	def test_2_match_files(self):
-		"""
-		Test matching files collectively.
-		"""
-		patterns = list(map(GitWildMatchPattern, [
-			'*.txt',
-			'!b.txt',
-		]))
-		results = match_files(patterns, [
-			'X/a.txt',
-			'X/b.txt',
-			'X/Z/c.txt',
-			'Y/a.txt',
-			'Y/b.txt',
-			'Y/Z/c.txt',
-		])
 		self.assertEqual(results, {
 			'X/a.txt',
 			'X/Z/c.txt',

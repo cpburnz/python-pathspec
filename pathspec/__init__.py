@@ -18,8 +18,8 @@ The following functions are also imported:
 
 - :func:`pathspec.util.lookup_pattern`
 
-The following utility functions are also imported to maintain backward
-compatibility:
+The following deprecated functions are also imported to maintain
+backward compatibility:
 
 - :func:`pathspec.util.iter_tree` which is an alias for
   :func:`pathspec.util.iter_tree_files`.
