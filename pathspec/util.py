@@ -23,7 +23,6 @@ from typing import (
 	Optional,
 	Sequence,
 	Set,
-	Text,
 	Union)
 
 from .pattern import (
@@ -50,9 +49,9 @@ registered pattern factory (:class:`~collections.abc.Callable`).
 
 def detailed_match_files(
 	patterns: Iterable[Pattern],
-	files: Iterable[Text],
+	files: Iterable[str],
 	all_matches: Optional[bool] = None,
-) -> Dict[Text, 'MatchDetail']:
+) -> Dict[str, 'MatchDetail']:
 	"""
 	Matches the files to the patterns, and returns which patterns matched
 	the files.
@@ -94,6 +93,22 @@ def detailed_match_files(
 	return return_files
 
 
+def _filter_patterns(patterns: Iterable[Pattern]) -> List[Pattern]:
+	"""
+	Filters out null-patterns.
+
+	*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the
+	patterns.
+
+	Returns the patterns (:class:`list` of :class:`.Pattern`).
+	"""
+	return [
+		__pat
+		for __pat in patterns
+		if __pat.include is not None
+	]
+
+
 def _is_iterable(value: Any) -> bool:
 	"""
 	Check whether the value is an iterable (excludes strings).
@@ -131,53 +146,12 @@ def iter_tree_entries(
 	directory entry (:class:`.TreeEntry`) relative to *root*.
 	"""
 	if on_error is not None and not callable(on_error):
-		raise TypeError("on_error:{!r} is not callable.".format(on_error))
+		raise TypeError(f"on_error:{on_error!r} is not callable.")
 
 	if follow_links is None:
 		follow_links = True
 
-	for entry in _iter_tree_entries_next(os.path.abspath(root), '', {}, on_error, follow_links):
-		yield entry
-
-
-def iter_tree_files(
-	root: str,
-	on_error: Optional[Callable] = None,
-	follow_links: Optional[bool] = None,
-) -> Iterator[Text]:
-	"""
-	Walks the specified directory for all files.
-
-	*root* (:class:`str`) is the root directory to search for files.
-
-	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
-	optionally is the error handler for file-system exceptions. It will be
-	called with the exception (:exc:`OSError`). Reraise the exception to
-	abort the walk. Default is :data:`None` to ignore file-system
-	exceptions.
-
-	*follow_links* (:class:`bool` or :data:`None`) optionally is whether
-	to walk symbolic links that resolve to directories. Default is
-	:data:`None` for :data:`True`.
-
-	Raises :exc:`RecursionError` if recursion is detected.
-
-	Returns an :class:`~collections.abc.Iterator` yielding the path to
-	each file (:class:`str`) relative to *root*.
-	"""
-	if on_error is not None and not callable(on_error):
-		raise TypeError("on_error:{!r} is not callable.".format(on_error))
-
-	if follow_links is None:
-		follow_links = True
-
-	for entry in _iter_tree_entries_next(os.path.abspath(root), '', {}, on_error, follow_links):
-		if not entry.is_dir(follow_links):
-			yield entry.path
-
-
-# Alias `iter_tree_files()` as `iter_tree()`.
-iter_tree = iter_tree_files
+	yield from _iter_tree_entries_next(os.path.abspath(root), '', {}, on_error, follow_links)
 
 
 def _iter_tree_entries_next(
@@ -218,42 +192,40 @@ def _iter_tree_entries_next(
 	else:
 		raise RecursionError(real_path=dir_real, first_path=memo[dir_real], second_path=dir_rel)
 
-	for node_name in os.listdir(dir_full):
-		node_rel = os.path.join(dir_rel, node_name)
-		node_full = os.path.join(root_full, node_rel)
+	with os.scandir(dir_full) as scan_iter:
+		node_ent: os.DirEntry
+		for node_ent in scan_iter:
+			node_rel = os.path.join(dir_rel, node_ent.name)
 
-		# Inspect child node.
-		try:
-			node_lstat = os.lstat(node_full)
-		except OSError as e:
-			if on_error is not None:
-				on_error(e)
-			continue
-
-		if stat.S_ISLNK(node_lstat.st_mode):
-			# Child node is a link, inspect the target node.
-			is_link = True
+			# Inspect child node.
 			try:
-				node_stat = os.stat(node_full)
+				node_lstat = node_ent.stat(follow_symlinks=False)
 			except OSError as e:
 				if on_error is not None:
 					on_error(e)
 				continue
-		else:
-			is_link = False
-			node_stat = node_lstat
 
-		if stat.S_ISDIR(node_stat.st_mode) and (follow_links or not is_link):
-			# Child node is a directory, recurse into it and yield its
-			# descendant files.
-			yield TreeEntry(node_name, node_rel, node_lstat, node_stat)
+			if node_ent.is_symlink():
+				# Child node is a link, inspect the target node.
+				try:
+					node_stat = node_ent.stat()
+				except OSError as e:
+					if on_error is not None:
+						on_error(e)
+					continue
+			else:
+				node_stat = node_lstat
 
-			for entry in _iter_tree_entries_next(root_full, node_rel, memo, on_error, follow_links):
-				yield entry
+			if node_ent.is_dir(follow_symlinks=follow_links):
+				# Child node is a directory, recurse into it and yield its
+				# descendant files.
+				yield TreeEntry(node_ent.name, node_rel, node_lstat, node_stat)
 
-		elif stat.S_ISREG(node_stat.st_mode) or is_link:
-			# Child node is either a file or an unfollowed link, yield it.
-			yield TreeEntry(node_name, node_rel, node_lstat, node_stat)
+				yield from _iter_tree_entries_next(root_full, node_rel, memo, on_error, follow_links)
+
+			elif node_ent.is_file() or node_ent.is_symlink():
+				# Child node is either a file or an unfollowed link, yield it.
+				yield TreeEntry(node_ent.name, node_rel, node_lstat, node_stat)
 
 	# NOTE: Make sure to remove the canonical (real) path of the directory
 	# from the ancestors memo once we are done with it. This allows the
@@ -261,6 +233,40 @@ def _iter_tree_entries_next(
 	# second occurrence of the directory will be incorrectly interpreted
 	# as a recursion. See <https://github.com/cpburnz/python-path-specification/pull/7>.
 	del memo[dir_real]
+
+
+def iter_tree_files(
+	root: str,
+	on_error: Optional[Callable] = None,
+	follow_links: Optional[bool] = None,
+) -> Iterator[str]:
+	"""
+	Walks the specified directory for all files.
+
+	*root* (:class:`str`) is the root directory to search for files.
+
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
+	optionally is the error handler for file-system exceptions. It will be
+	called with the exception (:exc:`OSError`). Reraise the exception to
+	abort the walk. Default is :data:`None` to ignore file-system
+	exceptions.
+
+	*follow_links* (:class:`bool` or :data:`None`) optionally is whether
+	to walk symbolic links that resolve to directories. Default is
+	:data:`None` for :data:`True`.
+
+	Raises :exc:`RecursionError` if recursion is detected.
+
+	Returns an :class:`~collections.abc.Iterator` yielding the path to
+	each file (:class:`str`) relative to *root*.
+	"""
+	for entry in iter_tree_entries(root, on_error=on_error, follow_links=follow_links):
+		if not entry.is_dir(follow_links):
+			yield entry.path
+
+
+# Alias `iter_tree_files()` as `iter_tree()`.
+iter_tree = iter_tree_files
 
 
 def lookup_pattern(name: str) -> Callable[[AnyStr], Pattern]:
@@ -296,7 +302,12 @@ def match_file(patterns: Iterable[Pattern], file: str) -> bool:
 	return matched
 
 
-def match_files(patterns: Iterable[Pattern], files: Iterable[str]) -> Set[str]:
+# NOTICE: This function is not used anymore. It is left to keep the
+# public API stable.
+def match_files(
+	patterns: Iterable[Pattern],
+	files: Iterable[str],
+) -> Set[str]:
 	"""
 	Matches the files to the patterns.
 
@@ -308,51 +319,25 @@ def match_files(patterns: Iterable[Pattern], files: Iterable[str]) -> Set[str]:
 
 	Returns the matched files (:class:`set` of :class:`str`).
 	"""
-	all_files = files if isinstance(files, CollectionType) else list(files)
+	use_patterns = _filter_patterns(patterns)
+
 	return_files = set()
-	for pattern in patterns:
-		if pattern.include is not None:
-			result_files = pattern.match(all_files)
-			if pattern.include:
-				return_files.update(result_files)
-			else:
-				return_files.difference_update(result_files)
+	for file in files:
+		if match_file(use_patterns, file):
+			return_files.add(file)
 
 	return return_files
 
 
-def _normalize_entries(
-	entries: Iterable['TreeEntry'],
-	separators: Optional[Collection[str]] = None,
-) -> Dict[Text, 'TreeEntry']:
-	"""
-	Normalizes the entry paths to use the POSIX path separator.
-
-	*entries* (:class:`~collections.abc.Iterable` of :class:`.TreeEntry`)
-	contains the entries to be normalized.
-
-	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
-	:data:`None`) optionally contains the path separators to normalize.
-	See :func:`normalize_file` for more information.
-
-	Returns a :class:`dict` mapping each normalized file path (:class:`str`)
-	to the entry (:class:`.TreeEntry`)
-	"""
-	norm_files = {}
-	for entry in entries:
-		norm_files[normalize_file(entry.path, separators=separators)] = entry
-
-	return norm_files
-
-
-def normalize_file(file: Union[str, PathLike],
+def normalize_file(
+	file: Union[str, PathLike],
 	separators: Optional[Collection[str]] = None,
 ) -> str:
 	"""
 	Normalizes the file path to use the POSIX path separator (i.e.,
 	:data:`'/'`), and make the paths relative (remove leading :data:`'/'`).
 
-	*file* (:class:`str` or :class:`pathlib.PurePath`) is the file path.
+	*file* (:class:`str` or :class:`os.PathLike`) is the file path.
 
 	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
 	:data:`None`) optionally contains the path separators to normalize.
@@ -384,15 +369,17 @@ def normalize_file(file: Union[str, PathLike],
 	return norm_file
 
 
+# NOTICE: This function is not used anymore. It is left to keep the
+# public API stable.
 def normalize_files(
 	files: Iterable[Union[str, PathLike]],
 	separators: Optional[Collection[str]] = None,
-) -> Dict[Text, List[Union[str, PathLike]]]:
+) -> Dict[str, List[Union[str, PathLike]]]:
 	"""
 	Normalizes the file paths to use the POSIX path separator.
 
 	*files* (:class:`~collections.abc.Iterable` of :class:`str` or
-	:class:`pathlib.PurePath`) contains the file paths to be normalized.
+	:class:`os.PathLike`) contains the file paths to be normalized.
 
 	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
 	:data:`None`) optionally contains the path separators to normalize.
@@ -400,7 +387,7 @@ def normalize_files(
 
 	Returns a :class:`dict` mapping each normalized file path (:class:`str`)
 	to the original file paths (:class:`list` of :class:`str` or
-	:class:`pathlib.PurePath`).
+	:class:`os.PathLike`).
 	"""
 	norm_files = {}
 	for path in files:
@@ -434,10 +421,10 @@ def register_pattern(
 	(:data:`False`). Default is :data:`None` for :data:`False`.
 	"""
 	if not isinstance(name, str):
-		raise TypeError("name:{!r} is not a string.".format(name))
+		raise TypeError(f"name:{name!r} is not a string.")
 
 	if not callable(pattern_factory):
-		raise TypeError("pattern_factory:{!r} is not callable.".format(pattern_factory))
+		raise TypeError(f"pattern_factory:{pattern_factory!r} is not callable.")
 
 	if name in _registered_patterns and not override:
 		raise AlreadyRegisteredError(name, _registered_patterns[name])
@@ -559,7 +546,7 @@ class MatchDetail(object):
 	The :class:`.MatchDetail` class contains information about
 	"""
 
-	#: Make the class dict-less.
+	# Make the class dict-less.
 	__slots__ = ('patterns',)
 
 	def __init__(self, patterns: Sequence[Pattern]) -> None:
@@ -585,7 +572,7 @@ class TreeEntry(object):
 	entry.
 	"""
 
-	#: Make the class dict-less.
+	# Make the class dict-less.
 	__slots__ = ('_lstat', 'name', 'path', '_stat')
 
 	def __init__(
@@ -602,16 +589,16 @@ class TreeEntry(object):
 
 		*path* (:class:`str`) is the relative path of the entry.
 
-		*lstat* (:class:`~os.stat_result`) is the stat result of the direct
+		*lstat* (:class:`os.stat_result`) is the stat result of the direct
 		entry.
 
-		*stat* (:class:`~os.stat_result`) is the stat result of the entry,
+		*stat* (:class:`os.stat_result`) is the stat result of the entry,
 		potentially linked.
 		"""
 
 		self._lstat: os.stat_result = lstat
 		"""
-		*_lstat* (:class:`~os.stat_result`) is the stat result of the direct
+		*_lstat* (:class:`os.stat_result`) is the stat result of the direct
 		entry.
 		"""
 
@@ -627,7 +614,7 @@ class TreeEntry(object):
 
 		self._stat: os.stat_result = stat
 		"""
-		*_stat* (:class:`~os.stat_result`) is the stat result of the linked
+		*_stat* (:class:`os.stat_result`) is the stat result of the linked
 		entry.
 		"""
 
@@ -677,7 +664,7 @@ class TreeEntry(object):
 		symbolic links. If this is :data:`True`, the stat result of the
 		linked file will be returned. Default is :data:`None` for :data:`True`.
 
-		Returns that stat result (:class:`~os.stat_result`).
+		Returns that stat result (:class:`os.stat_result`).
 		"""
 		if follow_links is None:
 			follow_links = True

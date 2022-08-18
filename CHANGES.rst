@@ -11,8 +11,10 @@ Change History
 
 - Support Python 3.10, 3.11.
 - Changed build system to `pyproject.toml`_ and build backend to `setuptools.build_meta`_ which may have unforeseen consequences.
+- Modernize code to Python 3.7.
 - `Issue #47`_: Dropped support of EOL Python 2.7, 3.5, 3.6.
 - `Issue #51`_: Refactor deprecated unittest aliases for Python 3.11 compatibility.
+- `Issue #52`_: match_files() is not a pure generator function, and it impacts tree_*() gravely.
 - `Issue #53`_: Symlink pathspec_meta.py breaks Windows.
 - `Issue #54`_: test_util.py uses os.symlink which can fail on Windows.
 - `Issue #55`_: Backslashes at start of pattern not handled correctly.
@@ -21,6 +23,7 @@ Change History
 .. _`setuptools.build_meta`: https://setuptools.pypa.io/en/latest/build_meta.html
 .. _`Issue #47`: https://github.com/cpburnz/python-path-specification/issues/47
 .. _`Issue #51`: https://github.com/cpburnz/python-path-specification/pull/51
+.. _`Issue #52`: https://github.com/cpburnz/python-path-specification/issues/52
 .. _`Issue #53`: https://github.com/cpburnz/python-path-specification/issues/53
 .. _`Issue #54`: https://github.com/cpburnz/python-path-specification/issues/54
 .. _`Issue #55`: https://github.com/cpburnz/python-path-specification/issues/55

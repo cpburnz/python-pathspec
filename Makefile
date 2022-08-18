@@ -2,7 +2,7 @@
 # This Makefile is used to manage development and distribution.
 #
 # Created: 2022-08-11
-# Updated: 2022-08-16
+# Updated: 2022-08-17
 #
 
 .PHONY: build create-venv help prebuild publish test test-all update-venv
@@ -20,7 +20,7 @@ help:
 	@echo
 	@echo "Development Targets:"
 	@echo "  create-venv  Create the development Python virtual environment."
-	@echo "  test         Run tests using Tox for the development virtual environment."
+	@echo "  test         Run tests using the development virtual environment."
 	@echo "  test-all     Run tests using Tox for all virtual environments."
 	@echo "  update-venv  Update the development Python virtual environment."
 
@@ -52,10 +52,10 @@ VENV := ./dev/venv.sh "${VENV_DIR}"
 .PHONY: dev-test-all dev-test-primary dev-venv-base dev-venv-create dev-venv-install
 
 dev-test-all:
-	${VENV} python -m tox
+	${VENV} tox
 
 dev-test-primary:
-	${VENV} python -m tox -e "py$(shell ${PYTHON} -c 'import sys;print(*sys.version_info[:2],sep="")')"
+	${VENV} python -m unittest -v
 
 dev-venv-base:
 	${PYTHON} -m venv --clear "${VENV_DIR}"
@@ -64,7 +64,7 @@ dev-venv-create: dev-venv-base dev-venv-install
 
 dev-venv-install:
 	${VENV} pip install --upgrade pip setuptools wheel
-	${VENV} pip install --upgrade build sphinx tox twine
+	${VENV} pip install --upgrade build sphinx tox twine typing-extensions
 	${VENV} pip install -e "${SRC_DIR}"
 
 

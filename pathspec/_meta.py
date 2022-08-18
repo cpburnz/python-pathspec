@@ -16,7 +16,6 @@ __credits__ = [
 	"nvie <https://github.com/nvie>",
 	"adrienverge <https://github.com/adrienverge>",
 	"AndersBlomdell <https://github.com/AndersBlomdell>",
-	"highb <https://github.com/highb>",
 	"thmxv <https://github.com/thmxv>",
 	"wimglenn <https://github.com/wimglenn>",
 	"hugovk <https://github.com/hugovk>",
@@ -41,6 +40,7 @@ __credits__ = [
 	"jayvdb <https://github.com/jayvdb>",
 	"jwodder <https://github.com/jwodder>",
 	"kloczek <https://github.com/kloczek>",
+	"orens <https://github.com/orens>",
 ]
 __license__ = "MPL 2.0"
 __version__ = "0.10.0.dev1"
