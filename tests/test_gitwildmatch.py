@@ -7,7 +7,9 @@ import unittest
 
 import pathspec.patterns.gitwildmatch
 import pathspec.util
-from pathspec.patterns.gitwildmatch import GitWildMatchPattern, GitWildMatchPatternError
+from pathspec.patterns.gitwildmatch import (
+	GitWildMatchPattern,
+	GitWildMatchPatternError)
 
 
 class GitWildMatchTest(unittest.TestCase):

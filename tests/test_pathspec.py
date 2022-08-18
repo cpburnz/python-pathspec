@@ -1,23 +1,72 @@
-# encoding: utf-8
 """
-This script tests ``PathSpec``.
+This script tests :class:`.PathSpec`.
 """
 
+import os
+import os.path
+import shutil
+import tempfile
 import unittest
+from typing import (
+	Iterable)
 
-import pathspec
+from pathspec import (
+	PathSpec)
+from pathspec.util import (
+	iter_tree_entries)
 
 
 class PathSpecTest(unittest.TestCase):
 	"""
-	The ``PathSpecTest`` class tests the ``PathSpec`` class.
+	The :class:`PathSpecTest` class tests the :class:`.PathSpec` class.
 	"""
+
+	def make_dirs(self, dirs: Iterable[str]) -> None:
+		"""
+		Create the specified directories.
+		"""
+		for dir in dirs:
+			os.mkdir(os.path.join(self.temp_dir, self.ospath(dir)))
+
+	def make_files(self, files: Iterable[str]) -> None:
+		"""
+		Create the specified files.
+		"""
+		for file in files:
+			self.mkfile(os.path.join(self.temp_dir, self.ospath(file)))
+
+	@staticmethod
+	def mkfile(file: str) -> None:
+		"""
+		Creates an empty file.
+		"""
+		with open(file, 'wb'):
+			pass
+
+	@staticmethod
+	def ospath(path: str) -> str:
+		"""
+		Convert the POSIX path to a native OS path.
+		"""
+		return os.path.join(*path.split('/'))
+
+	def setUp(self) -> None:
+		"""
+		Called before each test.
+		"""
+		self.temp_dir = tempfile.mkdtemp()
+
+	def tearDown(self) -> None:
+		"""
+		Called after each test.
+		"""
+		shutil.rmtree(self.temp_dir)
 
 	def test_01_absolute_dir_paths_1(self):
 		"""
 		Tests that absolute paths will be properly normalized and matched.
 		"""
-		spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+		spec = PathSpec.from_lines('gitwildmatch', [
 			'foo',
 		])
 		results = set(spec.match_files([
@@ -41,7 +90,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Tests that absolute paths will be properly normalized and matched.
 		"""
-		spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+		spec = PathSpec.from_lines('gitwildmatch', [
 			'/foo',
 		])
 		results = set(spec.match_files([
@@ -64,7 +113,7 @@ class PathSpecTest(unittest.TestCase):
 		Tests that paths referencing the current directory will be properly
 		normalized and matched.
 		"""
-		spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+		spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
 			'!test1/',
 		])
@@ -87,7 +136,7 @@ class PathSpecTest(unittest.TestCase):
 		Tests that matching files one at a time yields the same results as
 		matching multiples files at once.
 		"""
-		spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+		spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
 			'!test1/',
 		])
@@ -108,7 +157,7 @@ class PathSpecTest(unittest.TestCase):
 		Tests that paths referencing the current directory will be properly
 		normalized and matched.
 		"""
-		spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+		spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
 			'!test1/',
 		])
@@ -130,7 +179,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Tests that Windows paths will be properly normalized and matched.
 		"""
-		spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+		spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
 			'!test1/',
 		])
@@ -152,11 +201,11 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Tests equality.
 		"""
-		first_spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+		first_spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
 			'!test1/',
 		])
-		second_spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+		second_spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
 			'!test1/',
 		])
@@ -164,25 +213,25 @@ class PathSpecTest(unittest.TestCase):
 
 	def test_02_ne(self):
 		"""
-		Tests equality.
+		Tests inequality.
 		"""
-		first_spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+		first_spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
 		])
-		second_spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+		second_spec = PathSpec.from_lines('gitwildmatch', [
 			'!*.txt',
 		])
 		self.assertNotEqual(first_spec, second_spec)
 
-	def test_01_addition(self):
+	def test_03_add(self):
 		"""
-		Test pattern addition using + operator
+		Test spec addition using :data:`+` operator.
 		"""
-		first_spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+		first_spec = PathSpec.from_lines('gitwildmatch', [
 			'test.txt',
 			'test.png'
 		])
-		second_spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+		second_spec = PathSpec.from_lines('gitwildmatch', [
 			'test.html',
 			'test.jpg'
 		])
@@ -192,7 +241,7 @@ class PathSpecTest(unittest.TestCase):
 			'test.png',
 			'test.html',
 			'test.jpg'
-		], separators=('\\',)))
+		]))
 		self.assertEqual(results, {
 			'test.txt',
 			'test.png',
@@ -200,15 +249,15 @@ class PathSpecTest(unittest.TestCase):
 			'test.jpg'
 		})
 
-	def test_02_addition(self):
+	def test_03_iadd(self):
 		"""
-		Test pattern addition using += operator
+		Test spec addition using :data:`+=` operator.
 		"""
-		spec = pathspec.PathSpec.from_lines('gitwildmatch', [
+		spec = PathSpec.from_lines('gitwildmatch', [
 			'test.txt',
 			'test.png'
 		])
-		spec += pathspec.PathSpec.from_lines('gitwildmatch', [
+		spec += PathSpec.from_lines('gitwildmatch', [
 			'test.html',
 			'test.jpg'
 		])
@@ -217,10 +266,163 @@ class PathSpecTest(unittest.TestCase):
 			'test.png',
 			'test.html',
 			'test.jpg'
-		], separators=('\\',)))
+		]))
 		self.assertEqual(results, {
 			'test.txt',
 			'test.png',
 			'test.html',
 			'test.jpg'
+		})
+
+	def test_04_len(self):
+		"""
+		Test spec length.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'foo',
+			'bar',
+		])
+		self.assertEqual(len(spec), 2)
+
+	def test_05_match_entries(self):
+		"""
+		Test matching files collectively.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'*.txt',
+			'!b.txt',
+		])
+		self.make_dirs([
+			'X',
+			'X/Z',
+			'Y',
+			'Y/Z',
+		])
+		self.make_files([
+			'X/a.txt',
+			'X/b.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/b.txt',
+			'Y/Z/c.txt',
+		])
+		entries = iter_tree_entries(self.temp_dir)
+		results = {
+			__entry.path
+			for __entry in spec.match_entries(entries)
+		}
+		self.assertEqual(results, {
+			'X/a.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/Z/c.txt',
+		})
+
+	def test_05_match_file(self):
+		"""
+		Test matching files individually.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'*.txt',
+			'!b.txt',
+		])
+		results = set(filter(spec.match_file, [
+			'X/a.txt',
+			'X/b.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/b.txt',
+			'Y/Z/c.txt',
+		]))
+		self.assertEqual(results, {
+			'X/a.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/Z/c.txt',
+		})
+
+	def test_05_match_files(self):
+		"""
+		Test matching files collectively.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'*.txt',
+			'!b.txt',
+		])
+		results = set(spec.match_files([
+			'X/a.txt',
+			'X/b.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/b.txt',
+			'Y/Z/c.txt',
+		]))
+		self.assertEqual(results, {
+			'X/a.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/Z/c.txt',
+		})
+
+	def test_05_match_tree_entries(self):
+		"""
+		Test matching a file tree.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'*.txt',
+			'!b.txt',
+		])
+		self.make_dirs([
+			'X',
+			'X/Z',
+			'Y',
+			'Y/Z',
+		])
+		self.make_files([
+			'X/a.txt',
+			'X/b.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/b.txt',
+			'Y/Z/c.txt',
+		])
+		results = {
+			__entry.path
+			for __entry in spec.match_tree_entries(self.temp_dir)
+		}
+		self.assertEqual(results, {
+			'X/a.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/Z/c.txt',
+		})
+
+	def test_05_match_tree_files(self):
+		"""
+		Test matching a file tree.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'*.txt',
+			'!b.txt',
+		])
+		self.make_dirs([
+			'X',
+			'X/Z',
+			'Y',
+			'Y/Z',
+		])
+		self.make_files([
+			'X/a.txt',
+			'X/b.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/b.txt',
+			'Y/Z/c.txt',
+		])
+		results = set(spec.match_tree_files(self.temp_dir))
+		self.assertEqual(results, {
+			'X/a.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/Z/c.txt',
 		})

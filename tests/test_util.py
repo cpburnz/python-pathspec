@@ -1,4 +1,3 @@
-# encoding: utf-8
 """
 This script tests utility functions.
 """
@@ -6,42 +5,111 @@ This script tests utility functions.
 import errno
 import os
 import os.path
+import pathlib
 import shutil
-import sys
 import tempfile
 import unittest
+from functools import (
+	partial)
+from typing import (
+	Iterable,
+	Tuple)
 
-from pathspec.util import iter_tree_entries, iter_tree_files, RecursionError, normalize_file
+from pathspec.patterns.gitwildmatch import (
+	GitWildMatchPattern)
+from pathspec.util import (
+	RecursionError,
+	iter_tree_entries,
+	iter_tree_files,
+	match_file,
+	match_files,
+	normalize_file)
+
+
+class MatchFileTest(unittest.TestCase):
+	"""
+	The :class:`MatchFileTest` class tests the :meth:`.match_file` and
+	:meth:`.match_files` functions.
+	"""
+
+	def test_1_match_file(self):
+		"""
+		Test matching files individually.
+		"""
+		patterns = list(map(GitWildMatchPattern, [
+			'*.txt',
+			'!b.txt',
+		]))
+		results = set(filter(partial(match_file, patterns), [
+			'X/a.txt',
+			'X/b.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/b.txt',
+			'Y/Z/c.txt',
+		]))
+		self.assertEqual(results, {
+			'X/a.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/Z/c.txt',
+		})
+
+	def test_2_match_files(self):
+		"""
+		Test matching files collectively.
+		"""
+		patterns = list(map(GitWildMatchPattern, [
+			'*.txt',
+			'!b.txt',
+		]))
+		results = match_files(patterns, [
+			'X/a.txt',
+			'X/b.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/b.txt',
+			'Y/Z/c.txt',
+		])
+		self.assertEqual(results, {
+			'X/a.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/Z/c.txt',
+		})
 
 
 class IterTreeTest(unittest.TestCase):
 	"""
-	The ``IterTreeTest`` class tests `pathspec.util.iter_tree_files()`.
+	The :class:`IterTreeTest` class tests :meth:`.iter_tree_entries` and
+	:meth:`.iter_tree_files` functions.
 	"""
 
-	def make_dirs(self, dirs):
+	def make_dirs(self, dirs: Iterable[str]) -> None:
 		"""
 		Create the specified directories.
 		"""
 		for dir in dirs:
 			os.mkdir(os.path.join(self.temp_dir, self.ospath(dir)))
 
-	def make_files(self, files):
+	def make_files(self, files: Iterable[str]) -> None:
 		"""
 		Create the specified files.
 		"""
 		for file in files:
 			self.mkfile(os.path.join(self.temp_dir, self.ospath(file)))
 
-	def make_links(self, links):
+	def make_links(self, links: Iterable[Tuple[str, str]]) -> None:
 		"""
 		Create the specified links.
 		"""
 		for link, node in links:
-			os.symlink(os.path.join(self.temp_dir, self.ospath(node)), os.path.join(self.temp_dir, self.ospath(link)))
+			src = os.path.join(self.temp_dir, self.ospath(node))
+			dest = os.path.join(self.temp_dir, self.ospath(link))
+			os.symlink(src, dest)
 
 	@staticmethod
-	def mkfile(file):
+	def mkfile(file: str) -> None:
 		"""
 		Creates an empty file.
 		"""
@@ -49,13 +117,13 @@ class IterTreeTest(unittest.TestCase):
 			pass
 
 	@staticmethod
-	def ospath(path):
+	def ospath(path: str) -> str:
 		"""
 		Convert the POSIX path to a native OS path.
 		"""
 		return os.path.join(*path.split('/'))
 
-	def require_realpath(self):
+	def require_realpath(self) -> None:
 		"""
 		Skips the test if `os.path.realpath` does not properly support
 		symlinks.
@@ -63,20 +131,20 @@ class IterTreeTest(unittest.TestCase):
 		if self.broken_realpath:
 			raise unittest.SkipTest("`os.path.realpath` is broken.")
 
-	def require_symlink(self):
+	def require_symlink(self) -> None:
 		"""
 		Skips the test if `os.symlink` is not supported.
 		"""
 		if self.no_symlink:
 			raise unittest.SkipTest("`os.symlink` is not supported.")
 
-	def setUp(self):
+	def setUp(self) -> None:
 		"""
 		Called before each test.
 		"""
 		self.temp_dir = tempfile.mkdtemp()
 
-	def tearDown(self):
+	def tearDown(self) -> None:
 		"""
 		Called after each test.
 		"""
@@ -151,6 +219,7 @@ class IterTreeTest(unittest.TestCase):
 			except AssertionError:
 				broken_realpath = True
 				raise
+
 			broken_realpath = False
 
 		finally:
@@ -246,6 +315,7 @@ class IterTreeTest(unittest.TestCase):
 		])
 		with self.assertRaises(RecursionError) as context:
 			set(iter_tree_files(self.temp_dir))
+
 		self.assertEqual(context.exception.first_path, 'Dir')
 		self.assertEqual(context.exception.second_path, self.ospath('Dir/Self'))
 
@@ -272,6 +342,7 @@ class IterTreeTest(unittest.TestCase):
 		])
 		with self.assertRaises(RecursionError) as context:
 			set(iter_tree_files(self.temp_dir))
+
 		self.assertIn(context.exception.first_path, ('A', 'B', 'C'))
 		self.assertEqual(context.exception.second_path, {
 			'A': self.ospath('A/Bx/Cx/Ax'),
@@ -292,6 +363,7 @@ class IterTreeTest(unittest.TestCase):
 		])
 		with self.assertRaises(OSError) as context:
 			set(iter_tree_files(self.temp_dir, on_error=reraise))
+
 		self.assertEqual(context.exception.errno, errno.ENOENT)
 
 	def test_2_7_ignore_broken_links(self):
@@ -369,12 +441,10 @@ class IterTreeTest(unittest.TestCase):
 			'Empty',
 		])))
 
-	@unittest.skipIf(sys.version_info < (3, 4), "pathlib entered stdlib in Python 3.4")
 	def test_4_normalizing_pathlib_path(self):
 		"""
-		Tests passing pathlib.Path as argument.
+		Tests normalizing a :class:`pathlib.PurePath` as argument.
 		"""
-		from pathlib import Path
-		first_spec = normalize_file(Path('a.txt'))
+		first_spec = normalize_file(pathlib.PurePath('a.txt'))
 		second_spec = normalize_file('a.txt')
 		self.assertEqual(first_spec, second_spec)
