@@ -143,6 +143,14 @@ class GitWildMatchPattern(RegexPattern):
 				# all. This must be because the pattern is invalid.
 				raise GitWildMatchPatternError(f"Invalid git pattern: {original_pattern!r}")
 
+			if pattern_segs[-1] == '*' and len(pattern_segs) > 1:
+				# A pattern ending with "/*" should match all descendant paths
+				# of the directory, not just direct children. This is equivalent
+				# to "{pattern}/**". This behavior of git contradicts its
+				# documentation. So, set last segment to a double-asterisk to
+				# include all descendants.
+				pattern_segs[-1] = '**'
+
 			if not pattern_segs[-1] and len(pattern_segs) > 1:
 				# A pattern ending with a slash ('/') will match all descendant
 				# paths if it is a directory but not if it is a regular file.

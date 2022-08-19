@@ -6,10 +6,11 @@ import re
 import unittest
 
 import pathspec.patterns.gitwildmatch
-import pathspec.util
 from pathspec.patterns.gitwildmatch import (
 	GitWildMatchPattern,
 	GitWildMatchPatternError)
+from pathspec.util import (
+	lookup_pattern)
 
 
 class GitWildMatchTest(unittest.TestCase):
@@ -425,7 +426,7 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		Tests that the pattern is registered.
 		"""
-		self.assertIs(pathspec.util.lookup_pattern('gitwildmatch'), GitWildMatchPattern)
+		self.assertIs(lookup_pattern('gitwildmatch'), GitWildMatchPattern)
 
 	def test_06_access_deprecated(self):
 		"""
@@ -439,7 +440,7 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		Tests that the pattern is registered under the deprecated alias.
 		"""
-		self.assertIs(pathspec.util.lookup_pattern('gitignore'), pathspec.GitIgnorePattern)
+		self.assertIs(lookup_pattern('gitignore'), pathspec.GitIgnorePattern)
 
 	def test_07_encode_bytes(self):
 		"""
@@ -581,3 +582,63 @@ class GitWildMatchTest(unittest.TestCase):
 			"#sign",
 		]))
 		self.assertEqual(results, {"#sign"})
+
+	def test_11_match_directory_1(self):
+		"""
+		Test matching a directory.
+		"""
+		pattern = GitWildMatchPattern("dirG/")
+		results = set(pattern.match([
+			'fileA',
+			'fileB',
+			'dirD/fileE',
+			'dirD/fileF',
+			'dirG/dirH/fileI',
+			'dirG/dirH/fileJ',
+			'dirG/fileO',
+		]))
+		self.assertEqual(results, {
+			'dirG/dirH/fileI',
+			'dirG/dirH/fileJ',
+			'dirG/fileO',
+		})
+
+	def test_11_match_directory_2(self):
+		"""
+		Test matching a directory.
+		"""
+		pattern = GitWildMatchPattern("dirG/*")
+		results = set(pattern.match([
+			'fileA',
+			'fileB',
+			'dirD/fileE',
+			'dirD/fileF',
+			'dirG/dirH/fileI',
+			'dirG/dirH/fileJ',
+			'dirG/fileO',
+		]))
+		self.assertEqual(results, {
+			'dirG/dirH/fileI',
+			'dirG/dirH/fileJ',
+			'dirG/fileO',
+		})
+
+	def test_11_ignore_sub_directory_3(self):
+		"""
+		Test matching a directory.
+		"""
+		pattern = GitWildMatchPattern("dirG/**")
+		results = set(pattern.match([
+			'fileA',
+			'fileB',
+			'dirD/fileE',
+			'dirD/fileF',
+			'dirG/dirH/fileI',
+			'dirG/dirH/fileJ',
+			'dirG/fileO',
+		]))
+		self.assertEqual(results, {
+			'dirG/dirH/fileI',
+			'dirG/dirH/fileJ',
+			'dirG/fileO',
+		})

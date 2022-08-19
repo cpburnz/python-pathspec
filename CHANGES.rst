@@ -17,6 +17,7 @@ Change History
 - Deprecated: `pathspec.util.normalize_files()` is no longer used.
 - Deprecated: `pathspec.util.iter_tree()` is an alias for `pathspec.util.iter_tree_files()`.
 - Deprecated: `pathspec.iter_tree()` is an alias for `pathspec.util.iter_tree_files()`.
+- `Issue #19`_: Files inside an ignored sub-directory are not matched. {{TODO: close issue}}
 - `Issue #47`_: Dropped support of EOL Python 2.7, 3.5, 3.6.
 - `Issue #51`_: Refactor deprecated unittest aliases for Python 3.11 compatibility.
 - `Issue #52`_: match_files() is not a pure generator function, and it impacts tree_*() gravely.
@@ -26,6 +27,7 @@ Change History
 
 .. _`pyproject.toml`: https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/
 .. _`setuptools.build_meta`: https://setuptools.pypa.io/en/latest/build_meta.html
+.. _`Issue #19`: https://github.com/cpburnz/python-path-specification/issues/19
 .. _`Issue #47`: https://github.com/cpburnz/python-path-specification/issues/47
 .. _`Issue #51`: https://github.com/cpburnz/python-path-specification/pull/51
 .. _`Issue #52`: https://github.com/cpburnz/python-path-specification/issues/52
