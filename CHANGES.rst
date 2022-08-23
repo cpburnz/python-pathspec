@@ -13,6 +13,7 @@ Major changes:
 
 - Changed build system to `pyproject.toml`_ and build backend to `setuptools.build_meta`_ which may have unforeseen consequences.
 - `Issue #47`_: Dropped support of EOL Python 2.7, 3.5, 3.6.
+- The *gitwildmatch* pattern `dir/*` is now handled the same as `dir/`. This means `dir/*` will now match all descendants rather than only direct children. See `Issue #19`_.
 
 API changes:
 
