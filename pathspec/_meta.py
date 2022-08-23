@@ -42,6 +42,7 @@ __credits__ = [
 	"kloczek <https://github.com/kloczek>",
 	"orens <https://github.com/orens>",
 	"spMohanty <https://github.com/spMohanty>",
+	"ichard26 <https://github.com/ichard26>",
 ]
 __license__ = "MPL 2.0"
 __version__ = "0.10.0.dev1"
