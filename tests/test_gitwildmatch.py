@@ -60,6 +60,25 @@ class GitWildMatchTest(unittest.TestCase):
 			'an/absolute/file/path/foo',
 		})
 
+	def test_01_absolute_ignore(self):
+		"""
+		Tests an ignore absolute path pattern.
+		"""
+		regex, include = GitWildMatchPattern.pattern_to_regex('!/foo/build')
+		self.assertFalse(include)
+		self.assertEqual(regex, '^foo/build(?:/.*)?$')
+
+		# NOTE: The pattern match is backwards because the pattern itself
+		# does not consider the include attribute.
+		pattern = GitWildMatchPattern(re.compile(regex), include)
+		results = set(pattern.match([
+			'build/file.py',
+			'foo/build/file.py',
+		]))
+		self.assertEqual(results, {
+			'foo/build/file.py',
+		})
+
 	def test_01_absolute_root(self):
 		"""
 		Tests a single root absolute path pattern.
@@ -150,11 +169,17 @@ class GitWildMatchTest(unittest.TestCase):
 		regex, include = GitWildMatchPattern.pattern_to_regex('!temp')
 		self.assertIsNotNone(include)
 		self.assertFalse(include)
-		self.assertEqual(regex, '^(?:.+/)?temp$')
+		self.assertEqual(regex, '^(?:.+/)?temp(?:/.*)?$')
 
+		# NOTE: The pattern match is backwards because the pattern itself
+		# does not consider the include attribute.
 		pattern = GitWildMatchPattern(re.compile(regex), include)
-		results = set(pattern.match(['temp/foo']))
-		self.assertEqual(results, set())
+		results = set(pattern.match([
+			'temp/foo',
+		]))
+		self.assertEqual(results, {
+			'temp/foo',
+		})
 
 	def test_03_child_double_asterisk(self):
 		"""
@@ -623,7 +648,7 @@ class GitWildMatchTest(unittest.TestCase):
 			'dirG/fileO',
 		})
 
-	def test_11_ignore_sub_directory_3(self):
+	def test_11_match_sub_directory_3(self):
 		"""
 		Test matching a directory.
 		"""

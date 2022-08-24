@@ -201,12 +201,10 @@ class GitWildMatchPattern(RegexPattern):
 						except ValueError as e:
 							raise GitWildMatchPatternError(f"Invalid git pattern: {original_pattern!r}") from e
 
-						if i == end and include is True:
+						if i == end:
 							# A pattern ending without a slash ('/') will match a file
 							# or a directory (with paths underneath it). E.g., "foo"
 							# matches "foo", "foo/bar", "foo/bar/baz", etc.
-							# EDGE CASE: However, this does not hold for exclusion cases
-							# according to `git check-ignore` (v2.4.1).
 							output.append('(?:/.*)?')
 
 						need_slash = True

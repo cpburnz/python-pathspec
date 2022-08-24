@@ -31,6 +31,8 @@ Bug fixes:
 - `Issue #54`_: test_util.py uses os.symlink which can fail on Windows.
 - `Issue #55`_: Backslashes at start of pattern not handled correctly.
 - `Issue #56`_: pyproject.toml: include subpackages in setuptools config
+- `Issue #57`_: `!` doesn't exclude files in directories if the pattern doesn't have a trailing slash.
+
 
 Improvements:
 
@@ -49,6 +51,7 @@ Improvements:
 .. _`Issue #54`: https://github.com/cpburnz/python-path-specification/issues/54
 .. _`Issue #55`: https://github.com/cpburnz/python-path-specification/issues/55
 .. _`Issue #56`: https://github.com/cpburnz/python-path-specification/pull/56
+.. _`Issue #57`: https://github.com/cpburnz/python-path-specification/issues/57
 
 
 0.9.0 (2021-07-17)
