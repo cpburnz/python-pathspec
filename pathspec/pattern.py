@@ -2,13 +2,17 @@
 This module provides the base definition for patterns.
 """
 
+import dataclasses
 import re
+import warnings
 from typing import (
+	Any,
 	AnyStr,
 	Iterable,
 	Iterator,
+	Match as MatchHint,
 	Optional,
-	Pattern as RegexHint,
+	Pattern as PatternHint,
 	Tuple,
 	Union)
 
@@ -39,16 +43,40 @@ class Pattern(object):
 
 	def match(self, files: Iterable[str]) -> Iterator[str]:
 		"""
+		DEPRECATED: This method is no longer used and has been replaced by
+		:meth:`.match_file`. Use the :meth:`.match_file` method with a loop
+		for similar results.
+
 		Matches this pattern against the specified files.
 
-		*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
-		each file relative to the root directory (e.g., :data:`"relative/path/to/file"`).
+		*files* (:class:`~collections.abc.Iterable` of :class:`str`)
+		contains each file relative to the root directory (e.g.,
+		:data:`"relative/path/to/file"`).
 
 		Returns an :class:`~collections.abc.Iterable` yielding each matched
 		file path (:class:`str`).
 		"""
+		warnings.warn((
+			"{0.__module__}.{0.__qualname__}.match() is deprecated. Use "
+			"{0.__module__}.{0.__qualname__}.match_file() with a loop for "
+			"similar results."
+		).format(self.__class__), DeprecationWarning, stacklevel=2)
+
+		for file in files:
+			if self.match_file(file) is not None:
+				yield file
+
+	def match_file(self, file: str) -> Optional['PatternMatchResult']:
+		"""
+		Matches this pattern against the specified file.
+
+		*file* (:class:`str`) is the normalized file path to match against.
+
+		Returns :class:`PatternMatchResult` if *file* matched; otherwise,
+		:data:`None`.
+		"""
 		raise NotImplementedError((
-			"{0.__module__}.{0.__qualname__} must override match()."
+			"{0.__module__}.{0.__qualname__} must override match_file()."
 		).format(self.__class__))
 
 
@@ -58,22 +86,22 @@ class RegexPattern(Pattern):
 	using regular expressions.
 	"""
 
-	# Make the class dict-less.
+	# Keep the class dict-less.
 	__slots__ = ('regex',)
 
 	def __init__(
 		self,
-		pattern: Union[AnyStr, RegexHint],
+		pattern: Union[AnyStr, PatternHint],
 		include: Optional[bool] = None,
 	) -> None:
 		"""
 		Initializes the :class:`RegexPattern` instance.
 
-		*pattern* (:class:`str`, :class:`bytes`, :class:`re.RegexObject`, or
+		*pattern* (:class:`str`, :class:`bytes`, :class:`re.Pattern`, or
 		:data:`None`) is the pattern to compile into a regular expression.
 
 		*include* (:class:`bool` or :data:`None`) must be :data:`None`
-		unless *pattern* is a precompiled regular expression (:class:`re.RegexObject`)
+		unless *pattern* is a precompiled regular expression (:class:`re.Pattern`)
 		in which case it is whether matched files should be included
 		(:data:`True`), excluded (:data:`False`), or is a null operation
 		(:data:`None`).
@@ -105,13 +133,13 @@ class RegexPattern(Pattern):
 			).format(include, pattern)
 
 		else:
-			raise TypeError("pattern:{!r} is not a string, RegexObject, or None.".format(pattern))
+			raise TypeError("pattern:{!r} is not a string, re.Pattern, or None.".format(pattern))
 
 		super(RegexPattern, self).__init__(include)
 
-		self.regex: RegexHint = regex
+		self.regex: PatternHint = regex
 		"""
-		*regex* (:class:`re.RegexObject`) is the regular expression for the
+		*regex* (:class:`re.Pattern`) is the regular expression for the
 		pattern.
 		"""
 
@@ -126,20 +154,22 @@ class RegexPattern(Pattern):
 		else:
 			return NotImplemented
 
-	def match(self, files: Iterable[str]) -> Iterable[str]:
+	def match_file(self, file: str) -> Optional['RegexMatchResult']:
 		"""
-		Matches this pattern against the specified files.
+		Matches this pattern against the specified file.
 
-		*files* (:class:`~collections.abc.Iterable` of :class:`str`)
+		*file* (:class:`str`)
 		contains each file relative to the root directory (e.g., "relative/path/to/file").
 
-		Returns an :class:`~collections.abc.Iterable` yielding each matched
+		Returns :data:`True` if *file* matched; otherwise, :data:`False`.
 		file path (:class:`str`).
 		"""
 		if self.include is not None:
-			for path in files:
-				if self.regex.match(path) is not None:
-					yield path
+			match = self.regex.match(file)
+			if match is not None:
+				return RegexMatchResult(match)
+
+		return None
 
 	@classmethod
 	def pattern_to_regex(cls, pattern: str) -> Tuple[str, bool]:
@@ -157,3 +187,33 @@ class RegexPattern(Pattern):
 			   :data:`True`.
 		"""
 		return pattern, True
+
+
+@dataclasses.dataclass()
+class PatternMatchResult(object):
+	"""
+	The :class:`PatternMatchResult` data class is the base match result to
+	return when a file path matches. This can be subclassed to provide
+	additional information.
+	"""
+
+	# Make the class dict-less.
+	__slots__ = ()
+
+
+@dataclasses.dataclass()
+class RegexMatchResult(PatternMatchResult):
+	"""
+	The :class:`RegexMatchResult` data class add information about the
+	matched regular express.
+	"""
+
+	# Keep the class dict-less.
+	__slots__ = (
+		'match',
+	)
+
+	match: MatchHint
+	"""
+	*match* (:class:`re.Match`) is the regex match result.
+	"""

@@ -426,3 +426,101 @@ class PathSpecTest(unittest.TestCase):
 			'Y/a.txt',
 			'Y/Z/c.txt',
 		})
+
+	def test_06_issue_41_a(self):
+		"""
+		Test including a file and excluding a directory with the same name
+		pattern, scenario A.
+		"""
+		# TODO: When excluding a directory, do not exclude files already included.
+		# - When parsing patterns, classify as either file to directory.
+		# - When node is matched, classify match as either by file or directory.
+		# - Test set of patterns where directory exclusion pattern does not
+		#   end with "/" to test git behavior.
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'*.yaml',
+			'!*.yaml/',
+		])
+		files = {
+			'dir.yaml/file.sql',
+			'dir.yaml/file.yaml',
+			'dir.yaml/index.txt',
+			'dir/file.sql',
+			'dir/file.yaml',
+			'dir/index.txt',
+			'file.yaml',
+		}
+		ignores = set(spec.match_files(files))
+		self.assertEqual(ignores, {
+			'dir.yaml/file.yaml',  # MISSING!
+			'dir/file.yaml',
+			'file.yaml',
+		})
+		self.assertEqual(files - ignores, {
+			'dir.yaml/file.sql',
+			'dir.yaml/index.txt',
+			'dir/file.sql',
+			'dir/index.txt',
+		})
+
+	def test_06_issue_41_b(self):
+		"""
+		Test including a file and excluding a directory with the same name
+		pattern, scenario B.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'!*.yaml/',
+			'*.yaml',
+		])
+		files = {
+			'dir.yaml/file.sql',
+			'dir.yaml/file.yaml',
+			'dir.yaml/index.txt',
+			'dir/file.sql',
+			'dir/file.yaml',
+			'dir/index.txt',
+			'file.yaml',
+		}
+		ignores = set(spec.match_files(files))
+		self.assertEqual(ignores, {
+			'dir.yaml/file.sql',
+			'dir.yaml/file.yaml',
+			'dir.yaml/index.txt',
+			'dir/file.yaml',
+			'file.yaml',
+		})
+		self.assertEqual(files - ignores, {
+			'dir/file.sql',
+			'dir/index.txt',
+		})
+
+	def test_06_issue_41_c(self):
+		"""
+		Test including a file and excluding a directory with the same name
+		pattern, scenario C.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'*.yaml',
+			'!dir.yaml',
+		])
+		files = {
+			'dir.yaml/file.sql',
+			'dir.yaml/file.yaml',
+			'dir.yaml/index.txt',
+			'dir/file.sql',
+			'dir/file.yaml',
+			'dir/index.txt',
+			'file.yaml',
+		}
+		ignores = set(spec.match_files(files))
+		self.assertEqual(ignores, {
+			'dir.yaml/file.yaml',  # MISSING!
+			'dir/file.yaml',
+			'file.yaml',
+		})
+		self.assertEqual(files - ignores, {
+			'dir.yaml/file.sql',
+			'dir.yaml/index.txt',
+			'dir/file.sql',
+			'dir/index.txt',
+		})

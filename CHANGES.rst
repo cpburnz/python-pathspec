@@ -22,6 +22,8 @@ API changes:
 - Deprecated: `pathspec.util.normalize_files()` is no longer used.
 - Deprecated: `pathspec.util.iter_tree()` is an alias for `pathspec.util.iter_tree_files()`.
 - Deprecated: `pathspec.iter_tree()` is an alias for `pathspec.util.iter_tree_files()`.
+-	Deprecated: `pathspec.pattern.Pattern.match()` is no longer used. Use or implement
+	`pathspec.pattern.Pattern.match_file()`.
 
 Bug fixes:
 
@@ -32,7 +34,6 @@ Bug fixes:
 - `Issue #55`_: Backslashes at start of pattern not handled correctly.
 - `Issue #56`_: pyproject.toml: include subpackages in setuptools config
 - `Issue #57`_: `!` doesn't exclude files in directories if the pattern doesn't have a trailing slash.
-
 
 Improvements:
 

@@ -74,7 +74,7 @@ def detailed_match_files(
 	return_files = {}
 	for pattern in patterns:
 		if pattern.include is not None:
-			result_files = pattern.match(all_files)
+			result_files = pattern.match(all_files)  # TODO: Replace with `.match_file()`.
 			if pattern.include:
 				# Add files and record pattern.
 				for result_file in result_files:
@@ -277,7 +277,6 @@ def iter_tree(root, on_error=None, follow_links=None):
 	return iter_tree_files(root, on_error=on_error, follow_links=follow_links)
 
 
-
 def lookup_pattern(name: str) -> Callable[[AnyStr], Pattern]:
 	"""
 	Lookups a registered pattern factory by name.
@@ -305,7 +304,7 @@ def match_file(patterns: Iterable[Pattern], file: str) -> bool:
 	matched = False
 	for pattern in patterns:
 		if pattern.include is not None:
-			if file in pattern.match((file,)):
+			if pattern.match_file(file) is not None:
 				matched = pattern.include
 
 	return matched

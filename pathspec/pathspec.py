@@ -147,8 +147,13 @@ class PathSpec(object):
 		use_patterns = _filter_patterns(self.patterns)
 		for entry in entries:
 			norm_file = normalize_file(entry.path, separators)
-			if match_file(use_patterns, norm_file):
+			if self._match_file(use_patterns, norm_file):
 				yield entry
+
+	# Match files using the `match_file()` utility function. Subclasses
+	# may override this method as an instance method. It does not have to
+	# be a static method.
+	_match_file = staticmethod(match_file)
 
 	def match_file(
 		self,
@@ -168,7 +173,7 @@ class PathSpec(object):
 		Returns :data:`True` if *file* matched; otherwise, :data:`False`.
 		"""
 		norm_file = util.normalize_file(file, separators=separators)
-		return util.match_file(self.patterns, norm_file)
+		return self._match_file(self.patterns, norm_file)
 
 	def match_files(
 		self,
@@ -196,7 +201,7 @@ class PathSpec(object):
 		use_patterns = _filter_patterns(self.patterns)
 		for orig_file in files:
 			norm_file = normalize_file(orig_file, separators)
-			if match_file(use_patterns, norm_file):
+			if self._match_file(use_patterns, norm_file):
 				yield orig_file
 
 	def match_tree_entries(

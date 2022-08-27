@@ -41,7 +41,7 @@ class GitWildMatchPattern(RegexPattern):
 	def pattern_to_regex(
 		cls,
 		pattern: AnyStr,
-	) -> Tuple[Optional[AnyStr], Optional[bool]]:
+	) -> Tuple[Optional[AnyStr], Optional[bool]]:  # TODO: Change to NamedTuple
 		"""
 		Convert the pattern into a regular expression.
 
@@ -49,7 +49,7 @@ class GitWildMatchPattern(RegexPattern):
 		into a regular expression.
 
 		Returns the uncompiled regular expression (:class:`str`, :class:`bytes`,
-		or :data:`None`), and whether matched files should be included
+		or :data:`None`); and whether matched files should be included
 		(:data:`True`), excluded (:data:`False`), or if it is a
 		null-operation (:data:`None`).
 		"""
@@ -112,7 +112,7 @@ class GitWildMatchPattern(RegexPattern):
 				# EDGE CASE: The '**/' pattern should match everything except
 				# individual files in the root directory. This case cannot be
 				# adequately handled through normalization. Use the override.
-				override_regex = '^.+/.*$'
+				override_regex = '^.+(?P<ps_d>/).*$'
 
 			if not pattern_segs[0]:
 				# A pattern beginning with a slash ('/') will only match paths
@@ -177,7 +177,7 @@ class GitWildMatchPattern(RegexPattern):
 						elif i == end:
 							# A normalized pattern ending with double-asterisks ('**')
 							# will match any trailing path segments.
-							output.append('/.*')
+							output.append('(?P<ps_d>/).*')
 						else:
 							# A pattern with inner double-asterisks ('**') will match
 							# multiple (or zero) inner path segments.
@@ -205,7 +205,7 @@ class GitWildMatchPattern(RegexPattern):
 							# A pattern ending without a slash ('/') will match a file
 							# or a directory (with paths underneath it). E.g., "foo"
 							# matches "foo", "foo/bar", "foo/bar/baz", etc.
-							output.append('(?:/.*)?')
+							output.append('(?:(?P<ps_d>/).*)?')
 
 						need_slash = True
 
