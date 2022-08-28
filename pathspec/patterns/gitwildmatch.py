@@ -160,7 +160,7 @@ class GitWildMatchPattern(RegexPattern):
 
 			if override_regex is None:
 				# Build regular expression from pattern.
-				output = ['^']
+				output = []
 				need_slash = False
 				end = len(pattern_segs) - 1
 				for i, seg in enumerate(pattern_segs):
@@ -172,7 +172,7 @@ class GitWildMatchPattern(RegexPattern):
 						elif i == 0:
 							# A normalized pattern beginning with double-asterisks
 							# ('**') will match any leading path segments.
-							output.append('(?:.+/)?')
+							output.append('(?:^|.+/)')
 							need_slash = False
 						elif i == end:
 							# A normalized pattern ending with double-asterisks ('**')
