@@ -19,6 +19,17 @@ pathspec.pathspec
 		:special-members: __init__, __eq__, __len__
 
 
+pathspec.gitignore
+------------------
+
+.. automodule:: pathspec.gitignore
+
+	.. autoclass:: GitIgnoreSpec
+		:members:
+		:show-inheritance:
+		:special-members: __init__, __eq__
+
+
 pathspec.pattern
 ----------------
 
@@ -33,6 +44,11 @@ pathspec.pattern
 		:members:
 		:show-inheritance:
 		:special-members: __init__, __eq__
+
+	.. autoclass:: RegexMatchResult
+		:members:
+		:show-inheritance:
+		:special-members: __init__
 
 
 pathspec.patterns.gitwildmatch

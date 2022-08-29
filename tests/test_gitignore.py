@@ -14,7 +14,22 @@ class GitIgnoreSpecTest(unittest.TestCase):
 	class.
 	"""
 
-	def test_01_dir_exclusions(self) -> None:
+	def test_01_reversed_args(self):
+		"""
+		Test reversed args for `.from_lines()`.
+		"""
+		spec = GitIgnoreSpec.from_lines('gitwildmatch', [
+			'*.txt',
+		])
+		results = set(spec.match_files([
+			'a.txt',
+			'b.bin',
+		]))
+		self.assertEqual(results, {
+			'a.txt',
+		})
+
+	def test_02_dir_exclusions(self):
 		"""
 		Test directory exclusions.
 		"""
@@ -37,7 +52,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			'test2/c/c.txt',
 		})
 
-	def test_01_file_exclusions(self):
+	def test_02_file_exclusions(self):
 		"""
 		Test file exclusions.
 		"""
@@ -60,7 +75,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			'Y/Z/c.txt',
 		})
 
-	def test_02_issue_41(self) -> None:
+	def test_02_issue_41(self):
 		"""
 		Test including a file and excluding a directory with the same name
 		pattern.

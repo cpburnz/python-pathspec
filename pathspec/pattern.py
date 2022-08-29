@@ -66,14 +66,13 @@ class Pattern(object):
 			if self.match_file(file) is not None:
 				yield file
 
-	def match_file(self, file: str) -> Optional['PatternMatchResult']:
+	def match_file(self, file: str) -> Optional[Any]:
 		"""
 		Matches this pattern against the specified file.
 
 		*file* (:class:`str`) is the normalized file path to match against.
 
-		Returns :class:`PatternMatchResult` if *file* matched; otherwise,
-		:data:`None`.
+		Returns the match result if *file* matched; otherwise, :data:`None`.
 		"""
 		raise NotImplementedError((
 			"{0.__module__}.{0.__qualname__} must override match_file()."
@@ -190,22 +189,10 @@ class RegexPattern(Pattern):
 
 
 @dataclasses.dataclass()
-class PatternMatchResult(object):
+class RegexMatchResult(object):
 	"""
-	The :class:`PatternMatchResult` data class is the base match result to
-	return when a file path matches. This can be subclassed to provide
-	additional information.
-	"""
-
-	# Make the class dict-less.
-	__slots__ = ()
-
-
-@dataclasses.dataclass()
-class RegexMatchResult(PatternMatchResult):
-	"""
-	The :class:`RegexMatchResult` data class add information about the
-	matched regular express.
+	The :class:`RegexMatchResult` data class is used to return information
+	about the matched regular expression.
 	"""
 
 	# Keep the class dict-less.

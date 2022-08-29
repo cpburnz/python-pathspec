@@ -17,6 +17,8 @@ from .pattern import (
 	Pattern)
 from .patterns.gitwildmatch import (
 	GitWildMatchPattern)
+from .util import (
+	_is_iterable)
 
 
 class GitIgnoreSpec(PathSpec):
@@ -42,7 +44,6 @@ class GitIgnoreSpec(PathSpec):
 	def from_lines(
 		cls,
 		lines: Iterable[AnyStr],
-		*,
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern], None] = None,
 	) -> 'Self':
 		"""
@@ -63,6 +64,10 @@ class GitIgnoreSpec(PathSpec):
 		"""
 		if pattern_factory is None:
 			pattern_factory = GitWildMatchPattern
+
+		elif (isinstance(lines, str) or callable(lines)) and _is_iterable(pattern_factory):
+			# Support reversed order of arguments from PathSpec.
+			pattern_factory, lines = lines, pattern_factory
 
 		self = super().from_lines(pattern_factory, lines)
 		return self  # type: ignore
