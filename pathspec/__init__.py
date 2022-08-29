@@ -27,6 +27,8 @@ backward compatibility:
 - :func:`pathspec.util.match_files`
 """
 
+from .gitignore import (
+	GitIgnoreSpec)
 from .pathspec import (
 	PathSpec)
 from .pattern import (

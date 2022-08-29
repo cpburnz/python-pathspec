@@ -432,11 +432,6 @@ class PathSpecTest(unittest.TestCase):
 		Test including a file and excluding a directory with the same name
 		pattern, scenario A.
 		"""
-		# TODO: When excluding a directory, do not exclude files already included.
-		# - When parsing patterns, classify as either file to directory.
-		# - When node is matched, classify match as either by file or directory.
-		# - Test set of patterns where directory exclusion pattern does not
-		#   end with "/" to test git behavior.
 		spec = PathSpec.from_lines('gitwildmatch', [
 			'*.yaml',
 			'!*.yaml/',

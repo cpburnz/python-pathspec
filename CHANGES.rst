@@ -25,9 +25,14 @@ API changes:
 -	Deprecated: `pathspec.pattern.Pattern.match()` is no longer used. Use or implement
 	`pathspec.pattern.Pattern.match_file()`.
 
+New features:
+
+- Added class `pathspec.gitignore.GitIgnoreSpec` (with alias `pathspec.GitIgnoreSpec`) to implement *gitignore* behavior not possible with standard `PathSpec` class.
+
 Bug fixes:
 
 - `Issue #19`_: Files inside an ignored sub-directory are not matched.
+- `Issue #41`_: Incorrectly (?) matches files inside directories that do match. {{TODO: Comment and close issue}}
 - `Issue #51`_: Refactor deprecated unittest aliases for Python 3.11 compatibility.
 - `Issue #53`_: Symlink pathspec_meta.py breaks Windows.
 - `Issue #54`_: test_util.py uses os.symlink which can fail on Windows.
@@ -45,6 +50,7 @@ Improvements:
 .. _`pyproject.toml`: https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/
 .. _`setuptools.build_meta`: https://setuptools.pypa.io/en/latest/build_meta.html
 .. _`Issue #19`: https://github.com/cpburnz/python-path-specification/issues/19
+.. _`Issue #41`: https://github.com/cpburnz/python-path-specification/issues/41
 .. _`Issue #47`: https://github.com/cpburnz/python-path-specification/issues/47
 .. _`Issue #51`: https://github.com/cpburnz/python-path-specification/pull/51
 .. _`Issue #52`: https://github.com/cpburnz/python-path-specification/issues/52
