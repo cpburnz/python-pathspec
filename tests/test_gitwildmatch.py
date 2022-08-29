@@ -8,9 +8,21 @@ import unittest
 import pathspec.patterns.gitwildmatch
 from pathspec.patterns.gitwildmatch import (
 	GitWildMatchPattern,
-	GitWildMatchPatternError)
+	GitWildMatchPatternError,
+	_BYTES_ENCODING)
 from pathspec.util import (
 	lookup_pattern)
+
+
+RE_DIR = "(?P<ps_d>/)"
+"""
+This regular expression matches the directory marker.
+"""
+
+RE_SUB = "(?:(?P<ps_d>/).*)?"
+"""
+This regular expression matches an optional sub-path.
+"""
 
 
 class GitWildMatchTest(unittest.TestCase):
@@ -47,10 +59,10 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('/an/absolute/file/path')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^an/absolute/file/path(?:/.*)?$')
+		self.assertEqual(regex, f'^an/absolute/file/path{RE_SUB}$')
 
 		pattern = GitWildMatchPattern(re.compile(regex), include)
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'an/absolute/file/path',
 			'an/absolute/file/path/foo',
 			'foo/an/absolute/file/path',
@@ -66,12 +78,12 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('!/foo/build')
 		self.assertFalse(include)
-		self.assertEqual(regex, '^foo/build(?:/.*)?$')
+		self.assertEqual(regex, f'^foo/build{RE_SUB}$')
 
 		# NOTE: The pattern match is backwards because the pattern itself
 		# does not consider the include attribute.
 		pattern = GitWildMatchPattern(re.compile(regex), include)
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'build/file.py',
 			'foo/build/file.py',
 		]))
@@ -104,10 +116,10 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('spam')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^(?:.+/)?spam(?:/.*)?$')
+		self.assertEqual(regex, f'^(?:.+/)?spam{RE_SUB}$')
 
 		pattern = GitWildMatchPattern(re.compile(regex), include)
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'spam',
 			'spam/',
 			'foo/spam',
@@ -137,10 +149,10 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('foo/spam')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^foo/spam(?:/.*)?$')
+		self.assertEqual(regex, f'^foo/spam{RE_SUB}$')
 
 		pattern = GitWildMatchPattern(re.compile(regex), include)
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'foo/spam',
 			'foo/spam/bar',
 			'bar/foo/spam',
@@ -169,12 +181,12 @@ class GitWildMatchTest(unittest.TestCase):
 		regex, include = GitWildMatchPattern.pattern_to_regex('!temp')
 		self.assertIsNotNone(include)
 		self.assertFalse(include)
-		self.assertEqual(regex, '^(?:.+/)?temp(?:/.*)?$')
+		self.assertEqual(regex, f'^(?:.+/)?temp{RE_SUB}$')
 
 		# NOTE: The pattern match is backwards because the pattern itself
 		# does not consider the include attribute.
 		pattern = GitWildMatchPattern(re.compile(regex), include)
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'temp/foo',
 		]))
 		self.assertEqual(results, {
@@ -196,10 +208,10 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('spam/**')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^spam/.*$')
+		self.assertEqual(regex, f'^spam{RE_DIR}.*$')
 
 		pattern = GitWildMatchPattern(re.compile(regex), include)
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'spam/bar',
 			'foo/spam/bar',
 		]))
@@ -222,10 +234,10 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('left/**/right')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^left(?:/.+)?/right(?:/.*)?$')
+		self.assertEqual(regex, f'^left(?:/.+)?/right{RE_SUB}$')
 
 		pattern = GitWildMatchPattern(re.compile(regex), include)
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'left/right',
 			'left/bar/right',
 			'left/foo/bar/right',
@@ -259,10 +271,10 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('**/spam')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^(?:.+/)?spam(?:/.*)?$')
+		self.assertEqual(regex, f'^(?:.+/)?spam{RE_SUB}$')
 
 		pattern = GitWildMatchPattern(re.compile(regex), include)
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'spam',
 			'foo/spam',
 			'foo/spam/bar',
@@ -291,15 +303,15 @@ class GitWildMatchTest(unittest.TestCase):
 
 		regex, include = GitWildMatchPattern.pattern_to_regex('**/api')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^(?:.+/)?api(?:/.*)?$')
+		self.assertEqual(regex, f'^(?:.+/)?api{RE_SUB}$')
 
-		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex('**/**/api')
+		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex(f'**/**/api')
 		self.assertTrue(include)
 		self.assertEqual(equivalent_regex, regex)
 
 		regex, include = GitWildMatchPattern.pattern_to_regex('**/api/')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^(?:.+/)?api/.*$')
+		self.assertEqual(regex, f'^(?:.+/)?api{RE_DIR}.*$')
 
 		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex('**/api/**')
 		self.assertTrue(include)
@@ -317,7 +329,7 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('**/')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^.+/.*$')
+		self.assertEqual(regex, f'^.+{RE_DIR}.*$')
 
 		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex('**/**/')
 		self.assertTrue(include)
@@ -337,10 +349,10 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('foo-*-bar')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^(?:.+/)?foo\\-[^/]*\\-bar(?:/.*)?$')
+		self.assertEqual(regex, f'^(?:.+/)?foo\\-[^/]*\\-bar{RE_SUB}$')
 
 		pattern = GitWildMatchPattern(re.compile(regex), include)
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'foo--bar',
 			'foo-hello-bar',
 			'a/foo-hello-bar',
@@ -369,10 +381,10 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('~temp-*')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^(?:.+/)?\\~temp\\-[^/]*(?:/.*)?$')
+		self.assertEqual(regex, f'^(?:.+/)?\\~temp\\-[^/]*{RE_SUB}$')
 
 		pattern = GitWildMatchPattern(re.compile(regex), include)
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'~temp-',
 			'~temp-foo',
 			'~temp-foo/bar',
@@ -400,10 +412,10 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('*.py')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^(?:.+/)?[^/]*\\.py(?:/.*)?$')
+		self.assertEqual(regex, f'^(?:.+/)?[^/]*\\.py{RE_SUB}$')
 
 		pattern = GitWildMatchPattern(re.compile(regex), include)
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'bar.py',
 			'bar.py/',
 			'foo/bar.py',
@@ -432,10 +444,10 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('dir/')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^(?:.+/)?dir/.*$')
+		self.assertEqual(regex, f'^(?:.+/)?dir{RE_DIR}.*$')
 
 		pattern = GitWildMatchPattern(re.compile(regex), include)
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'dir/',
 			'foo/dir/',
 			'foo/dir/bar',
@@ -471,16 +483,44 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		Test encoding bytes.
 		"""
-		encoded = "".join(map(chr, range(0, 256))).encode(pathspec.patterns.gitwildmatch._BYTES_ENCODING)
-		expected = b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\x7f\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9b\x9c\x9d\x9e\x9f\xa0\xa1\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xab\xac\xad\xae\xaf\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xbb\xbc\xbd\xbe\xbf\xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb\xcc\xcd\xce\xcf\xd0\xd1\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xdb\xdc\xdd\xde\xdf\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xeb\xec\xed\xee\xef\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff"
+		encoded = "".join(map(chr, range(0, 256))).encode(_BYTES_ENCODING)
+		expected = (
+			b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10"
+			b"\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
+			b" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\"
+			b"]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+			b"\x7f\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d"
+			b"\x8e\x8f\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9b\x9c"
+			b"\x9d\x9e\x9f\xa0\xa1\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xab"
+			b"\xac\xad\xae\xaf\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba"
+			b"\xbb\xbc\xbd\xbe\xbf\xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9"
+			b"\xca\xcb\xcc\xcd\xce\xcf\xd0\xd1\xd2\xd3\xd4\xd5\xd6\xd7\xd8"
+			b"\xd9\xda\xdb\xdc\xdd\xde\xdf\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7"
+			b"\xe8\xe9\xea\xeb\xec\xed\xee\xef\xf0\xf1\xf2\xf3\xf4\xf5\xf6"
+			b"\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff"
+		)
 		self.assertEqual(encoded, expected)
 
 	def test_07_decode_bytes(self):
 		"""
 		Test decoding bytes.
 		"""
-		decoded = bytes(bytearray(range(0, 256))).decode(pathspec.patterns.gitwildmatch._BYTES_ENCODING)
-		expected = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\x7f\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9b\x9c\x9d\x9e\x9f\xa0\xa1\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xab\xac\xad\xae\xaf\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xbb\xbc\xbd\xbe\xbf\xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb\xcc\xcd\xce\xcf\xd0\xd1\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xdb\xdc\xdd\xde\xdf\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xeb\xec\xed\xee\xef\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff"
+		decoded = bytes(bytearray(range(0, 256))).decode(_BYTES_ENCODING)
+		expected = (
+			"\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10"
+			"\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
+			" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\"
+			"]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+			"\x7f\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d"
+			"\x8e\x8f\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9b\x9c"
+			"\x9d\x9e\x9f\xa0\xa1\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xab"
+			"\xac\xad\xae\xaf\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba"
+			"\xbb\xbc\xbd\xbe\xbf\xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9"
+			"\xca\xcb\xcc\xcd\xce\xcf\xd0\xd1\xd2\xd3\xd4\xd5\xd6\xd7\xd8"
+			"\xd9\xda\xdb\xdc\xdd\xde\xdf\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7"
+			"\xe8\xe9\xea\xeb\xec\xed\xee\xef\xf0\xf1\xf2\xf3\xf4\xf5\xf6"
+			"\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff"
+		)
 		self.assertEqual(decoded, expected)
 
 	def test_07_match_bytes_and_bytes(self):
@@ -488,7 +528,7 @@ class GitWildMatchTest(unittest.TestCase):
 		Test byte string patterns matching byte string paths.
 		"""
 		pattern = GitWildMatchPattern(b'*.py')
-		results = set(pattern.match([b'a.py']))
+		results = set(filter(pattern.match_file, [b'a.py']))
 		self.assertEqual(results, {b'a.py'})
 
 	def test_07_match_bytes_and_bytes_complete(self):
@@ -505,7 +545,7 @@ class GitWildMatchTest(unittest.TestCase):
 		escaped = b"".join(b"\\" + encoded[i:i+1] for i in range(len(encoded)))
 
 		pattern = GitWildMatchPattern(escaped)
-		results = set(pattern.match([encoded]))
+		results = set(filter(pattern.match_file, [encoded]))
 		self.assertEqual(results, {encoded})
 
 	def test_07_match_bytes_and_unicode_fail(self):
@@ -514,8 +554,7 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		pattern = GitWildMatchPattern(b'*.py')
 		with self.assertRaises(TypeError):
-			for _ in pattern.match(['a.py']):
-				pass
+			pattern.match_file('a.py')
 
 	def test_07_match_unicode_and_bytes_fail(self):
 		"""
@@ -523,15 +562,14 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		pattern = GitWildMatchPattern('*.py')
 		with self.assertRaises(TypeError):
-			for _ in pattern.match([b'a.py']):
-				pass
+			pattern.match_file(b'a.py')
 
 	def test_07_match_unicode_and_unicode(self):
 		"""
 		Test unicode patterns with unicode paths.
 		"""
 		pattern = GitWildMatchPattern('*.py')
-		results = set(pattern.match(['a.py']))
+		results = set(filter(pattern.match_file, ['a.py']))
 		self.assertEqual(results, {'a.py'})
 
 	def test_08_escape(self):
@@ -560,7 +598,7 @@ class GitWildMatchTest(unittest.TestCase):
 		Test escaping an asterisk at the end of a line.
 		"""
 		pattern = GitWildMatchPattern("asteris\\*")
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			"asteris*",
 			"asterisk",
 		]))
@@ -571,7 +609,7 @@ class GitWildMatchTest(unittest.TestCase):
 		Test escaping an asterisk in the middle of a line.
 		"""
 		pattern = GitWildMatchPattern("as\\*erisk")
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			"as*erisk",
 			"asterisk",
 		]))
@@ -582,7 +620,7 @@ class GitWildMatchTest(unittest.TestCase):
 		Test escaping an asterisk at the start of a line.
 		"""
 		pattern = GitWildMatchPattern("\\*sterisk")
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			"*sterisk",
 			"asterisk",
 		]))
@@ -593,7 +631,7 @@ class GitWildMatchTest(unittest.TestCase):
 		Test escaping an exclamation mark at the start of a line.
 		"""
 		pattern = GitWildMatchPattern("\\!mark")
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			"!mark",
 		]))
 		self.assertEqual(results, {"!mark"})
@@ -603,7 +641,7 @@ class GitWildMatchTest(unittest.TestCase):
 		Test escaping a pound sign at the start of a line.
 		"""
 		pattern = GitWildMatchPattern("\\#sign")
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			"#sign",
 		]))
 		self.assertEqual(results, {"#sign"})
@@ -613,7 +651,7 @@ class GitWildMatchTest(unittest.TestCase):
 		Test matching a directory.
 		"""
 		pattern = GitWildMatchPattern("dirG/")
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'fileA',
 			'fileB',
 			'dirD/fileE',
@@ -633,7 +671,7 @@ class GitWildMatchTest(unittest.TestCase):
 		Test matching a directory.
 		"""
 		pattern = GitWildMatchPattern("dirG/*")
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'fileA',
 			'fileB',
 			'dirD/fileE',
@@ -653,7 +691,7 @@ class GitWildMatchTest(unittest.TestCase):
 		Test matching a directory.
 		"""
 		pattern = GitWildMatchPattern("dirG/**")
-		results = set(pattern.match([
+		results = set(filter(pattern.match_file, [
 			'fileA',
 			'fileB',
 			'dirD/fileE',
