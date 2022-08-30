@@ -129,20 +129,24 @@ The source code for *pathspec* is available from the GitHub repo
 Installation
 ------------
 
-*pathspec* requires the following packages:
-
-- `setuptools`_ (>=40.8.0)
-
-*pathspec* can be installed from source with::
-
-	python setup.py install
-
-*pathspec* is also available for install through `PyPI`_::
+*pathspec* is available for install through `PyPI`_::
 
 	pip install pathspec
 
-.. _`setuptools`: https://pypi.python.org/pypi/setuptools
+*pathspec* can also be built from source. The following packages will be
+required:
+
+- `build`_ (>=0.6.0)
+- `setuptools`_ (>=40.8.0)
+
+*pathspec* can then be built and installed with::
+
+	python -m build
+	pip install dist/pathspec-*-py3-none-any.whl
+
 .. _`PyPI`: http://pypi.python.org/pypi/pathspec
+.. _`build`: https://pypi.org/project/build/
+.. _`setuptools`: https://pypi.org/project/setuptools/
 
 
 Documentation
@@ -156,6 +160,8 @@ Documentation for *pathspec* is available on `Read the Docs`_.
 Other Languages
 ---------------
 
-*pathspec* is also available as a `Ruby gem`_.
+The related project `pathspec-ruby`_ (by *highb*) provides a similar library as
+a `Ruby gem`_.
 
-.. _`Ruby gem`: https://github.com/highb/pathspec-ruby
+.. _`pathspec-ruby`: https://github.com/highb/pathspec-ruby
+.. _`Ruby gem`: https://rubygems.org/gems/pathspec
