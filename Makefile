@@ -2,7 +2,7 @@
 # This Makefile is used to manage development and distribution.
 #
 # Created: 2022-08-11
-# Updated: 2022-08-17
+# Updated: 2022-08-31
 #
 
 .PHONY: build create-venv help prebuild publish test test-all update-venv
@@ -83,4 +83,4 @@ dist-prebuild:
 
 dist-publish: dist-build
 	${VENV} twine check ./dist/*
-	${VENV} twine upload --skip-existing ./dist/*
+	${VENV} twine upload -r pathspec --skip-existing ./dist/*
