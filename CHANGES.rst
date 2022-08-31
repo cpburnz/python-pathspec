@@ -6,14 +6,13 @@ Change History
 0.10.0 (TBD)
 ------------
 
-- GOAL: Clear backlog.
-- TODO: Rename repo to "python-pathspec".
-
 Major changes:
 
-- Changed build system to `pyproject.toml`_ and build backend to `setuptools.build_meta`_ which may have unforeseen consequences.
-- `Issue #47`_: Dropped support of EOL Python 2.7, 3.5, 3.6.
+- Dropped support of EOL Python 2.7, 3.5, 3.6. See `Issue #47`_.
 - The *gitwildmatch* pattern `dir/*` is now handled the same as `dir/`. This means `dir/*` will now match all descendants rather than only direct children. See `Issue #19`_.
+- Added `pathspec.GitIgnoreSpec` class (see new features).
+- Changed build system to `pyproject.toml`_ and build backend to `setuptools.build_meta`_ which may have unforeseen consequences.
+- Renamed GitHub project from `python-path-specification`_ to `python-pathspec`_. See `Issue #35`_.
 
 API changes:
 
@@ -32,7 +31,7 @@ New features:
 Bug fixes:
 
 - `Issue #19`_: Files inside an ignored sub-directory are not matched.
-- `Issue #41`_: Incorrectly (?) matches files inside directories that do match. {{TODO: Comment and close issue}}
+- `Issue #41`_: Incorrectly (?) matches files inside directories that do match.
 - `Issue #51`_: Refactor deprecated unittest aliases for Python 3.11 compatibility.
 - `Issue #53`_: Symlink pathspec_meta.py breaks Windows.
 - `Issue #54`_: test_util.py uses os.symlink which can fail on Windows.
@@ -47,18 +46,21 @@ Improvements:
 - `Issue #52`_: match_files() is not a pure generator function, and it impacts tree_*() gravely.
 
 
+.. _`python-path-specification`: https://github.com/cpburnz/python-path-specification
+.. _`python-pathspec`: https://github.com/cpburnz/python-pathspec
 .. _`pyproject.toml`: https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/
 .. _`setuptools.build_meta`: https://setuptools.pypa.io/en/latest/build_meta.html
-.. _`Issue #19`: https://github.com/cpburnz/python-path-specification/issues/19
-.. _`Issue #41`: https://github.com/cpburnz/python-path-specification/issues/41
-.. _`Issue #47`: https://github.com/cpburnz/python-path-specification/issues/47
-.. _`Issue #51`: https://github.com/cpburnz/python-path-specification/pull/51
-.. _`Issue #52`: https://github.com/cpburnz/python-path-specification/issues/52
-.. _`Issue #53`: https://github.com/cpburnz/python-path-specification/issues/53
-.. _`Issue #54`: https://github.com/cpburnz/python-path-specification/issues/54
-.. _`Issue #55`: https://github.com/cpburnz/python-path-specification/issues/55
-.. _`Issue #56`: https://github.com/cpburnz/python-path-specification/pull/56
-.. _`Issue #57`: https://github.com/cpburnz/python-path-specification/issues/57
+.. _`Issue #19`: https://github.com/cpburnz/python-pathspec/issues/19
+.. _`Issue #35`: https://github.com/cpburnz/python-pathspec/issues/35
+.. _`Issue #41`: https://github.com/cpburnz/python-pathspec/issues/41
+.. _`Issue #47`: https://github.com/cpburnz/python-pathspec/issues/47
+.. _`Issue #51`: https://github.com/cpburnz/python-pathspec/pull/51
+.. _`Issue #52`: https://github.com/cpburnz/python-pathspec/issues/52
+.. _`Issue #53`: https://github.com/cpburnz/python-pathspec/issues/53
+.. _`Issue #54`: https://github.com/cpburnz/python-pathspec/issues/54
+.. _`Issue #55`: https://github.com/cpburnz/python-pathspec/issues/55
+.. _`Issue #56`: https://github.com/cpburnz/python-pathspec/pull/56
+.. _`Issue #57`: https://github.com/cpburnz/python-pathspec/issues/57
 
 
 0.9.0 (2021-07-17)
@@ -70,10 +72,10 @@ Improvements:
 - API change: `util.normalize_files()` now returns a `Dict[str, List[pathlike]]` instead of a `Dict[str, pathlike]`.
 - Added type hinting.
 
-.. _`Issue #44`: https://github.com/cpburnz/python-path-specification/issues/44
-.. _`Issue #45`: https://github.com/cpburnz/python-path-specification/pull/45
-.. _`Issue #46`: https://github.com/cpburnz/python-path-specification/issues/46
-.. _`Issue #50`: https://github.com/cpburnz/python-path-specification/pull/50
+.. _`Issue #44`: https://github.com/cpburnz/python-pathspec/issues/44
+.. _`Issue #45`: https://github.com/cpburnz/python-pathspec/pull/45
+.. _`Issue #46`: https://github.com/cpburnz/python-pathspec/issues/46
+.. _`Issue #50`: https://github.com/cpburnz/python-pathspec/pull/50
 
 
 0.8.1 (2020-11-07)
@@ -81,7 +83,7 @@ Improvements:
 
 - `Issue #43`_: Add support for addition operator.
 
-.. _`Issue #43`: https://github.com/cpburnz/python-path-specification/pull/43
+.. _`Issue #43`: https://github.com/cpburnz/python-pathspec/pull/43
 
 
 0.8.0 (2020-04-09)
@@ -94,9 +96,9 @@ Improvements:
 - API change: `match_tree()` has been renamed to `match_tree_files()`. The old name `match_tree()` is still available as an alias.
 - API change: `match_tree_files()` now returns symlinks. This is a bug fix but it will change the returned results.
 
-.. _`Issue #30`: https://github.com/cpburnz/python-path-specification/issues/30
-.. _`Issue #31`: https://github.com/cpburnz/python-path-specification/issues/31
-.. _`Issue #34`: https://github.com/cpburnz/python-path-specification/issues/34
+.. _`Issue #30`: https://github.com/cpburnz/python-pathspec/issues/30
+.. _`Issue #31`: https://github.com/cpburnz/python-pathspec/issues/31
+.. _`Issue #34`: https://github.com/cpburnz/python-pathspec/issues/34
 
 
 0.7.0 (2019-12-27)
@@ -105,8 +107,8 @@ Improvements:
 - `Issue #28`_: Add support for Python 3.8, and drop Python 3.4.
 - `Issue #29`_: Publish bdist wheel.
 
-.. _`Issue #28`: https://github.com/cpburnz/python-path-specification/pull/28
-.. _`Issue #29`: https://github.com/cpburnz/python-path-specification/pull/29
+.. _`Issue #28`: https://github.com/cpburnz/python-pathspec/pull/28
+.. _`Issue #29`: https://github.com/cpburnz/python-pathspec/pull/29
 
 
 0.6.0 (2019-10-03)
@@ -116,9 +118,9 @@ Improvements:
 - `Issue #25`_: Update README.rst.
 - `Issue #26`_: Method to escape gitwildmatch.
 
-.. _`Issue #24`: https://github.com/cpburnz/python-path-specification/pull/24
-.. _`Issue #25`: https://github.com/cpburnz/python-path-specification/pull/25
-.. _`Issue #26`: https://github.com/cpburnz/python-path-specification/pull/26
+.. _`Issue #24`: https://github.com/cpburnz/python-pathspec/pull/24
+.. _`Issue #25`: https://github.com/cpburnz/python-pathspec/pull/25
+.. _`Issue #26`: https://github.com/cpburnz/python-pathspec/pull/26
 
 
 0.5.9 (2018-09-15)
@@ -135,7 +137,7 @@ Improvements:
 - Improved byte string handling in Python 3.
 - `Issue #22`_: Handle dangling symlinks.
 
-.. _`Issue #22`: https://github.com/cpburnz/python-path-specification/issues/22
+.. _`Issue #22`: https://github.com/cpburnz/python-pathspec/issues/22
 
 
 0.5.7 (2018-08-14)
@@ -143,7 +145,7 @@ Improvements:
 
 - `Issue #21`_: Fix collections deprecation warning.
 
-.. _`Issue #21`: https://github.com/cpburnz/python-path-specification/issues/21
+.. _`Issue #21`: https://github.com/cpburnz/python-pathspec/issues/21
 
 
 0.5.6 (2018-04-06)
@@ -153,7 +155,7 @@ Improvements:
 - Improved type checking.
 - `Issue #20`_: Support current directory prefix.
 
-.. _`Issue #20`: https://github.com/cpburnz/python-path-specification/issues/20
+.. _`Issue #20`: https://github.com/cpburnz/python-pathspec/issues/20
 
 
 0.5.5 (2017-09-09)
@@ -168,7 +170,7 @@ Improvements:
 - `Issue #17`_: Add link to Ruby implementation of *pathspec*.
 - Add sphinx documentation.
 
-.. _`Issue #17`: https://github.com/cpburnz/python-path-specification/pull/17
+.. _`Issue #17`: https://github.com/cpburnz/python-pathspec/pull/17
 
 
 0.5.3 (2017-07-01)
@@ -178,9 +180,9 @@ Improvements:
 - `Issue #15`_: Include "LICENSE" in source package.
 - `Issue #16`_: Support Python 2.6.
 
-.. _`Issue #14`: https://github.com/cpburnz/python-path-specification/issues/14
-.. _`Issue #15`: https://github.com/cpburnz/python-path-specification/pull/15
-.. _`Issue #16`: https://github.com/cpburnz/python-path-specification/issues/16
+.. _`Issue #14`: https://github.com/cpburnz/python-pathspec/issues/14
+.. _`Issue #15`: https://github.com/cpburnz/python-pathspec/pull/15
+.. _`Issue #16`: https://github.com/cpburnz/python-pathspec/issues/16
 
 
 0.5.2 (2017-04-04)
@@ -194,7 +196,7 @@ Improvements:
 
 - `Issue #13`_: Add equality methods to `PathSpec` and `RegexPattern`.
 
-.. _`Issue #13`: https://github.com/cpburnz/python-path-specification/pull/13
+.. _`Issue #13`: https://github.com/cpburnz/python-pathspec/pull/13
 
 
 0.5.0 (2016-08-22)
@@ -204,7 +206,7 @@ Improvements:
 - Renamed `gitignore.GitIgnorePattern` to `patterns.gitwildmatch.GitWildMatchPattern`.
 - Deprecated `gitignore.GitIgnorePattern`.
 
-.. _`Issue #12`: https://github.com/cpburnz/python-path-specification/issues/12
+.. _`Issue #12`: https://github.com/cpburnz/python-pathspec/issues/12
 
 
 0.4.0 (2016-07-15)
@@ -213,7 +215,7 @@ Improvements:
 - `Issue #11`_: Support converting patterns into regular expressions without compiling them.
 - API change: Subclasses of `RegexPattern` should implement `pattern_to_regex()`.
 
-.. _`Issue #11`: https://github.com/cpburnz/python-path-specification/issues/11
+.. _`Issue #11`: https://github.com/cpburnz/python-pathspec/issues/11
 
 
 0.3.4 (2015-08-24)
@@ -225,9 +227,9 @@ Improvements:
 - Fixed recursion detection.
 - Fixed trivial incompatibility with Python 3.2.
 
-.. _`Issue #7`: https://github.com/cpburnz/python-path-specification/pull/7
-.. _`Issue #8`: https://github.com/cpburnz/python-path-specification/pull/8
-.. _`Issue #9`: https://github.com/cpburnz/python-path-specification/pull/9
+.. _`Issue #7`: https://github.com/cpburnz/python-pathspec/pull/7
+.. _`Issue #8`: https://github.com/cpburnz/python-pathspec/pull/8
+.. _`Issue #9`: https://github.com/cpburnz/python-pathspec/pull/9
 
 
 0.3.3 (2014-11-21)
@@ -244,8 +246,8 @@ Improvements:
 - Improved documentation.
 - API change: `spec.match_tree()` and `spec.match_files()` now return iterators instead of sets.
 
-.. _`Issue #5`: https://github.com/cpburnz/python-path-specification/pull/5
-.. _`Issue #6`: https://github.com/cpburnz/python-path-specification/issues/6
+.. _`Issue #5`: https://github.com/cpburnz/python-pathspec/pull/5
+.. _`Issue #6`: https://github.com/cpburnz/python-pathspec/issues/6
 
 
 0.3.1 (2014-09-17)
@@ -261,8 +263,8 @@ Improvements:
 - `Issue #4`_: Fixed test for trailing slash in gitignore patterns.
 - Added registered patterns.
 
-.. _`Issue #3`: https://github.com/cpburnz/python-path-specification/pull/3
-.. _`Issue #4`: https://github.com/cpburnz/python-path-specification/pull/4
+.. _`Issue #3`: https://github.com/cpburnz/python-pathspec/pull/3
+.. _`Issue #4`: https://github.com/cpburnz/python-pathspec/pull/4
 
 
 0.2.2 (2013-12-17)

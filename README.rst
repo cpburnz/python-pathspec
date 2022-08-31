@@ -1,6 +1,6 @@
 
-*pathspec*: Path Specification
-==============================
+PathSpec
+========
 
 *pathspec* is a utility library for pattern matching of file paths. So
 far this only includes Git's wildmatch pattern matching which itself is
@@ -121,9 +121,9 @@ Source
 ------
 
 The source code for *pathspec* is available from the GitHub repo
-`cpburnz/python-path-specification`_.
+`cpburnz/python-pathspec`_.
 
-.. _`cpburnz/python-path-specification`: https://github.com/cpburnz/python-path-specification
+.. _`cpburnz/python-pathspec`: https://github.com/cpburnz/python-pathspec
 
 
 Installation
@@ -154,7 +154,7 @@ Documentation
 
 Documentation for *pathspec* is available on `Read the Docs`_.
 
-.. _`Read the Docs`: http://python-path-specification.readthedocs.io
+.. _`Read the Docs`: https://python-path-specification.readthedocs.io
 
 
 Other Languages

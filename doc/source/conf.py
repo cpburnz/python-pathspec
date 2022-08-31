@@ -11,7 +11,6 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
-from __future__ import unicode_literals
 
 import os
 import sys
@@ -20,7 +19,7 @@ import sys
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../../'))
-from pathspec._meta import __author__, __copyright__, __project__, __version__
+from pathspec._meta import __author__, __copyright__, __version__
 
 
 # -- General configuration ------------------------------------------------
@@ -47,7 +46,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = __project__
+project = "PathSpec"
 copyright = __copyright__.split("©")[1].strip()
 author = __author__
 
