@@ -6,6 +6,8 @@ this only includes Git's wildmatch pattern matching (the style used for
 The following classes are imported and made available from the root of
 the `pathspec` package:
 
+- :class:`pathspec.gitignore.GitIgnoreSpec`
+
 - :class:`pathspec.pathspec.PathSpec`
 
 - :class:`pathspec.pattern.Pattern`
