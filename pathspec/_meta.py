@@ -46,4 +46,4 @@ __credits__ = [
 	"jack1142 <https://github.com/jack1142>",
 ]
 __license__ = "MPL 2.0"
-__version__ = "0.10.0.dev1"
+__version__ = "0.10.0"
