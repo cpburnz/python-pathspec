@@ -160,8 +160,8 @@ class RegexPattern(Pattern):
 		*file* (:class:`str`)
 		contains each file relative to the root directory (e.g., "relative/path/to/file").
 
-		Returns :data:`True` if *file* matched; otherwise, :data:`False`.
-		file path (:class:`str`).
+		Returns the match result (:class:`RegexMatchResult`) if *file*
+		matched; otherwise, :data:`None`.
 		"""
 		if self.include is not None:
 			match = self.regex.match(file)
