@@ -3,6 +3,17 @@ Change History
 ==============
 
 
+0.10.1 (TBD)
+------------
+
+Bug fixes:
+
+- `Issue #61`_: Dist failure for Fedora, CentOS, EPEL.
+
+
+.. _`Issue #61`: https://github.com/cpburnz/python-pathspec/issues/61
+
+
 0.10.0 (2022-08-30)
 -------------------
 
