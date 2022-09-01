@@ -8,9 +8,11 @@ Change History
 
 Bug fixes:
 
+- `Issue #60`_: Remove redundant wheel dep from pyproject.toml.
 - `Issue #61`_: Dist failure for Fedora, CentOS, EPEL.
 
 
+.. _`Issue #60`: https://github.com/cpburnz/python-pathspec/pull/60
 .. _`Issue #61`: https://github.com/cpburnz/python-pathspec/issues/61
 
 
