@@ -8,6 +8,7 @@ Change History
 
 Bug fixes:
 
+- Fix documentation on `pathspec.pattern.RegexPattern.match_file()`.
 - `Issue #60`_: Remove redundant wheel dep from pyproject.toml.
 - `Issue #61`_: Dist failure for Fedora, CentOS, EPEL.
 
