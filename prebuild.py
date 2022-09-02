@@ -61,9 +61,6 @@ def generate_setup_cfg() -> None:
 	output['options.packages.find'] = {
 		'include': ", ".join(config['tool']['setuptools']['packages']['find']['include'])
 	}
-	output['bdist_wheel'] = {
-		'universal': "1",
-	}
 
 	with open("setup.cfg", 'w') as fh:
 		output.write(fh)
