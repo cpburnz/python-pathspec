@@ -62,7 +62,7 @@ def generate_setup_cfg() -> None:
 		'include': ", ".join(config['tool']['setuptools']['packages']['find']['include'])
 	}
 
-	with open("setup.cfg", 'w') as fh:
+	with open("setup.cfg", 'w', encoding='utf8') as fh:
 		output.write(fh)
 
 
