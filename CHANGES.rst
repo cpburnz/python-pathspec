@@ -3,8 +3,8 @@ Change History
 ==============
 
 
-0.10.1 (TBD)
-------------
+0.10.1 (2022-09-02)
+-------------------
 
 Bug fixes:
 
@@ -12,6 +12,10 @@ Bug fixes:
 - `Issue #60`_: Remove redundant wheel dep from pyproject.toml.
 - `Issue #61`_: Dist failure for Fedora, CentOS, EPEL.
 - `Issue #62`_: Since version 0.10.0 pure wildcard does not work in some cases.
+
+Improvements:
+
+- Restore support for legacy installations using `setup.py`. See `Issue #61`_.
 
 
 .. _`Issue #60`: https://github.com/cpburnz/python-pathspec/pull/60
