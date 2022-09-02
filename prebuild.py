@@ -58,6 +58,9 @@ def generate_setup_cfg() -> None:
 		'setup_requires': ", ".join(config['build-system']['requires']),
 		'test_suite': "tests",
 	}
+	output['options.packages.find'] = {
+		'include': ", ".join(config['tool']['setuptools']['packages']['find']['include'])
+	}
 	output['bdist_wheel'] = {
 		'universal': "1",
 	}
