@@ -2,7 +2,7 @@
 # This Makefile is used to manage development and distribution.
 #
 # Created: 2022-08-11
-# Updated: 2022-08-31
+# Updated: 2022-09-01
 #
 
 .PHONY: build create-venv help prebuild publish test test-all update-venv
@@ -64,7 +64,7 @@ dev-venv-create: dev-venv-base dev-venv-install
 
 dev-venv-install:
 	${VENV} pip install --upgrade pip setuptools wheel
-	${VENV} pip install --upgrade build sphinx tox twine typing-extensions
+	${VENV} pip install --upgrade build sphinx tomli tox twine typing-extensions
 	${VENV} pip install -e "${SRC_DIR}"
 
 

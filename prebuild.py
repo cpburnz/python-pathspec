@@ -1,9 +1,13 @@
 """
-This script generates files required for source and wheel distributions.
+This script generates files required for source and wheel distributions,
+and legacy installations.
 """
 
 import argparse
+import configparser
 import sys
+
+import tomli
 
 
 def generate_readme_dist() -> None:
@@ -25,6 +29,43 @@ def generate_readme_dist() -> None:
 		fh.write(output)
 
 
+def generate_setup_cfg() -> None:
+	"""
+	Generate the "setup.cfg" file from "pyproject.toml" in order to
+	support legacy installation with "setup.py".
+	"""
+	print("Read: pyproject.toml")
+	with open("pyproject.toml", 'rb') as fh:
+		config = tomli.load(fh)
+
+	print("Write: setup.cfg")
+	output = configparser.ConfigParser()
+	output['metadata'] = {
+		'author': config['project']['authors'][0]['name'],
+		'author_email': config['project']['authors'][0]['email'],
+		'classifiers': "\n" + "\n".join(config['project']['classifiers']),
+		'description': config['project']['description'],
+		'license': config['project']['license']['text'],
+		'long_description': f"file: {config['project']['readme']}",
+		'long_description_content_type': "text/x-rst",
+		'name': config['project']['name'],
+		'url': config['project']['urls']['Source Code'],
+		'version': f"attr: {config['tool']['setuptools']['dynamic']['version']['attr']}",
+	}
+	output['options'] = {
+		'packages': "find:",
+		'python_requires': config['project']['requires-python'],
+		'setup_requires': ", ".join(config['build-system']['requires']),
+		'test_suite': "tests",
+	}
+	output['bdist_wheel'] = {
+		'universal': "1",
+	}
+
+	with open("setup.cfg", 'w') as fh:
+		output.write(fh)
+
+
 def main() -> int:
 	"""
 	Run the script.
@@ -34,6 +75,7 @@ def main() -> int:
 	parser.parse_args(sys.argv[1:])
 
 	generate_readme_dist()
+	generate_setup_cfg()
 
 	return 0
 
