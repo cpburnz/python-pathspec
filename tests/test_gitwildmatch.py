@@ -705,3 +705,48 @@ class GitWildMatchTest(unittest.TestCase):
 			'dirG/dirH/fileJ',
 			'dirG/fileO',
 		})
+
+	def test_12_asterisk_1_regex(self):
+		"""
+		Test a relative asterisk path pattern's regular expression.
+		"""
+		regex, include = GitWildMatchPattern.pattern_to_regex('*')
+		self.assertTrue(include)
+		self.assertEqual(regex, f'^(?:.+/)?[^/]+{RE_SUB}$')
+
+	def test_12_asterisk_2_regex_equivalent(self):
+		"""
+		Test a path pattern equivalent to the relative asterisk using double
+		asterisk.
+		"""
+		regex, include = GitWildMatchPattern.pattern_to_regex('*')
+		self.assertTrue(include)
+
+		equiv_regex, include = GitWildMatchPattern.pattern_to_regex('**/*')
+		self.assertTrue(include)
+
+		self.assertEqual(regex, equiv_regex)
+
+	def test_12_asterisk_3_child(self):
+		"""
+		Test a relative asterisk path pattern matching a direct child path.
+		"""
+		pattern = GitWildMatchPattern('*')
+		results = set(filter(pattern.match_file, [
+			'file.txt',
+		]))
+		self.assertEqual(results, {
+			'file.txt',
+		})
+
+	def test_12_asterisk_4_descendant(self):
+		"""
+		Test a relative asterisk path pattern matching a descendant path.
+		"""
+		pattern = GitWildMatchPattern('*')
+		results = set(filter(pattern.match_file, [
+			'anydir/file.txt',
+		]))
+		self.assertEqual(results, {
+			'anydir/file.txt',
+		})

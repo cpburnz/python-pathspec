@@ -521,3 +521,19 @@ class PathSpecTest(unittest.TestCase):
 			'dir/file.sql',
 			'dir/index.txt',
 		})
+
+	def test_07_issue_62(self):
+		"""
+		Test including all files and excluding a directory.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'*',
+			'!product_dir/',
+		])
+		results = set(spec.match_files([
+			'anydir/file.txt',
+			'product_dir/file.txt'
+		]))
+		self.assertEqual(results, {
+			'anydir/file.txt',
+		})

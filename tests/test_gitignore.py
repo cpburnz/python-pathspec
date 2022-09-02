@@ -294,3 +294,20 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			'dirD/fileE',
 			'dirD/fileF',
 		})
+
+	def test_04_issue_62(self):
+		"""
+		Test including all files and excluding a directory.
+		"""
+		spec = GitIgnoreSpec.from_lines([
+			'*',
+			'!product_dir/',
+		])
+		results = set(spec.match_files([
+			'anydir/file.txt',
+			'product_dir/file.txt',
+		]))
+		self.assertEqual(results, {
+			'anydir/file.txt',
+			'product_dir/file.txt',
+		})
