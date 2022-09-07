@@ -48,4 +48,4 @@ __credits__ = [
 	"bzakdd <https://github.com/bzakdd>",
 ]
 __license__ = "MPL 2.0"
-__version__ = "0.10.1"
+__version__ = "0.10.2.dev1"

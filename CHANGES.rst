@@ -3,6 +3,21 @@ Change History
 ==============
 
 
+0.10.2 (TBD)
+------------
+
+TODO:
+
+- Fix test failures on Windows: https://github.com/cpburnz/python-pathspec/runs/8192308694?check_suite_focus=true
+
+Improvements:
+
+- `Issue #58`_: CI: add GitHub Actions test workflow.
+
+
+.. _`Issue #58`: https://github.com/cpburnz/python-pathspec/pull/58
+
+
 0.10.1 (2022-09-02)
 -------------------
 

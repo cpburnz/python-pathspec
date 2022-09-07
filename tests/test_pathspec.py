@@ -537,3 +537,30 @@ class PathSpecTest(unittest.TestCase):
 		self.assertEqual(results, {
 			'anydir/file.txt',
 		})
+
+	def test_08_issue_39(self):
+		"""
+		Test excluding files in a directory.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'*.log',
+			'!important/*.log',
+			'trace.*',
+		])
+		files = {
+			'a.log',
+			'b.txt',
+			'important/d.log',
+			'important/e.txt',
+			'trace.c',
+		}
+		ignores = set(spec.match_files(files))
+		self.assertEqual(ignores, {
+			'a.log',
+			'trace.c',
+		})
+		self.assertEqual(files - ignores, {
+			'b.txt',
+			'important/d.log',
+			'important/e.txt',
+		})

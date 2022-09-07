@@ -311,3 +311,30 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			'anydir/file.txt',
 			'product_dir/file.txt',
 		})
+
+	def test_05_issue_39(self):
+		"""
+		Test excluding files in a directory.
+		"""
+		spec = GitIgnoreSpec.from_lines([
+			'*.log',
+			'!important/*.log',
+			'trace.*',
+		])
+		files = {
+			'a.log',
+			'b.txt',
+			'important/d.log',
+			'important/e.txt',
+			'trace.c',
+		}
+		ignores = set(spec.match_files(files))
+		self.assertEqual(ignores, {
+			'a.log',
+			'trace.c',
+		})
+		self.assertEqual(files - ignores, {
+			'b.txt',
+			'important/d.log',
+			'important/e.txt',
+		})
