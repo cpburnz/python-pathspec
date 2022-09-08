@@ -6,10 +6,6 @@ Change History
 0.10.2 (TBD)
 ------------
 
-TODO:
-
-- Fix test failures on Windows: https://github.com/cpburnz/python-pathspec/runs/8192308694?check_suite_focus=true
-
 Bug fixes:
 
 - Fix failing tests on Windows.
