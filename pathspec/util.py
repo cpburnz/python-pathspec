@@ -122,14 +122,15 @@ def _is_iterable(value: Any) -> bool:
 
 
 def iter_tree_entries(
-	root: str,
+	root: Union[str, PathLike],
 	on_error: Optional[Callable] = None,
 	follow_links: Optional[bool] = None,
 ) -> Iterator['TreeEntry']:
 	"""
 	Walks the specified directory for all files and directories.
 
-	*root* (:class:`str`) is the root directory to search.
+	*root* (:class:`str` or :class:`os.PathLike`) is the root directory to
+	search.
 
 	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
 	optionally is the error handler for file-system exceptions. It will be
@@ -237,14 +238,15 @@ def _iter_tree_entries_next(
 
 
 def iter_tree_files(
-	root: str,
+	root: Union[str, PathLike],
 	on_error: Optional[Callable] = None,
 	follow_links: Optional[bool] = None,
 ) -> Iterator[str]:
 	"""
 	Walks the specified directory for all files.
 
-	*root* (:class:`str`) is the root directory to search for files.
+	*root* (:class:`str` or :class:`os.PathLike`) is the root directory to
+	search for files.
 
 	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
 	optionally is the error handler for file-system exceptions. It will be

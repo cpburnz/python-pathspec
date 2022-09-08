@@ -10,7 +10,16 @@ TODO:
 
 - Fix test failures on Windows: https://github.com/cpburnz/python-pathspec/runs/8192308694?check_suite_focus=true
 
+Bug fixes:
+
+- Fix failing tests on Windows.
+- Type hint on *root* parameter on `pathspec.pathspec.PathSpec.match_tree_entries()`.
+- Type hint on *root* parameter on `pathspec.pathspec.PathSpec.match_tree_files()`.
+- Type hint on *root* parameter on `pathspec.util.iter_tree_entries()`.
+- Type hint on *root* parameter on `pathspec.util.iter_tree_files()`.
+
 Improvements:
+
 
 - `Issue #58`_: CI: add GitHub Actions test workflow.
 

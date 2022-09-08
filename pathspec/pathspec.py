@@ -206,7 +206,7 @@ class PathSpec(object):
 
 	def match_tree_entries(
 		self,
-		root: str,
+		root: Union[str, PathLike],
 		on_error: Optional[Callable] = None,
 		follow_links: Optional[bool] = None,
 	) -> Iterator[TreeEntry]:
@@ -233,7 +233,7 @@ class PathSpec(object):
 
 	def match_tree_files(
 		self,
-		root: str,
+		root: Union[str, PathLike],
 		on_error: Optional[Callable] = None,
 		follow_links: Optional[bool] = None,
 	) -> Iterator[str]:

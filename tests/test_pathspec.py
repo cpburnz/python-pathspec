@@ -4,6 +4,7 @@ This script tests :class:`.PathSpec`.
 
 import os
 import os.path
+import pathlib
 import shutil
 import tempfile
 import unittest
@@ -14,6 +15,10 @@ from pathspec import (
 	PathSpec)
 from pathspec.util import (
 	iter_tree_entries)
+from tests.util import (
+	make_dirs,
+	make_files,
+	ospath)
 
 
 class PathSpecTest(unittest.TestCase):
@@ -25,36 +30,19 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Create the specified directories.
 		"""
-		for dir in dirs:
-			os.mkdir(os.path.join(self.temp_dir, self.ospath(dir)))
+		make_dirs(self.temp_dir, dirs)
 
 	def make_files(self, files: Iterable[str]) -> None:
 		"""
 		Create the specified files.
 		"""
-		for file in files:
-			self.mkfile(os.path.join(self.temp_dir, self.ospath(file)))
-
-	@staticmethod
-	def mkfile(file: str) -> None:
-		"""
-		Creates an empty file.
-		"""
-		with open(file, 'wb'):
-			pass
-
-	@staticmethod
-	def ospath(path: str) -> str:
-		"""
-		Convert the POSIX path to a native OS path.
-		"""
-		return os.path.join(*path.split('/'))
+		return make_files(self.temp_dir, files)
 
 	def setUp(self) -> None:
 		"""
 		Called before each test.
 		"""
-		self.temp_dir = tempfile.mkdtemp()
+		self.temp_dir = pathlib.Path(tempfile.mkdtemp())
 
 	def tearDown(self) -> None:
 		"""
@@ -311,12 +299,12 @@ class PathSpecTest(unittest.TestCase):
 			__entry.path
 			for __entry in spec.match_entries(entries)
 		}
-		self.assertEqual(results, {
+		self.assertEqual(results, set(map(ospath, [
 			'X/a.txt',
 			'X/Z/c.txt',
 			'Y/a.txt',
 			'Y/Z/c.txt',
-		})
+		])))
 
 	def test_05_match_file(self):
 		"""
@@ -390,12 +378,12 @@ class PathSpecTest(unittest.TestCase):
 			__entry.path
 			for __entry in spec.match_tree_entries(self.temp_dir)
 		}
-		self.assertEqual(results, {
+		self.assertEqual(results, set(map(ospath, [
 			'X/a.txt',
 			'X/Z/c.txt',
 			'Y/a.txt',
 			'Y/Z/c.txt',
-		})
+		])))
 
 	def test_05_match_tree_files(self):
 		"""
@@ -420,12 +408,12 @@ class PathSpecTest(unittest.TestCase):
 			'Y/Z/c.txt',
 		])
 		results = set(spec.match_tree_files(self.temp_dir))
-		self.assertEqual(results, {
+		self.assertEqual(results, set(map(ospath, [
 			'X/a.txt',
 			'X/Z/c.txt',
 			'Y/a.txt',
 			'Y/Z/c.txt',
-		})
+		])))
 
 	def test_06_issue_41_a(self):
 		"""

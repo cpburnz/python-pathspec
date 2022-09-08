@@ -23,6 +23,12 @@ from pathspec.util import (
 	iter_tree_files,
 	match_file,
 	normalize_file)
+from tests.util import (
+	make_dirs,
+	make_files,
+	make_links,
+	mkfile,
+	ospath)
 
 
 class MatchFileTest(unittest.TestCase):
@@ -65,39 +71,19 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		Create the specified directories.
 		"""
-		for dir in dirs:
-			os.mkdir(os.path.join(self.temp_dir, self.ospath(dir)))
+		make_dirs(self.temp_dir, dirs)
 
 	def make_files(self, files: Iterable[str]) -> None:
 		"""
 		Create the specified files.
 		"""
-		for file in files:
-			self.mkfile(os.path.join(self.temp_dir, self.ospath(file)))
+		make_files(self.temp_dir, files)
 
 	def make_links(self, links: Iterable[Tuple[str, str]]) -> None:
 		"""
 		Create the specified links.
 		"""
-		for link, node in links:
-			src = os.path.join(self.temp_dir, self.ospath(node))
-			dest = os.path.join(self.temp_dir, self.ospath(link))
-			os.symlink(src, dest)
-
-	@staticmethod
-	def mkfile(file: str) -> None:
-		"""
-		Creates an empty file.
-		"""
-		with open(file, 'wb'):
-			pass
-
-	@staticmethod
-	def ospath(path: str) -> str:
-		"""
-		Convert the POSIX path to a native OS path.
-		"""
-		return os.path.join(*path.split('/'))
+		make_links(self.temp_dir, links)
 
 	def require_realpath(self) -> None:
 		"""
@@ -118,7 +104,7 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		Called before each test.
 		"""
-		self.temp_dir = tempfile.mkdtemp()
+		self.temp_dir = pathlib.Path(tempfile.mkdtemp())
 
 	def tearDown(self) -> None:
 		"""
@@ -144,7 +130,7 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Inner/f',
 		])
 		results = set(iter_tree_files(self.temp_dir))
-		self.assertEqual(results, set(map(self.ospath, [
+		self.assertEqual(results, set(map(ospath, [
 			'a',
 			'b',
 			'Dir/c',
@@ -161,16 +147,16 @@ class IterTreeTest(unittest.TestCase):
 		# 3.2+.
 		no_symlink = None
 		try:
-			file = os.path.join(self.temp_dir, 'file')
-			link = os.path.join(self.temp_dir, 'link')
-			self.mkfile(file)
+			file = self.temp_dir / 'file'
+			link = self.temp_dir / 'link'
+			mkfile(file)
 
 			try:
 				os.symlink(file, link)
 			except (AttributeError, NotImplementedError, OSError):
 				no_symlink = True
-				raise
-			no_symlink = False
+			else:
+				no_symlink = False
 
 		finally:
 			self.__class__.no_symlink = no_symlink
@@ -185,18 +171,17 @@ class IterTreeTest(unittest.TestCase):
 		broken_realpath = None
 		try:
 			self.require_symlink()
-			file = os.path.join(self.temp_dir, 'file')
-			link = os.path.join(self.temp_dir, 'link')
-			self.mkfile(file)
+			file = self.temp_dir / 'file'
+			link = self.temp_dir / 'link'
+			mkfile(file)
 			os.symlink(file, link)
 
 			try:
 				self.assertEqual(os.path.realpath(file), os.path.realpath(link))
 			except AssertionError:
 				broken_realpath = True
-				raise
-
-			broken_realpath = False
+			else:
+				broken_realpath = False
 
 		finally:
 			self.__class__.broken_realpath = broken_realpath
@@ -223,7 +208,7 @@ class IterTreeTest(unittest.TestCase):
 			('DirX', 'Dir'),
 		])
 		results = set(iter_tree_files(self.temp_dir))
-		self.assertEqual(results, set(map(self.ospath, [
+		self.assertEqual(results, set(map(ospath, [
 			'a',
 			'ax',
 			'b',
@@ -260,7 +245,7 @@ class IterTreeTest(unittest.TestCase):
 			('Dir/Fx', 'Dir/Target'),
 		])
 		results = set(iter_tree_files(self.temp_dir))
-		self.assertEqual(results, set(map(self.ospath, [
+		self.assertEqual(results, set(map(ospath, [
 			'Ax/Ex/file',
 			'Ax/Fx/file',
 			'Ax/Target/file',
@@ -293,7 +278,7 @@ class IterTreeTest(unittest.TestCase):
 			set(iter_tree_files(self.temp_dir))
 
 		self.assertEqual(context.exception.first_path, 'Dir')
-		self.assertEqual(context.exception.second_path, self.ospath('Dir/Self'))
+		self.assertEqual(context.exception.second_path, ospath('Dir/Self'))
 
 	def test_2_5_recursive_circular_links(self):
 		"""
@@ -321,9 +306,9 @@ class IterTreeTest(unittest.TestCase):
 
 		self.assertIn(context.exception.first_path, ('A', 'B', 'C'))
 		self.assertEqual(context.exception.second_path, {
-			'A': self.ospath('A/Bx/Cx/Ax'),
-			'B': self.ospath('B/Cx/Ax/Bx'),
-			'C': self.ospath('C/Ax/Bx/Cx'),
+			'A': ospath('A/Bx/Cx/Ax'),
+			'B': ospath('B/Cx/Ax/Bx'),
+			'C': ospath('C/Ax/Bx/Cx'),
 		}[context.exception.first_path])
 
 	def test_2_6_detect_broken_links(self):
@@ -375,7 +360,7 @@ class IterTreeTest(unittest.TestCase):
 			('DirX', 'Dir'),
 		])
 		results = set(iter_tree_files(self.temp_dir, follow_links=False))
-		self.assertEqual(results, set(map(self.ospath, [
+		self.assertEqual(results, set(map(ospath, [
 			'A',
 			'Ax',
 			'B',
@@ -405,7 +390,7 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Inner/f',
 		])
 		results = {entry.path for entry in iter_tree_entries(self.temp_dir)}
-		self.assertEqual(results, set(map(self.ospath, [
+		self.assertEqual(results, set(map(ospath, [
 			'a',
 			'b',
 			'Dir',
