@@ -16,7 +16,8 @@ from .pathspec import (
 from .pattern import (
 	Pattern)
 from .patterns.gitwildmatch import (
-	GitWildMatchPattern)
+	GitWildMatchPattern,
+	GitWildMatchPatternError)
 from .util import (
 	_is_iterable)
 
@@ -101,7 +102,15 @@ class GitIgnoreSpec(PathSpec):
 					# Pattern matched.
 
 					# Check for directory marker.
-					dir_mark = match.match.group('ps_d')
+					try:
+						dir_mark = match.match.group('ps_d')
+					except IndexError as e:
+						# NOTICE: The exact content of this error message is subject
+						# to change.
+						raise GitWildMatchPatternError((
+							"Bad git pattern encountered: file={!r} regex={!r} match={!r}."
+						).format(file, pattern.regex, match.match)) from e
+
 					if dir_mark:
 						# Pattern matched by a directory pattern.
 						priority = 1
