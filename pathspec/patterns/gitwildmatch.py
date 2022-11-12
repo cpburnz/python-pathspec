@@ -166,7 +166,7 @@ class GitWildMatchPattern(RegexPattern):
 						if i == 0 and i == end:
 							# A pattern consisting solely of double-asterisks ('**')
 							# will match every path.
-							output.append('.+')
+							output.append(f'[^/]+(?:(?P<{_DIR_MARK}>/).*)?')
 						elif i == 0:
 							# A normalized pattern beginning with double-asterisks
 							# ('**') will match any leading path segments.

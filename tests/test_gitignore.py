@@ -338,3 +338,23 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			'important/d.log',
 			'important/e.txt',
 		})
+
+	def test_06_issue_64(self):
+		"""
+		Test using a double asterisk pattern.
+		"""
+		spec = GitIgnoreSpec.from_lines([
+			"**",
+		])
+		files = {
+			'x',
+			'y.py',
+			'A/x',
+			'A/y.py',
+			'A/B/x',
+			'A/B/y.py',
+			'A/B/C/x',
+			'A/B/C/y.py',
+		}
+		ignores = set(spec.match_files(files))
+		self.assertEqual(ignores, files)

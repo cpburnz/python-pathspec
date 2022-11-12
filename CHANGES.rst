@@ -13,7 +13,7 @@ Bug fixes:
 - Type hint on *root* parameter on `pathspec.pathspec.PathSpec.match_tree_files()`.
 - Type hint on *root* parameter on `pathspec.util.iter_tree_entries()`.
 - Type hint on *root* parameter on `pathspec.util.iter_tree_files()`.
-- WIP: `Issue #64`_: IndexError with my .gitignore file when trying to build a Python package.
+- `Issue #64`_: IndexError with my .gitignore file when trying to build a Python package.
 
 Improvements:
 

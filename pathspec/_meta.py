@@ -46,6 +46,7 @@ __credits__ = [
 	"jack1142 <https://github.com/jack1142>",
 	"mgorny <https://github.com/mgorny>",
 	"bzakdd <https://github.com/bzakdd>",
+	"haimat <https://github.com/haimat>",
 ]
 __license__ = "MPL 2.0"
 __version__ = "0.10.2.dev1"

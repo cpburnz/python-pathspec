@@ -20,7 +20,7 @@ RE_DIR = f"(?P<{_DIR_MARK}>/)"
 This regular expression matches the directory marker.
 """
 
-RE_SUB = f"(?:(?P<{_DIR_MARK}>/).*)?"
+RE_SUB = f"(?:{RE_DIR}.*)?"
 """
 This regular expression matches an optional sub-path.
 """
@@ -258,7 +258,29 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('**')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^.+$')
+		self.assertEqual(regex, f'^[^/]+{RE_SUB}$')
+		pattern = GitWildMatchPattern(re.compile(regex), include)
+		results = set(filter(pattern.match_file, [
+			'x',
+			'y.py',
+			'A/x',
+			'A/y.py',
+			'A/B/x',
+			'A/B/y.py',
+			'A/B/C/x',
+			'A/B/C/y.py',
+		]))
+
+		self.assertEqual(results, {
+			'x',
+			'y.py',
+			'A/x',
+			'A/y.py',
+			'A/B/x',
+			'A/B/y.py',
+			'A/B/C/x',
+			'A/B/C/y.py',
+		})
 
 	def test_03_parent_double_asterisk(self):
 		"""
@@ -292,7 +314,7 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('**')
 		self.assertTrue(include)
-		self.assertEqual(regex, '^.+$')
+		self.assertEqual(regex, f'^[^/]+{RE_SUB}$')
 
 		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex('**/**')
 		self.assertTrue(include)
