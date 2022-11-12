@@ -13,14 +13,15 @@ Bug fixes:
 - Type hint on *root* parameter on `pathspec.pathspec.PathSpec.match_tree_files()`.
 - Type hint on *root* parameter on `pathspec.util.iter_tree_entries()`.
 - Type hint on *root* parameter on `pathspec.util.iter_tree_files()`.
+- WIP: `Issue #64`_: IndexError with my .gitignore file when trying to build a Python package.
 
 Improvements:
-
 
 - `Issue #58`_: CI: add GitHub Actions test workflow.
 
 
 .. _`Issue #58`: https://github.com/cpburnz/python-pathspec/pull/58
+.. _`Issue #64`: https://github.com/cpburnz/python-pathspec/issues/64
 
 
 0.10.1 (2022-09-02)

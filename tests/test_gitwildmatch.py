@@ -9,17 +9,18 @@ import pathspec.patterns.gitwildmatch
 from pathspec.patterns.gitwildmatch import (
 	GitWildMatchPattern,
 	GitWildMatchPatternError,
-	_BYTES_ENCODING)
+	_BYTES_ENCODING,
+	_DIR_MARK)
 from pathspec.util import (
 	lookup_pattern)
 
 
-RE_DIR = "(?P<ps_d>/)"
+RE_DIR = f"(?P<{_DIR_MARK}>/)"
 """
 This regular expression matches the directory marker.
 """
 
-RE_SUB = "(?:(?P<ps_d>/).*)?"
+RE_SUB = f"(?:(?P<{_DIR_MARK}>/).*)?"
 """
 This regular expression matches an optional sub-path.
 """

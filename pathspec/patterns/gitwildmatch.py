@@ -19,6 +19,12 @@ _BYTES_ENCODING = 'latin1'
 The encoding to use when parsing a byte string pattern.
 """
 
+_DIR_MARK = 'ps_d'
+"""
+The regex group name for the directory marker. This is only used by
+:class:`GitIgnoreSpec`.
+"""
+
 
 class GitWildMatchPatternError(ValueError):
 	"""
@@ -112,7 +118,7 @@ class GitWildMatchPattern(RegexPattern):
 				# EDGE CASE: The '**/' pattern should match everything except
 				# individual files in the root directory. This case cannot be
 				# adequately handled through normalization. Use the override.
-				override_regex = '^.+(?P<ps_d>/).*$'
+				override_regex = f'^.+(?P<{_DIR_MARK}>/).*$'
 
 			if not pattern_segs[0]:
 				# A pattern beginning with a slash ('/') will only match paths
@@ -169,7 +175,7 @@ class GitWildMatchPattern(RegexPattern):
 						elif i == end:
 							# A normalized pattern ending with double-asterisks ('**')
 							# will match any trailing path segments.
-							output.append('(?P<ps_d>/).*')
+							output.append(f'(?P<{_DIR_MARK}>/).*')
 						else:
 							# A pattern with inner double-asterisks ('**') will match
 							# multiple (or zero) inner path segments.
@@ -187,7 +193,7 @@ class GitWildMatchPattern(RegexPattern):
 							# A pattern ending without a slash ('/') will match a file
 							# or a directory (with paths underneath it). E.g., "foo"
 							# matches "foo", "foo/bar", "foo/bar/baz", etc.
-							output.append('(?:(?P<ps_d>/).*)?')
+							output.append(f'(?:(?P<{_DIR_MARK}>/).*)?')
 
 						need_slash = True
 
@@ -205,7 +211,7 @@ class GitWildMatchPattern(RegexPattern):
 							# A pattern ending without a slash ('/') will match a file
 							# or a directory (with paths underneath it). E.g., "foo"
 							# matches "foo", "foo/bar", "foo/bar/baz", etc.
-							output.append('(?:(?P<ps_d>/).*)?')
+							output.append(f'(?:(?P<{_DIR_MARK}>/).*)?')
 
 						need_slash = True
 
