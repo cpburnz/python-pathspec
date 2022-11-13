@@ -49,4 +49,4 @@ __credits__ = [
 	"haimat <https://github.com/haimat>",
 ]
 __license__ = "MPL 2.0"
-__version__ = "0.10.2.dev1"
+__version__ = "0.10.2"
