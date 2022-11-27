@@ -2,6 +2,7 @@ include *.in
 include *.ini
 include *.py
 include *.rst
+include pathspec/py.typed
 include LICENSE
 recursive-include doc *
 recursive-include tests *
