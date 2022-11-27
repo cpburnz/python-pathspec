@@ -5,4 +5,4 @@ implementations.
 """
 
 # Load pattern implementations.
-from .gitwildmatch import GitWildMatchPattern
+from .gitwildmatch import GitWildMatchPattern as GitWildMatchPattern
