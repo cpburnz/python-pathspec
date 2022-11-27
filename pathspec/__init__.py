@@ -30,17 +30,17 @@ backward compatibility:
 """
 
 from .gitignore import (
-	GitIgnoreSpec)
+	GitIgnoreSpec as GitIgnoreSpec)
 from .pathspec import (
-	PathSpec)
+	PathSpec as PathSpec)
 from .pattern import (
-	Pattern,
-	RegexPattern)
+	Pattern as Pattern,
+	RegexPattern as RegexPattern)
 from .util import (
-	RecursionError,
-	iter_tree,
-	lookup_pattern,
-	match_files)
+	RecursionError as RecursionError,
+	iter_tree as iter_tree,
+	lookup_pattern as lookup_pattern,
+	match_files as match_files)
 
 from ._meta import (
 	__author__,
@@ -51,8 +51,8 @@ from ._meta import (
 )
 
 # Load pattern implementations.
-from . import patterns
+from . import patterns as patterns
 
 # Expose `GitIgnorePattern` class in the root module for backward
 # compatibility with v0.4.
-from .patterns.gitwildmatch import GitIgnorePattern
+from .patterns.gitwildmatch import GitIgnorePattern as GitIgnorePattern
