@@ -9,6 +9,7 @@ from typing import (
 	Collection,
 	Iterable,
 	TYPE_CHECKING,
+	TypeVar,
 	Union)
 
 from .pathspec import (
@@ -22,6 +23,8 @@ from .patterns.gitwildmatch import (
 from .util import (
 	_is_iterable)
 
+Self = TypeVar("Self")
+
 
 class GitIgnoreSpec(PathSpec):
 	"""
@@ -29,7 +32,7 @@ class GitIgnoreSpec(PathSpec):
 	replicate *.gitignore* behavior.
 	"""
 
-	def __eq__(self, other: 'Self') -> bool:
+	def __eq__(self, other: object) -> bool:
 		"""
 		Tests the equality of this gitignore-spec with *other*
 		(:class:`GitIgnoreSpec`) by comparing their :attr:`~PathSpec.patterns`
@@ -44,10 +47,10 @@ class GitIgnoreSpec(PathSpec):
 
 	@classmethod
 	def from_lines(
-		cls,
+		cls: type[Self],
 		lines: Iterable[AnyStr],
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern], None] = None,
-	) -> 'Self':
+	) -> Self:
 		"""
 		Compiles the pattern lines.
 
@@ -126,13 +129,3 @@ class GitIgnoreSpec(PathSpec):
 						out_priority = priority
 
 		return out_matched
-
-
-if TYPE_CHECKING:
-	try:
-		from typing import Self
-	except ImportError:
-		try:
-			from typing_extensions import Self
-		except ImportError:
-			Self = GitIgnoreSpec

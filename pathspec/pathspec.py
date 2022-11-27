@@ -17,6 +17,7 @@ from typing import (
 	Iterator,
 	Optional,
 	TYPE_CHECKING,
+	TypeVar,
 	Union)
 
 from . import util
@@ -28,6 +29,8 @@ from .util import (
 	_is_iterable,
 	match_file,
 	normalize_file)
+
+Self = TypeVar("Self")
 
 
 class PathSpec(object):
@@ -50,7 +53,7 @@ class PathSpec(object):
 		contains the compiled patterns.
 		"""
 
-	def __eq__(self, other: 'Self') -> bool:
+	def __eq__(self, other: object) -> bool:
 		"""
 		Tests the equality of this path-spec with *other* (:class:`PathSpec`)
 		by comparing their :attr:`~PathSpec.patterns` attributes.
@@ -68,7 +71,7 @@ class PathSpec(object):
 		"""
 		return len(self.patterns)
 
-	def __add__(self, other: 'Self') -> 'Self':
+	def __add__(self: Self, other: "PathSpec") -> Self:
 		"""
 		Combines the :attr:`Pathspec.patterns` patterns from two
 		:class:`PathSpec` instances.
@@ -78,7 +81,7 @@ class PathSpec(object):
 		else:
 			return NotImplemented
 
-	def __iadd__(self, other: 'Self') -> 'Self':
+	def __iadd__(self: Self, other: "PathSpec") -> Self:
 		"""
 		Adds the :attr:`Pathspec.patterns` patterns from one :class:`PathSpec`
 		instance to this instance.
@@ -91,10 +94,10 @@ class PathSpec(object):
 
 	@classmethod
 	def from_lines(
-		cls,
+		cls: type[Self],
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern]],
 		lines: Iterable[AnyStr],
-	) -> 'Self':
+	) -> Self:
 		"""
 		Compiles the pattern lines.
 
@@ -261,13 +264,3 @@ class PathSpec(object):
 	# Alias `match_tree_files()` as `match_tree()` for backward
 	# compatibility before v0.3.2.
 	match_tree = match_tree_files
-
-
-if TYPE_CHECKING:
-	try:
-		from typing import Self
-	except ImportError:
-		try:
-			from typing_extensions import Self
-		except ImportError:
-			Self = PathSpec
