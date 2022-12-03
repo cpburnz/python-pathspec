@@ -8,7 +8,7 @@ from typing import (
 	Callable,
 	Collection,
 	Iterable,
-	TYPE_CHECKING,
+	Type,
 	TypeVar,
 	Union)
 
@@ -23,7 +23,11 @@ from .patterns.gitwildmatch import (
 from .util import (
 	_is_iterable)
 
-Self = TypeVar("Self")
+Self = TypeVar("Self", bound="GitIgnoreSpec")
+"""
+:class:`GitIgnoreSpec` self type hint to support Python v<3.11 using PEP
+673 recommendation.
+"""
 
 
 class GitIgnoreSpec(PathSpec):
@@ -47,7 +51,7 @@ class GitIgnoreSpec(PathSpec):
 
 	@classmethod
 	def from_lines(
-		cls: type[Self],
+		cls: Type[Self],
 		lines: Iterable[AnyStr],
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern], None] = None,
 	) -> Self:

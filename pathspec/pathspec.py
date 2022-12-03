@@ -16,7 +16,7 @@ from typing import (
 	Iterable,
 	Iterator,
 	Optional,
-	TYPE_CHECKING,
+	Type,
 	TypeVar,
 	Union)
 
@@ -30,7 +30,11 @@ from .util import (
 	match_file,
 	normalize_file)
 
-Self = TypeVar("Self")
+Self = TypeVar("Self", bound="PathSpec")
+"""
+:class:`PathSpec` self type hint to support Python v<3.11 using PEP 673
+recommendation.
+"""
 
 
 class PathSpec(object):
@@ -94,7 +98,7 @@ class PathSpec(object):
 
 	@classmethod
 	def from_lines(
-		cls: type[Self],
+		cls: Type[Self],
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern]],
 		lines: Iterable[AnyStr],
 	) -> Self:
