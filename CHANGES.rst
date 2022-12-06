@@ -9,11 +9,13 @@ Change History
 Improvements:
 
 - `Issue #66`_/`Pull #67`_: Package not marked as py.typed.
+- `Issue #68`_: Exports are considered private.
 - `Issue #70`_/`Pull #71`_: 'Self' string literal type is Unknown in pyright.
 
 
 .. _`Issue #66`: https://github.com/cpburnz/python-pathspec/issues/66
 .. _`Pull #67`: https://github.com/cpburnz/python-pathspec/pull/67
+.. _`Issue #68`: https://github.com/cpburnz/python-pathspec/issues/68
 .. _`Issue #70`: https://github.com/cpburnz/python-pathspec/issues/70
 .. _`Pull #71`: https://github.com/cpburnz/python-pathspec/pull/71
 
