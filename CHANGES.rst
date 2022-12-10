@@ -3,16 +3,18 @@ Change History
 ==============
 
 
-0.10.3 (TBD)
+0.10.3 (TDB)
 ------------
 
 Improvements:
 
+- `Issue #65`_: Checking directories via match_file() does not work on Path objects.
 - `Issue #66`_/`Pull #67`_: Package not marked as py.typed.
 - `Issue #68`_: Exports are considered private.
 - `Issue #70`_/`Pull #71`_: 'Self' string literal type is Unknown in pyright.
 
 
+.. _`Issue #65`: https://github.com/cpburnz/python-pathspec/issues/65
 .. _`Issue #66`: https://github.com/cpburnz/python-pathspec/issues/66
 .. _`Pull #67`: https://github.com/cpburnz/python-pathspec/pull/67
 .. _`Issue #68`: https://github.com/cpburnz/python-pathspec/issues/68
