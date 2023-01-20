@@ -50,16 +50,16 @@ def generate_setup_cfg() -> None:
 		'long_description_content_type': "text/x-rst",
 		'name': config['project']['name'],
 		'url': config['project']['urls']['Source Code'],
-		'version': f"attr: {config['tool']['setuptools']['dynamic']['version']['attr']}",
+		'version': "attr: pathspec._meta.__version__",
 	}
 	output['options'] = {
 		'packages': "find:",
 		'python_requires': config['project']['requires-python'],
-		'setup_requires': ", ".join(config['build-system']['requires']),
+		'setup_requires': "setuptools>=40.8.0",
 		'test_suite': "tests",
 	}
 	output['options.packages.find'] = {
-		'include': ", ".join(config['tool']['setuptools']['packages']['find']['include'])
+		'include': "pathspec, pathspec.*",
 	}
 
 	with open("setup.cfg", 'w', encoding='utf8') as fh:

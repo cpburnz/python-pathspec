@@ -1,6 +1,6 @@
 [build-system]
-build-backend = "setuptools.build_meta"
-requires = ["setuptools>=40.8.0"]
+build-backend = "flit_core.buildapi"
+requires = ["flit_core >=3.2,<4"]
 
 [project]
 authors = [
@@ -34,9 +34,3 @@ requires-python = ">=3.7"
 "Source Code" = "https://github.com/cpburnz/python-pathspec"
 "Documentation" = "https://python-path-specification.readthedocs.io/en/latest/index.html"
 "Issue Tracker" = "https://github.com/cpburnz/python-pathspec/issues"
-
-[tool.setuptools.dynamic]
-version = {attr = "pathspec._meta.__version__"}
-
-[tool.setuptools.packages.find]
-include = ["pathspec", "pathspec.*"]
