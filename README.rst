@@ -137,7 +137,6 @@ Installation
 required:
 
 - `build`_ (>=0.6.0)
-- `setuptools`_ (>=40.8.0)
 
 *pathspec* can then be built and installed with::
 
@@ -146,7 +145,6 @@ required:
 
 .. _`PyPI`: http://pypi.python.org/pypi/pathspec
 .. _`build`: https://pypi.org/project/build/
-.. _`setuptools`: https://pypi.org/project/setuptools/
 
 
 Documentation
