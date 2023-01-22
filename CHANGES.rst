@@ -3,6 +3,23 @@ Change History
 ==============
 
 
+0.11.0 (TBD)
+------------
+
+Major changes:
+
+- Changed build backend to `flit_core.buildapi`_ from `setuptools.build_meta`_. Building with `setuptools` through `setup.py` is still supported for distributions that need it. See `Issue #72`_.
+
+Improvements:
+
+- `Issue #72`_/`Pull #73`_: Please consider switching the build-system to flit_core to ease setuptools bootstrap.
+
+
+.. _`flit_core.buildapi`: https://flit.pypa.io/en/latest/index.html
+.. _`Issue #72`: https://github.com/cpburnz/python-pathspec/issues/72
+.. _`Pull #73`: https://github.com/cpburnz/python-pathspec/pull/73
+
+
 0.10.3 (2022-12-09)
 -------------------
 
