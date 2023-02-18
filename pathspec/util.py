@@ -7,6 +7,7 @@ import os.path
 import pathlib
 import posixpath
 import stat
+import sys
 import warnings
 from collections.abc import (
 	Collection as CollectionType,
@@ -29,6 +30,11 @@ from typing import (
 
 from .pattern import (
 	Pattern)
+
+if sys.version_info >= (3,9):
+	StrPath = Union[str, PathLike[str]]
+else:
+	StrPath = Union[str, PathLike]
 
 NORMALIZE_PATH_SEPS = [
 	__sep
@@ -141,7 +147,7 @@ def _is_iterable(value: Any) -> bool:
 
 
 def iter_tree_entries(
-	root: Union[str, PathLike[str]],
+	root: StrPath,
 	on_error: Optional[Callable] = None,
 	follow_links: Optional[bool] = None,
 ) -> Iterator['TreeEntry']:
@@ -257,7 +263,7 @@ def _iter_tree_entries_next(
 
 
 def iter_tree_files(
-	root: Union[str, PathLike[str]],
+	root: StrPath,
 	on_error: Optional[Callable] = None,
 	follow_links: Optional[bool] = None,
 ) -> Iterator[str]:
@@ -365,7 +371,7 @@ def match_files(
 
 
 def normalize_file(
-	file: Union[str, PathLike[str]],
+	file: StrPath,
 	separators: Optional[Collection[str]] = None,
 ) -> str:
 	"""
@@ -405,9 +411,9 @@ def normalize_file(
 
 
 def normalize_files(
-	files: Iterable[Union[str, PathLike[str]]],
+	files: Iterable[StrPath],
 	separators: Optional[Collection[str]] = None,
-) -> Dict[str, List[Union[str, PathLike[str]]]]:
+) -> Dict[str, List[StrPath]]:
 	"""
 	DEPRECATED: This function is no longer used. Use the :func:`.normalize_file`
 	function with a loop for better results.

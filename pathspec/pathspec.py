@@ -3,6 +3,7 @@ This module provides an object oriented interface for pattern matching
 of files.
 """
 
+import sys
 from collections.abc import (
 	Collection as CollectionType)
 from itertools import (
@@ -29,6 +30,11 @@ from .util import (
 	_is_iterable,
 	match_file,
 	normalize_file)
+
+if sys.version_info >= (3,9):
+	StrPath = Union[str, PathLike[str]]
+else:
+	StrPath = Union[str, PathLike]
 
 Self = TypeVar("Self", bound="PathSpec")
 """
@@ -164,7 +170,7 @@ class PathSpec(object):
 
 	def match_file(
 		self,
-		file: Union[str, PathLike[str]],
+		file: StrPath,
 		separators: Optional[Collection[str]] = None,
 	) -> bool:
 		"""
@@ -184,9 +190,9 @@ class PathSpec(object):
 
 	def match_files(
 		self,
-		files: Iterable[Union[str, PathLike[str]]],
+		files: Iterable[StrPath],
 		separators: Optional[Collection[str]] = None,
-	) -> Iterator[Union[str, PathLike[str]]]:
+	) -> Iterator[StrPath]:
 		"""
 		Matches the files to this path-spec.
 
@@ -213,7 +219,7 @@ class PathSpec(object):
 
 	def match_tree_entries(
 		self,
-		root: Union[str, PathLike[str]],
+		root: StrPath,
 		on_error: Optional[Callable] = None,
 		follow_links: Optional[bool] = None,
 	) -> Iterator[TreeEntry]:
@@ -240,7 +246,7 @@ class PathSpec(object):
 
 	def match_tree_files(
 		self,
-		root: Union[str, PathLike[str]],
+		root: StrPath,
 		on_error: Optional[Callable] = None,
 		follow_links: Optional[bool] = None,
 	) -> Iterator[str]:
