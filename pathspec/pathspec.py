@@ -164,13 +164,13 @@ class PathSpec(object):
 
 	def match_file(
 		self,
-		file: Union[str, PathLike],
+		file: Union[str, PathLike[str]],
 		separators: Optional[Collection[str]] = None,
 	) -> bool:
 		"""
 		Matches the file to this path-spec.
 
-		*file* (:class:`str` or :class:`os.PathLike`) is the file path to be
+		*file* (:class:`str` or :class:`os.PathLike[str]`) is the file path to be
 		matched against :attr:`self.patterns <PathSpec.patterns>`.
 
 		*separators* (:class:`~collections.abc.Collection` of :class:`str`)
@@ -184,14 +184,14 @@ class PathSpec(object):
 
 	def match_files(
 		self,
-		files: Iterable[Union[str, PathLike]],
+		files: Iterable[Union[str, PathLike[str]]],
 		separators: Optional[Collection[str]] = None,
-	) -> Iterator[Union[str, PathLike]]:
+	) -> Iterator[Union[str, PathLike[str]]]:
 		"""
 		Matches the files to this path-spec.
 
 		*files* (:class:`~collections.abc.Iterable` of :class:`str` or
-		:class:`os.PathLike`) contains the file paths to be matched against
+		:class:`os.PathLike[str]`) contains the file paths to be matched against
 		:attr:`self.patterns <PathSpec.patterns>`.
 
 		*separators* (:class:`~collections.abc.Collection` of :class:`str`;
@@ -200,7 +200,7 @@ class PathSpec(object):
 		information.
 
 		Returns the matched files (:class:`~collections.abc.Iterator` of
-		:class:`str` or :class:`os.PathLike`).
+		:class:`str` or :class:`os.PathLike[str]`).
 		"""
 		if not _is_iterable(files):
 			raise TypeError(f"files:{files!r} is not an iterable.")
@@ -213,7 +213,7 @@ class PathSpec(object):
 
 	def match_tree_entries(
 		self,
-		root: Union[str, PathLike],
+		root: Union[str, PathLike[str]],
 		on_error: Optional[Callable] = None,
 		follow_links: Optional[bool] = None,
 	) -> Iterator[TreeEntry]:
@@ -221,7 +221,7 @@ class PathSpec(object):
 		Walks the specified root path for all files and matches them to this
 		path-spec.
 
-		*root* (:class:`str` or :class:`os.PathLike`) is the root directory
+		*root* (:class:`str` or :class:`os.PathLike[str]`) is the root directory
 		to search.
 
 		*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
@@ -240,7 +240,7 @@ class PathSpec(object):
 
 	def match_tree_files(
 		self,
-		root: Union[str, PathLike],
+		root: Union[str, PathLike[str]],
 		on_error: Optional[Callable] = None,
 		follow_links: Optional[bool] = None,
 	) -> Iterator[str]:
@@ -248,7 +248,7 @@ class PathSpec(object):
 		Walks the specified root path for all files and matches them to this
 		path-spec.
 
-		*root* (:class:`str` or :class:`os.PathLike`) is the root directory
+		*root* (:class:`str` or :class:`os.PathLike[str]`) is the root directory
 		to search for files.
 
 		*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
