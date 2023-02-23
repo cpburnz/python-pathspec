@@ -25,16 +25,12 @@ from . import util
 from .pattern import (
 	Pattern)
 from .util import (
+	StrPath,
 	TreeEntry,
 	_filter_patterns,
 	_is_iterable,
 	match_file,
 	normalize_file)
-
-if sys.version_info >= (3,9):
-	StrPath = Union[str, PathLike[str]]
-else:
-	StrPath = Union[str, PathLike]
 
 Self = TypeVar("Self", bound="PathSpec")
 """

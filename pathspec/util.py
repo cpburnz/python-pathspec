@@ -31,7 +31,7 @@ from typing import (
 from .pattern import (
 	Pattern)
 
-if sys.version_info >= (3,9):
+if sys.version_info >= (3, 9):
 	StrPath = Union[str, PathLike[str]]
 else:
 	StrPath = Union[str, PathLike]
@@ -394,7 +394,7 @@ def normalize_file(
 		separators = NORMALIZE_PATH_SEPS
 
 	# Convert path object to string.
-	norm_file = str(file)
+	norm_file: str = os.fspath(file)
 
 	for sep in separators:
 		norm_file = norm_file.replace(sep, posixpath.sep)
