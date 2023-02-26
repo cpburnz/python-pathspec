@@ -6,9 +6,12 @@ Change History
 0.11.1 (TBD)
 ------------
 
-Improvements:
+Bug fixes:
 
 - `Issue #74`_: Include directory should override exclude file.
+
+Improvements:
+
 - `Pull #75`_: Fix partially unknown PathLike type.
 - Convert `os.PathLike` to a string properly using `os.fspath`.
 
