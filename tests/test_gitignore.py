@@ -358,3 +358,33 @@ class GitIgnoreSpecTest(unittest.TestCase):
 		}
 		ignores = set(spec.match_files(files))
 		self.assertEqual(ignores, files)
+
+	def test_07_issue_74(self):
+		"""
+		Test include directory should override exclude file.
+		"""
+		spec = GitIgnoreSpec.from_lines([
+			'*',  # Ignore all files by default
+			'!*/',  # but scan all directories
+			'!*.txt',  # Text files
+			'/test1/**',  # ignore all in the directory
+		])
+		files = {
+			'test1/b.bin',
+			'test1/a.txt',
+			'test1/c/c.txt',
+			'test2/a.txt',
+			'test2/b.bin',
+			'test2/c/c.txt',
+		}
+		ignores = set(spec.match_files(files))
+		self.assertEqual(ignores, {
+			'test1/b.bin',
+			'test1/a.txt',
+			'test1/c/c.txt',
+			'test2/b.bin',
+		})
+		self.assertEqual(files - ignores, {
+			'test2/a.txt',
+			'test2/c/c.txt',
+		})
