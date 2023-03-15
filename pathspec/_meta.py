@@ -52,4 +52,4 @@ __credits__ = [
 	"axesider <https://github.com/axesider>",
 ]
 __license__ = "MPL 2.0"
-__version__ = "0.11.1.dev1"
+__version__ = "0.11.1"
