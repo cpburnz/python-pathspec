@@ -68,7 +68,14 @@ class GitWildMatchPattern(RegexPattern):
 			raise TypeError(f"pattern:{pattern!r} is not a unicode or byte string.")
 
 		original_pattern = pattern
-		pattern = pattern.strip()
+
+		if pattern.endswith('\\ '):
+			# EDGE CASE: Spaces can be escaped with backslash.
+			# If a pattern that ends with backslash followed by a space,
+			# only strip from left.
+			pattern = pattern.lstrip()
+		else:
+			pattern = pattern.strip()
 
 		if pattern.startswith('#'):
 			# A pattern starting with a hash ('#') serves as a comment
