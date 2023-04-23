@@ -773,3 +773,28 @@ class GitWildMatchTest(unittest.TestCase):
 		self.assertEqual(results, {
 			'anydir/file.txt',
 		})
+
+	def test_13_issue_77_1_regex(self):
+		"""
+		Test the resulting regex for regex bracket expression negation.
+		"""
+		regex, include = GitWildMatchPattern.pattern_to_regex('a[^b]c')
+		self.assertTrue(include)
+
+		equiv_regex, include = GitWildMatchPattern.pattern_to_regex('a[!b]c')
+		self.assertTrue(include)
+
+		self.assertEqual(regex, equiv_regex)
+
+	def test_13_issue_77_2_results(self):
+		"""
+		Test that regex bracket expression negation works.
+		"""
+		pattern = GitWildMatchPattern('a[^b]c')
+		results = set(filter(pattern.match_file, [
+			'abc',
+			'azc',
+		]))
+		self.assertEqual(results, {
+			'azc',
+		})

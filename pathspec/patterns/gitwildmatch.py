@@ -306,16 +306,17 @@ class GitWildMatchPattern(RegexPattern):
 					expr = '['
 
 					if pattern[i] == '!':
-						# Braket expression needs to be negated.
+						# Bracket expression needs to be negated.
 						expr += '^'
 						i += 1
 					elif pattern[i] == '^':
 						# POSIX declares that the regex bracket expression negation
 						# "[^...]" is undefined in a glob pattern. Python's
 						# `fnmatch.translate()` escapes the caret ('^') as a
-						# literal. To maintain consistency with undefined behavior,
-						# I am escaping the '^' as well.
-						expr += '\\^'
+						# literal. Git supports the using a caret for negation.
+						# Maintain consistency with Git because that is the expected
+						# behavior.
+						expr += '^'
 						i += 1
 
 					# Build regex bracket expression. Escape slashes so they are

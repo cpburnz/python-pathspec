@@ -3,6 +3,16 @@ Change History
 ==============
 
 
+0.11.2 (TBD)
+------------
+
+Bug fixes:
+
+- `Issue #77`_: On bracket expression negation.
+
+.. _`Issue #77`: https://github.com/cpburnz/python-pathspec/issues/77
+
+
 0.11.1 (2023-03-14)
 -------------------
 
@@ -17,7 +27,6 @@ Improvements:
 
 .. _`Issue #74`: https://github.com/cpburnz/python-pathspec/issues/74
 .. _`Pull #75`: https://github.com/cpburnz/python-pathspec/pull/75
-
 
 
 0.11.0 (2023-01-24)
