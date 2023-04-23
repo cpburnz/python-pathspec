@@ -15,6 +15,7 @@ from pathspec import (
 	PathSpec)
 from pathspec.util import (
 	iter_tree_entries)
+from pathspec.patterns.gitwildmatch import GitWildMatchPatternError
 from tests.util import (
 	make_dirs,
 	make_files,
@@ -118,6 +119,32 @@ class PathSpecTest(unittest.TestCase):
 			'./src/test2/b.txt',
 			'./src/test2/c/c.txt',
 		})
+
+	def test_01_empty_path(self):
+		"""
+		Tests that patterns that end with an escaped space will be treated properly.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'\\ ',
+			'abc\\ '
+		])
+		test_files = [
+			' ',
+			'  ',
+			'abc ',
+			'somefile',
+		]
+		results = list(filter(spec.match_file, test_files))
+		self.assertEqual(results, [
+			' ',
+			'abc '
+		])
+
+		# An escape with double spaces is invalid.
+		# Disallow it. Better to be safe than sorry.
+		self.assertRaises(GitWildMatchPatternError, lambda: PathSpec.from_lines('gitwildmatch', [
+			'\\  '
+		]))
 
 	def test_01_match_files(self):
 		"""
