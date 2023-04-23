@@ -8,8 +8,11 @@ Change History
 
 Bug fixes:
 
+- `Pull #76`_: Add edge case: patterns that end with an escaped space
 - `Issue #77`_: On bracket expression negation.
 
+
+.. _`Pull #76`: https://github.com/cpburnz/python-pathspec/pull/76
 .. _`Issue #77`: https://github.com/cpburnz/python-pathspec/issues/77
 
 
@@ -24,6 +27,7 @@ Improvements:
 
 - `Pull #75`_: Fix partially unknown PathLike type.
 - Convert `os.PathLike` to a string properly using `os.fspath`.
+
 
 .. _`Issue #74`: https://github.com/cpburnz/python-pathspec/issues/74
 .. _`Pull #75`: https://github.com/cpburnz/python-pathspec/pull/75
