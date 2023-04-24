@@ -9,7 +9,7 @@ Change History
 Bug fixes:
 
 - `Pull #76`_: Add edge case: patterns that end with an escaped space
-- `Issue #77`_/`Pull #78`_: On bracket expression negation.
+- `Issue #77`_/`Pull #78`_: Negate with caret symbol as with the exclamation mark.
 
 
 .. _`Pull #76`: https://github.com/cpburnz/python-pathspec/pull/76
