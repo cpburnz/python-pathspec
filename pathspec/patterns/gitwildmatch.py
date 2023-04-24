@@ -290,13 +290,16 @@ class GitWildMatchPattern(RegexPattern):
 				# - "[]-]" matches ']' and '-'.
 				# - "[!]a-]" matches any character except ']', 'a' and '-'.
 				j = i
+        
 				# Pass bracket expression negation.
 				if j < end and (pattern[j] == '!' or pattern[j] == '^'):
 					j += 1
+          
 				# Pass first closing bracket if it is at the beginning of the
 				# expression.
 				if j < end and pattern[j] == ']':
 					j += 1
+          
 				# Find closing bracket. Stop once we reach the end or find it.
 				while j < end and pattern[j] != ']':
 					j += 1
@@ -312,8 +315,17 @@ class GitWildMatchPattern(RegexPattern):
 					j += 1
 					expr = '['
 
-					if pattern[i] == '!' or pattern[i] == '^':
+					if pattern[i] == '!':
 						# Bracket expression needs to be negated.
+						expr += '^'
+						i += 1
+					elif pattern[i] == '^':
+						# POSIX declares that the regex bracket expression negation
+						# "[^...]" is undefined in a glob pattern. Python's
+						# `fnmatch.translate()` escapes the caret ('^') as a
+						# literal. Git supports the using a caret for negation.
+						# Maintain consistency with Git because that is the expected
+						# behavior.
 						expr += '^'
 						i += 1
 
