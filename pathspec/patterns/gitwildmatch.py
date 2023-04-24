@@ -290,13 +290,16 @@ class GitWildMatchPattern(RegexPattern):
 				# - "[]-]" matches ']' and '-'.
 				# - "[!]a-]" matches any character except ']', 'a' and '-'.
 				j = i
-				# Pass brack expression negation.
-				if j < end and pattern[j] == '!':
+        
+				# Pass bracket expression negation.
+				if j < end and (pattern[j] == '!' or pattern[j] == '^'):
 					j += 1
+          
 				# Pass first closing bracket if it is at the beginning of the
 				# expression.
 				if j < end and pattern[j] == ']':
 					j += 1
+          
 				# Find closing bracket. Stop once we reach the end or find it.
 				while j < end and pattern[j] != ']':
 					j += 1

@@ -774,7 +774,7 @@ class GitWildMatchTest(unittest.TestCase):
 			'anydir/file.txt',
 		})
 
-	def test_13_issue_77_1_regex(self):
+	def test_13_issue_77_regex(self):
 		"""
 		Test the resulting regex for regex bracket expression negation.
 		"""
@@ -786,15 +786,28 @@ class GitWildMatchTest(unittest.TestCase):
 
 		self.assertEqual(regex, equiv_regex)
 
-	def test_13_issue_77_2_results(self):
+	def test_13_negate_with_caret(self):
 		"""
-		Test that regex bracket expression negation works.
+		Test negation using the caret symbol (^)
 		"""
-		pattern = GitWildMatchPattern('a[^b]c')
+		pattern = GitWildMatchPattern("a[^gy]c")
 		results = set(filter(pattern.match_file, [
-			'abc',
-			'azc',
+			"agc",
+			"ayc",
+			"abc",
+			"adc",
 		]))
-		self.assertEqual(results, {
-			'azc',
-		})
+		self.assertEqual(results, {"abc", "adc"})
+
+	def test_13_negate_with_exclamation_mark(self):
+		"""
+		Test negation using the exclamation mark (!)
+		"""
+		pattern = GitWildMatchPattern("a[!gy]c")
+		results = set(filter(pattern.match_file, [
+			"agc",
+			"ayc",
+			"abc",
+			"adc",
+		]))
+		self.assertEqual(results, {"abc", "adc"})
