@@ -773,3 +773,29 @@ class GitWildMatchTest(unittest.TestCase):
 		self.assertEqual(results, {
 			'anydir/file.txt',
 		})
+
+	def test_13_negate_with_caret(self):
+		"""
+		Test negation using the caret symbol (^)
+		"""
+		pattern = GitWildMatchPattern("a[^gy]c")
+		results = set(filter(pattern.match_file, [
+			"agc",
+			"ayc",
+			"abc",
+			"adc",
+		]))
+		self.assertEqual(results, {"abc", "adc"})
+
+	def test_13_negate_with_exclamation_mark(self):
+		"""
+		Test negation using the exclamation mark (!)
+		"""
+		pattern = GitWildMatchPattern("a[!gy]c")
+		results = set(filter(pattern.match_file, [
+			"agc",
+			"ayc",
+			"abc",
+			"adc",
+		]))
+		self.assertEqual(results, {"abc", "adc"})
