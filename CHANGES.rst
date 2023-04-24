@@ -9,11 +9,12 @@ Change History
 Bug fixes:
 
 - `Pull #76`_: Add edge case: patterns that end with an escaped space
-- `Issue #77`_: On bracket expression negation.
+- `Issue #77`_/`Pull #78`_: On bracket expression negation.
 
 
 .. _`Pull #76`: https://github.com/cpburnz/python-pathspec/pull/76
 .. _`Issue #77`: https://github.com/cpburnz/python-pathspec/issues/77
+.. _`Pull #78`: https://github.com/cpburnz/python-pathspec/pull/78/
 
 
 0.11.1 (2023-03-14)
