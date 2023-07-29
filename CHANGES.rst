@@ -6,6 +6,10 @@ Change History
 0.11.2 (TBD)
 ------------
 
+New features:
+
+- `Issue #80`_: match_files with negated path spec. `pathspec.PathSpec.match_*()` now have a `negate` parameter to make using *.gitignore* logic easier and more efficient.
+
 Bug fixes:
 
 - `Pull #76`_: Add edge case: patterns that end with an escaped space
@@ -15,6 +19,7 @@ Bug fixes:
 .. _`Pull #76`: https://github.com/cpburnz/python-pathspec/pull/76
 .. _`Issue #77`: https://github.com/cpburnz/python-pathspec/issues/77
 .. _`Pull #78`: https://github.com/cpburnz/python-pathspec/pull/78/
+.. _`Issue #80`: https://github.com/cpburnz/python-pathspec/issues/80
 
 
 0.11.1 (2023-03-14)

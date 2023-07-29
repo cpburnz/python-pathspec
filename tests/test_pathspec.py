@@ -579,3 +579,53 @@ class PathSpecTest(unittest.TestCase):
 			'important/d.log',
 			'important/e.txt',
 		})
+
+	def test_09_issue_80_a(self):
+		"""
+		Test negating patterns.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'build',
+			'*.log',
+			'.*',
+			'!.gitignore',
+		])
+		files = {
+			'.c-tmp',
+			'.gitignore',
+			'a.log',
+			'b.txt',
+			'build/d.log',
+			'build/trace.bin',
+			'trace.c',
+		}
+		keeps = set(spec.match_files(files, negate=True))
+		self.assertEqual(keeps, {
+			'.gitignore',
+			'b.txt',
+			'trace.c',
+		})
+
+	def test_09_issue_80_b(self):
+		"""
+		Test negating patterns.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'build',
+			'*.log',
+			'.*',
+			'!.gitignore',
+		])
+		files = {
+			'.c-tmp',
+			'.gitignore',
+			'a.log',
+			'b.txt',
+			'build/d.log',
+			'build/trace.bin',
+			'trace.c',
+		}
+		keeps = set(spec.match_files(files, negate=True))
+		ignores = set(spec.match_files(files))
+		self.assertEqual(files - ignores, keeps)
+		self.assertEqual(files - keeps, ignores)
