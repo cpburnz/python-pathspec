@@ -54,4 +54,4 @@ __credits__ = [
 	"oprypin <https://github.com/oprypin>",
 ]
 __license__ = "MPL 2.0"
-__version__ = "0.11.2.dev1"
+__version__ = "0.11.2"
