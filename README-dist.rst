@@ -170,6 +170,25 @@ Change History
 ==============
 
 
+0.11.2 (2023-07-28)
+-------------------
+
+New features:
+
+- `Issue #80`_: match_files with negated path spec. `pathspec.PathSpec.match_*()` now have a `negate` parameter to make using *.gitignore* logic easier and more efficient.
+
+Bug fixes:
+
+- `Pull #76`_: Add edge case: patterns that end with an escaped space
+- `Issue #77`_/`Pull #78`_: Negate with caret symbol as with the exclamation mark.
+
+
+.. _`Pull #76`: https://github.com/cpburnz/python-pathspec/pull/76
+.. _`Issue #77`: https://github.com/cpburnz/python-pathspec/issues/77
+.. _`Pull #78`: https://github.com/cpburnz/python-pathspec/pull/78/
+.. _`Issue #80`: https://github.com/cpburnz/python-pathspec/issues/80
+
+
 0.11.1 (2023-03-14)
 -------------------
 
@@ -182,9 +201,9 @@ Improvements:
 - `Pull #75`_: Fix partially unknown PathLike type.
 - Convert `os.PathLike` to a string properly using `os.fspath`.
 
+
 .. _`Issue #74`: https://github.com/cpburnz/python-pathspec/issues/74
 .. _`Pull #75`: https://github.com/cpburnz/python-pathspec/pull/75
-
 
 
 0.11.0 (2023-01-24)
