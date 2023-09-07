@@ -68,7 +68,11 @@ Review the following Linux distributions.
 
 **RHEL via Fedora EPEL:**
 
+- Goal:
+	- Support oldest release with recent version of *python-pathspec* package.
 - RHEL 9:
+	- Oldest release with recent version of *python-pathspec* package (v0.10.1 from 2022-09-02; as of 2023-09-07).
+	- Ends full support on 2027-05-31.
 	- Uses Python 3.9.
 - References:
 	- [Chapter 1. Introduction to Python](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/installing_and_using_dynamic_programming_languages/assembly_introduction-to-python_installing-and-using-dynamic-programming-languages#con_python-versions_assembly_introduction-to-python)
