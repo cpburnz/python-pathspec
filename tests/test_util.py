@@ -205,7 +205,7 @@ class IterTreeTest(unittest.TestCase):
 			('bx', 'b'),
 			('Dir/cx', 'Dir/c'),
 			('Dir/dx', 'Dir/d'),
-			('DirX', 'Dir', True),
+			('DirX', 'Dir'),
 		])
 		results = set(iter_tree_files(self.temp_dir))
 		self.assertEqual(results, set(map(ospath, [

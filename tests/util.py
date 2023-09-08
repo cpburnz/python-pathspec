@@ -48,11 +48,10 @@ def make_links(temp_dir: pathlib.Path, links: Iterable[Tuple[str, str]]) -> None
 	the destination link path (:class:`str`) and source node path
 	(:class:`str`).
 	"""
-	for link, node, *opt in links:
+	for link, node in links:
 		src = temp_dir / ospath(node)
 		dest = temp_dir / ospath(link)
-		is_dir = opt[0] if opt else False
-		os.symlink(src, dest, target_is_directory=is_dir)
+		os.symlink(src, dest)
 
 
 def mkfile(file: pathlib.Path) -> None:
