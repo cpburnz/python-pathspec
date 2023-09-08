@@ -13,6 +13,7 @@ from functools import (
 	partial)
 from typing import (
 	Iterable,
+	Optional,
 	Tuple)
 
 from pathspec.patterns.gitwildmatch import (
@@ -29,36 +30,6 @@ from tests.util import (
 	make_links,
 	mkfile,
 	ospath)
-
-
-class MatchFileTest(unittest.TestCase):
-	"""
-	The :class:`MatchFileTest` class tests the :meth:`.match_file`
-	function.
-	"""
-
-	def test_1_match_file(self):
-		"""
-		Test matching files individually.
-		"""
-		patterns = list(map(GitWildMatchPattern, [
-			'*.txt',
-			'!b.txt',
-		]))
-		results = set(filter(partial(match_file, patterns), [
-			'X/a.txt',
-			'X/b.txt',
-			'X/Z/c.txt',
-			'Y/a.txt',
-			'Y/b.txt',
-			'Y/Z/c.txt',
-		]))
-		self.assertEqual(results, {
-			'X/a.txt',
-			'X/Z/c.txt',
-			'Y/a.txt',
-			'Y/Z/c.txt',
-		})
 
 
 class IterTreeTest(unittest.TestCase):
@@ -84,6 +55,14 @@ class IterTreeTest(unittest.TestCase):
 		Create the specified links.
 		"""
 		make_links(self.temp_dir, links)
+
+	def require_islink_dir(self) -> None:
+		"""
+		Skips the test if `os.path.islink` does not properly support symlinks to
+		directories.
+		"""
+		if self.broken_islink_dir:
+			raise unittest.SkipTest("`os.path.islink` is broken for directories.")
 
 	def require_realpath(self) -> None:
 		"""
@@ -112,7 +91,7 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		shutil.rmtree(self.temp_dir)
 
-	def test_1_files(self):
+	def test_01_files(self):
 		"""
 		Tests to make sure all files are found.
 		"""
@@ -139,13 +118,13 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Inner/f',
 		])))
 
-	def test_2_0_check_symlink(self):
+	def test_02_link_1_check_1_symlink(self):
 		"""
 		Tests whether links can be created.
 		"""
 		# NOTE: Windows Vista and greater supports `os.symlink` for Python
 		# 3.2+.
-		no_symlink = None
+		no_symlink: Optional[bool] = None
 		try:
 			file = self.temp_dir / 'file'
 			link = self.temp_dir / 'link'
@@ -161,14 +140,14 @@ class IterTreeTest(unittest.TestCase):
 		finally:
 			self.__class__.no_symlink = no_symlink
 
-	def test_2_1_check_realpath(self):
+	def test_02_link_1_check_2_realpath(self):
 		"""
 		Tests whether `os.path.realpath` works properly with symlinks.
 		"""
 		# NOTE: Windows does not follow symlinks with `os.path.realpath`
 		# which is what we use to detect recursion. See <https://bugs.python.org/issue9949>
 		# for details.
-		broken_realpath = None
+		broken_realpath: Optional[bool] = None
 		try:
 			self.require_symlink()
 			file = self.temp_dir / 'file'
@@ -186,11 +165,36 @@ class IterTreeTest(unittest.TestCase):
 		finally:
 			self.__class__.broken_realpath = broken_realpath
 
-	def test_2_2_links(self):
+	def test_02_link_1_check_3_islink(self):
+		"""
+		Tests whether `os.path.islink` works properly with symlinks to directories.
+		"""
+		# NOTE: PyPy on Windows does not detect symlinks to directories.
+		# - See <https://foss.heptapod.net/pypy/pypy/-/issues/3434>
+		broken_islink_dir: Optional[bool] = None
+		try:
+			self.require_symlink()
+			folder = self.temp_dir / 'folder'
+			link = self.temp_dir / 'link'
+			os.mkdir(folder)
+			os.symlink(folder, link)
+
+			try:
+				self.assertTrue(os.path.islink(link))
+			except AssertionError:
+				broken_islink_dir = True
+			else:
+				broken_islink_dir = False
+
+		finally:
+			self.__class__.broken_islink_dir = broken_islink_dir
+
+	def test_02_link_2_links(self):
 		"""
 		Tests to make sure links to directories and files work.
 		"""
 		self.require_symlink()
+		self.require_islink_dir()
 		self.make_dirs([
 			'Dir',
 		])
@@ -223,12 +227,13 @@ class IterTreeTest(unittest.TestCase):
 			'DirX/dx',
 		])))
 
-	def test_2_3_sideways_links(self):
+	def test_02_link_3_sideways_links(self):
 		"""
 		Tests to make sure the same directory can be encountered multiple
 		times via links.
 		"""
 		self.require_symlink()
+		self.require_islink_dir()
 		self.make_dirs([
 			'Dir',
 			'Dir/Target',
@@ -259,12 +264,13 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Target/file',
 		])))
 
-	def test_2_4_recursive_links(self):
+	def test_02_link_4_recursive_links(self):
 		"""
 		Tests detection of recursive links.
 		"""
 		self.require_symlink()
 		self.require_realpath()
+		self.require_islink_dir()
 		self.make_dirs([
 			'Dir',
 		])
@@ -280,12 +286,13 @@ class IterTreeTest(unittest.TestCase):
 		self.assertEqual(context.exception.first_path, 'Dir')
 		self.assertEqual(context.exception.second_path, ospath('Dir/Self'))
 
-	def test_2_5_recursive_circular_links(self):
+	def test_02_link_5_recursive_circular_links(self):
 		"""
 		Tests detection of recursion through circular links.
 		"""
 		self.require_symlink()
 		self.require_realpath()
+		self.require_islink_dir()
 		self.make_dirs([
 			'A',
 			'B',
@@ -311,7 +318,7 @@ class IterTreeTest(unittest.TestCase):
 			'C': ospath('C/Ax/Bx/Cx'),
 		}[context.exception.first_path])
 
-	def test_2_6_detect_broken_links(self):
+	def test_02_link_6_detect_broken_links(self):
 		"""
 		Tests that broken links are detected.
 		"""
@@ -327,7 +334,7 @@ class IterTreeTest(unittest.TestCase):
 
 		self.assertEqual(context.exception.errno, errno.ENOENT)
 
-	def test_2_7_ignore_broken_links(self):
+	def test_02_link_7_ignore_broken_links(self):
 		"""
 		Tests that broken links are ignored.
 		"""
@@ -338,11 +345,12 @@ class IterTreeTest(unittest.TestCase):
 		results = set(iter_tree_files(self.temp_dir))
 		self.assertEqual(results, set())
 
-	def test_2_8_no_follow_links(self):
+	def test_02_link_8_no_follow_links(self):
 		"""
 		Tests to make sure directory links can be ignored.
 		"""
 		self.require_symlink()
+		self.require_islink_dir()
 		self.make_dirs([
 			'Dir',
 		])
@@ -372,7 +380,7 @@ class IterTreeTest(unittest.TestCase):
 			'DirX',
 		])))
 
-	def test_3_entries(self):
+	def test_03_entries(self):
 		"""
 		Tests to make sure all files are found.
 		"""
@@ -402,7 +410,44 @@ class IterTreeTest(unittest.TestCase):
 			'Empty',
 		])))
 
-	def test_4_normalizing_pathlib_path(self):
+
+class MatchFileTest(unittest.TestCase):
+	"""
+	The :class:`MatchFileTest` class tests the :meth:`.match_file`
+	function.
+	"""
+
+	def test_01_match_file(self):
+		"""
+		Test matching files individually.
+		"""
+		patterns = list(map(GitWildMatchPattern, [
+			'*.txt',
+			'!b.txt',
+		]))
+		results = set(filter(partial(match_file, patterns), [
+			'X/a.txt',
+			'X/b.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/b.txt',
+			'Y/Z/c.txt',
+		]))
+		self.assertEqual(results, {
+			'X/a.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/Z/c.txt',
+		})
+
+
+class NormalizeFileTest(unittest.TestCase):
+	"""
+	The :class:`NormalizeFileTest` class tests the :meth:`.normalize_file`
+	function.
+	"""
+
+	def test_01_purepath(self):
 		"""
 		Tests normalizing a :class:`pathlib.PurePath` as argument.
 		"""
