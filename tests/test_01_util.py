@@ -64,14 +64,6 @@ class IterTreeTest(unittest.TestCase):
 		if self.broken_islink_dir:
 			raise unittest.SkipTest("`os.path.islink` is broken for directories.")
 
-	def require_realpath(self) -> None:
-		"""
-		Skips the test if `os.path.realpath` does not properly support
-		symlinks.
-		"""
-		if self.broken_realpath:
-			raise unittest.SkipTest("`os.path.realpath` is broken.")
-
 	def require_symlink(self) -> None:
 		"""
 		Skips the test if `os.symlink` is not supported.
@@ -139,31 +131,6 @@ class IterTreeTest(unittest.TestCase):
 
 		finally:
 			self.__class__.no_symlink = no_symlink
-
-	def test_02_link_1_check_2_realpath(self):
-		"""
-		Tests whether `os.path.realpath` works properly with symlinks.
-		"""
-		# NOTE: Windows does not follow symlinks with `os.path.realpath`
-		# which is what we use to detect recursion. See <https://bugs.python.org/issue9949>
-		# for details.
-		broken_realpath: Optional[bool] = None
-		try:
-			self.require_symlink()
-			file = self.temp_dir / 'file'
-			link = self.temp_dir / 'link'
-			mkfile(file)
-			os.symlink(file, link)
-
-			try:
-				self.assertEqual(os.path.realpath(file), os.path.realpath(link))
-			except AssertionError:
-				broken_realpath = True
-			else:
-				broken_realpath = False
-
-		finally:
-			self.__class__.broken_realpath = broken_realpath
 
 	def test_02_link_1_check_3_islink(self):
 		"""
@@ -269,7 +236,6 @@ class IterTreeTest(unittest.TestCase):
 		Tests detection of recursive links.
 		"""
 		self.require_symlink()
-		self.require_realpath()
 		self.require_islink_dir()
 		self.make_dirs([
 			'Dir',
@@ -291,7 +257,6 @@ class IterTreeTest(unittest.TestCase):
 		Tests detection of recursion through circular links.
 		"""
 		self.require_symlink()
-		self.require_realpath()
 		self.require_islink_dir()
 		self.make_dirs([
 			'A',
