@@ -56,14 +56,6 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		make_links(self.temp_dir, links)
 
-	def require_islink_dir(self) -> None:
-		"""
-		Skips the test if `os.path.islink` does not properly support symlinks to
-		directories.
-		"""
-		if self.broken_islink_dir:
-			raise unittest.SkipTest("`os.path.islink` is broken for directories.")
-
 	def require_symlink(self) -> None:
 		"""
 		Skips the test if `os.symlink` is not supported.
@@ -132,36 +124,11 @@ class IterTreeTest(unittest.TestCase):
 		finally:
 			self.__class__.no_symlink = no_symlink
 
-	def test_02_link_1_check_3_islink(self):
-		"""
-		Tests whether `os.path.islink` works properly with symlinks to directories.
-		"""
-		# NOTE: PyPy on Windows does not detect symlinks to directories.
-		# - See <https://foss.heptapod.net/pypy/pypy/-/issues/3434>
-		broken_islink_dir: Optional[bool] = None
-		try:
-			self.require_symlink()
-			folder = self.temp_dir / 'folder'
-			link = self.temp_dir / 'link'
-			os.mkdir(folder)
-			os.symlink(folder, link)
-
-			try:
-				self.assertTrue(os.path.islink(link))
-			except AssertionError:
-				broken_islink_dir = True
-			else:
-				broken_islink_dir = False
-
-		finally:
-			self.__class__.broken_islink_dir = broken_islink_dir
-
 	def test_02_link_2_links(self):
 		"""
 		Tests to make sure links to directories and files work.
 		"""
 		self.require_symlink()
-		self.require_islink_dir()
 		self.make_dirs([
 			'Dir',
 		])
@@ -200,7 +167,6 @@ class IterTreeTest(unittest.TestCase):
 		times via links.
 		"""
 		self.require_symlink()
-		self.require_islink_dir()
 		self.make_dirs([
 			'Dir',
 			'Dir/Target',
@@ -236,7 +202,6 @@ class IterTreeTest(unittest.TestCase):
 		Tests detection of recursive links.
 		"""
 		self.require_symlink()
-		self.require_islink_dir()
 		self.make_dirs([
 			'Dir',
 		])
@@ -257,7 +222,6 @@ class IterTreeTest(unittest.TestCase):
 		Tests detection of recursion through circular links.
 		"""
 		self.require_symlink()
-		self.require_islink_dir()
 		self.make_dirs([
 			'A',
 			'B',
@@ -315,7 +279,6 @@ class IterTreeTest(unittest.TestCase):
 		Tests to make sure directory links can be ignored.
 		"""
 		self.require_symlink()
-		self.require_islink_dir()
 		self.make_dirs([
 			'Dir',
 		])
