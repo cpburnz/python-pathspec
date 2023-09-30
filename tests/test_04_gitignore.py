@@ -388,3 +388,57 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			'test2/a.txt',
 			'test2/c/c.txt',
 		})
+
+	def test_08_issue_81_a(self):
+		"""
+		Test issue 81.
+		"""
+		spec = GitIgnoreSpec.from_lines([
+			"*",
+			"!libfoo",
+			"!libfoo/**",
+		])
+		files = {
+			"./libfoo/__init__.py",
+		}
+		ignores = set(spec.match_files(files))
+		self.assertEqual(ignores, set())
+		self.assertEqual(files - ignores, {
+			"./libfoo/__init__.py",
+		})
+
+	def test_08_issue_81_b(self):
+		"""
+		Test issue 81.
+		"""
+		spec = GitIgnoreSpec.from_lines([
+			"*",
+			"!libfoo",
+			"!libfoo/*",
+		])
+		files = {
+			"./libfoo/__init__.py",
+		}
+		ignores = set(spec.match_files(files))
+		self.assertEqual(ignores, set())
+		self.assertEqual(files - ignores, {
+			"./libfoo/__init__.py",
+		})
+
+	def test_08_issue_81_c(self):
+		"""
+		Test issue 81.
+		"""
+		spec = GitIgnoreSpec.from_lines([
+			"*",
+			"!libfoo",
+			"!libfoo/",
+		])
+		files = {
+			"./libfoo/__init__.py",
+		}
+		ignores = set(spec.match_files(files))
+		self.assertEqual(ignores, {
+			"./libfoo/__init__.py",
+		})
+		self.assertEqual(files - ignores, set())

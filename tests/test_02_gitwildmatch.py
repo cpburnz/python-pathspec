@@ -669,10 +669,11 @@ class GitWildMatchTest(unittest.TestCase):
 		]))
 		self.assertEqual(results, {"#sign"})
 
-	def test_11_match_directory_1(self):
+	def test_11_issue_19_directory_a(self):
 		"""
-		Test matching a directory.
+		Test a directory discrepancy, scenario A.
 		"""
+		# NOTE: The result from GitWildMatchPattern will differ from GitIgnoreSpec.
 		pattern = GitWildMatchPattern("dirG/")
 		results = set(filter(pattern.match_file, [
 			'fileA',
@@ -689,10 +690,11 @@ class GitWildMatchTest(unittest.TestCase):
 			'dirG/fileO',
 		})
 
-	def test_11_match_directory_2(self):
+	def test_11_issue_19_directory_b(self):
 		"""
-		Test matching a directory.
+		Test a directory discrepancy, scenario B.
 		"""
+		# NOTE: The result from GitWildMatchPattern will differ from GitIgnoreSpec.
 		pattern = GitWildMatchPattern("dirG/*")
 		results = set(filter(pattern.match_file, [
 			'fileA',
@@ -709,10 +711,11 @@ class GitWildMatchTest(unittest.TestCase):
 			'dirG/fileO',
 		})
 
-	def test_11_match_sub_directory_3(self):
+	def test_11_issue_19_directory_c(self):
 		"""
-		Test matching a directory.
+		Test a directory discrepancy, scenario C.
 		"""
+		# NOTE: The result from GitWildMatchPattern will differ from GitIgnoreSpec.
 		pattern = GitWildMatchPattern("dirG/**")
 		results = set(filter(pattern.match_file, [
 			'fileA',
@@ -774,21 +777,23 @@ class GitWildMatchTest(unittest.TestCase):
 			'anydir/file.txt',
 		})
 
-	def test_13_issue_77_regex(self):
+	def test_12_issue_62(self):
 		"""
-		Test the resulting regex for regex bracket expression negation.
+		Test including all files, scenario A.
 		"""
-		regex, include = GitWildMatchPattern.pattern_to_regex('a[^b]c')
-		self.assertTrue(include)
+		pattern = GitWildMatchPattern('*')
+		results = set(filter(pattern.match_file, [
+			'file.txt',
+			'anydir/file.txt',
+		]))
+		self.assertEqual(results, {
+			'file.txt',
+			'anydir/file.txt',
+		})
 
-		equiv_regex, include = GitWildMatchPattern.pattern_to_regex('a[!b]c')
-		self.assertTrue(include)
-
-		self.assertEqual(regex, equiv_regex)
-
-	def test_13_negate_with_caret(self):
+	def test_13_issue_77_1_negate_with_caret(self):
 		"""
-		Test negation using the caret symbol (^)
+		Test negation using the caret symbol ("^").
 		"""
 		pattern = GitWildMatchPattern("a[^gy]c")
 		results = set(filter(pattern.match_file, [
@@ -799,9 +804,9 @@ class GitWildMatchTest(unittest.TestCase):
 		]))
 		self.assertEqual(results, {"abc", "adc"})
 
-	def test_13_negate_with_exclamation_mark(self):
+	def test_13_issue_77_1_negate_with_exclamation_mark(self):
 		"""
-		Test negation using the exclamation mark (!)
+		Test negation using the exclamation mark ("!").
 		"""
 		pattern = GitWildMatchPattern("a[!gy]c")
 		results = set(filter(pattern.match_file, [
@@ -811,3 +816,15 @@ class GitWildMatchTest(unittest.TestCase):
 			"adc",
 		]))
 		self.assertEqual(results, {"abc", "adc"})
+
+	def test_13_issue_77_2_regex(self):
+		"""
+		Test the resulting regex for regex bracket expression negation.
+		"""
+		regex, include = GitWildMatchPattern.pattern_to_regex('a[^b]c')
+		self.assertTrue(include)
+
+		equiv_regex, include = GitWildMatchPattern.pattern_to_regex('a[!b]c')
+		self.assertTrue(include)
+
+		self.assertEqual(regex, equiv_regex)

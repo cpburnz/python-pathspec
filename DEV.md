@@ -114,6 +114,10 @@ Review the following PyPI packages.
 - v23.7.0 (latest as of 2023-09-06) requires Python 3.8+.
 - [black on Wheelodex](https://www.wheelodex.org/projects/black/).
 
+[dvc](https://github.com/iterative/dvc)
+
+- v3.23.0 (latest as of 2023-09-30) requires Python 3.8+.
+- [dvc on Wheelodex](https://www.wheelodex.org/projects/dvc/).
 
 [hatchling](https://pypi.org/project/hatchling/)
 
