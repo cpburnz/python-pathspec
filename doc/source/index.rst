@@ -9,6 +9,7 @@ Welcome to pathspec's documentation!
 
 .. toctree::
    :caption: Contents:
+   :maxdepth: 2
 
    readme
    api

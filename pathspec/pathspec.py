@@ -137,7 +137,7 @@ class PathSpec(object):
 		"""
 		Matches the entries to this path-spec.
 
-		*entries* (:class:`~collections.abc.Iterable` of :class:`~util.TreeEntry`)
+		*entries* (:class:`~collections.abc.Iterable` of :class:`~pathspec.util.TreeEntry`)
 		contains the entries to be matched against :attr:`self.patterns <PathSpec.patterns>`.
 
 		*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
@@ -150,7 +150,7 @@ class PathSpec(object):
 		:data:`False`.
 
 		Returns the matched entries (:class:`~collections.abc.Iterator` of
-		:class:`~util.TreeEntry`).
+		:class:`~pathspec.util.TreeEntry`).
 		"""
 		if not _is_iterable(entries):
 			raise TypeError(f"entries:{entries!r} is not an iterable.")
@@ -179,7 +179,7 @@ class PathSpec(object):
 		"""
 		Matches the file to this path-spec.
 
-		*file* (:class:`str` or :class:`os.PathLike[str]`) is the file path to be
+		*file* (:class:`str` or :class:`os.PathLike`) is the file path to be
 		matched against :attr:`self.patterns <PathSpec.patterns>`.
 
 		*separators* (:class:`~collections.abc.Collection` of :class:`str`)
@@ -202,7 +202,7 @@ class PathSpec(object):
 		Matches the files to this path-spec.
 
 		*files* (:class:`~collections.abc.Iterable` of :class:`str` or
-		:class:`os.PathLike[str]`) contains the file paths to be matched against
+		:class:`os.PathLike`) contains the file paths to be matched against
 		:attr:`self.patterns <PathSpec.patterns>`.
 
 		*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
@@ -215,7 +215,7 @@ class PathSpec(object):
 		:data:`False`.
 
 		Returns the matched files (:class:`~collections.abc.Iterator` of
-		:class:`str` or :class:`os.PathLike[str]`).
+		:class:`str` or :class:`os.PathLike`).
 		"""
 		if not _is_iterable(files):
 			raise TypeError(f"files:{files!r} is not an iterable.")
@@ -243,7 +243,7 @@ class PathSpec(object):
 		Walks the specified root path for all files and matches them to this
 		path-spec.
 
-		*root* (:class:`str` or :class:`os.PathLike[str]`) is the root directory to
+		*root* (:class:`str` or :class:`os.PathLike`) is the root directory to
 		search.
 
 		*on_error* (:class:`~collections.abc.Callable` or :data:`None`) optionally
@@ -277,7 +277,7 @@ class PathSpec(object):
 		Walks the specified root path for all files and matches them to this
 		path-spec.
 
-		*root* (:class:`str` or :class:`os.PathLike[str]`) is the root directory to
+		*root* (:class:`str` or :class:`os.PathLike`) is the root directory to
 		search for files.
 
 		*on_error* (:class:`~collections.abc.Callable` or :data:`None`) optionally

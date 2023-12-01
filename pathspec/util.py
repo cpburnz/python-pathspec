@@ -62,7 +62,7 @@ def append_dir_sep(path: pathlib.Path) -> str:
 	files on the file-system by relying on the presence of a trailing path
 	separator.
 
-	*path* (:class:`pathlib.path`) is the path to use.
+	*path* (:class:`pathlib.Path`) is the path to use.
 
 	Returns the path (:class:`str`).
 	"""
@@ -88,7 +88,7 @@ def detailed_match_files(
 	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
 	the normalized file paths to be matched against *patterns*.
 
-	*all_matches* (:class:`boot` or :data:`None`) is whether to return all
+	*all_matches* (:class:`bool` or :data:`None`) is whether to return all
 	matches patterns (:data:`True`), or only the last matched pattern
 	(:data:`False`). Default is :data:`None` for :data:`False`.
 
@@ -154,7 +154,7 @@ def iter_tree_entries(
 	"""
 	Walks the specified directory for all files and directories.
 
-	*root* (:class:`str` or :class:`os.PathLike[str]`) is the root directory to
+	*root* (:class:`str` or :class:`os.PathLike`) is the root directory to
 	search.
 
 	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
@@ -270,7 +270,7 @@ def iter_tree_files(
 	"""
 	Walks the specified directory for all files.
 
-	*root* (:class:`str` or :class:`os.PathLike[str]`) is the root directory to
+	*root* (:class:`str` or :class:`os.PathLike`) is the root directory to
 	search for files.
 
 	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
@@ -376,16 +376,16 @@ def normalize_file(
 ) -> str:
 	"""
 	Normalizes the file path to use the POSIX path separator (i.e.,
-	:data:`'/'`), and make the paths relative (remove leading :data:`'/'`).
+	``"/"``), and make the paths relative (remove leading ``"/"``).
 
-	*file* (:class:`str` or :class:`os.PathLike[str]`) is the file path.
+	*file* (:class:`str` or :class:`os.PathLike`) is the file path.
 
 	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
-	:data:`None`) optionally contains the path separators to normalize.
-	This does not need to include the POSIX path separator (:data:`'/'`),
-	but including it will not affect the results. Default is :data:`None`
-	for :data:`NORMALIZE_PATH_SEPS`. To prevent normalization, pass an
-	empty container (e.g., an empty tuple :data:`()`).
+	``None``) optionally contains the path separators to normalize.
+	This does not need to include the POSIX path separator (``"/"``),
+	but including it will not affect the results. Default is ``None``
+	for ``NORMALIZE_PATH_SEPS``. To prevent normalization, pass an
+	empty container (e.g., an empty tuple ``()``).
 
 	Returns the normalized file path (:class:`str`).
 	"""
@@ -421,7 +421,7 @@ def normalize_files(
 	Normalizes the file paths to use the POSIX path separator.
 
 	*files* (:class:`~collections.abc.Iterable` of :class:`str` or
-	:class:`os.PathLike[str]`) contains the file paths to be normalized.
+	:class:`os.PathLike`) contains the file paths to be normalized.
 
 	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
 	:data:`None`) optionally contains the path separators to normalize.
@@ -429,7 +429,7 @@ def normalize_files(
 
 	Returns a :class:`dict` mapping each normalized file path (:class:`str`)
 	to the original file paths (:class:`list` of :class:`str` or
-	:class:`os.PathLike[str]`).
+	:class:`os.PathLike`).
 	"""
 	warnings.warn((
 		"util.normalize_files() is deprecated. Use util.normalize_file() "
