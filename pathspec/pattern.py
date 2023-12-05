@@ -51,7 +51,7 @@ class Pattern(object):
 
 		*files* (:class:`~collections.abc.Iterable` of :class:`str`)
 		contains each file relative to the root directory (e.g.,
-		:data:`"relative/path/to/file"`).
+		``"relative/path/to/file"``).
 
 		Returns an :class:`~collections.abc.Iterable` yielding each matched
 		file path (:class:`str`).
@@ -160,7 +160,7 @@ class RegexPattern(Pattern):
 		*file* (:class:`str`)
 		contains each file relative to the root directory (e.g., "relative/path/to/file").
 
-		Returns the match result (:class:`RegexMatchResult`) if *file*
+		Returns the match result (:class:`.RegexMatchResult`) if *file*
 		matched; otherwise, :data:`None`.
 		"""
 		if self.include is not None:
