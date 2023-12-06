@@ -31,14 +31,14 @@ Self = TypeVar("Self", bound="GitIgnoreSpec")
 
 class GitIgnoreSpec(PathSpec):
 	"""
-	The :class:`GitIgnoreSpec` class extends :class:`PathSpec` to
+	The :class:`GitIgnoreSpec` class extends :class:`pathspec.pathspec.PathSpec` to
 	replicate *.gitignore* behavior.
 	"""
 
 	def __eq__(self, other: object) -> bool:
 		"""
-		Tests the equality of this gitignore-spec with *other*
-		(:class:`GitIgnoreSpec`) by comparing their :attr:`~PathSpec.patterns`
+		Tests the equality of this gitignore-spec with *other* (:class:`GitIgnoreSpec`)
+		by comparing their :attr:`~pathspec.pattern.Pattern`
 		attributes. A non-:class:`GitIgnoreSpec` will not compare equal.
 		"""
 		if isinstance(other, GitIgnoreSpec):
@@ -65,7 +65,8 @@ class GitIgnoreSpec(PathSpec):
 		*pattern_factory* can be :data:`None`, the name of a registered
 		pattern factory (:class:`str`), or a :class:`~collections.abc.Callable`
 		used to compile patterns. The callable must accept an uncompiled
-		pattern (:class:`str`) and return the compiled pattern (:class:`.Pattern`).
+		pattern (:class:`str`) and return the compiled pattern
+		(:class:`pathspec.pattern.Pattern`).
 		Default is :data:`None` for :class:`.GitWildMatchPattern`).
 
 		Returns the :class:`GitIgnoreSpec` instance.
