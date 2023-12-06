@@ -88,18 +88,19 @@ class GitIgnoreSpecTest(unittest.TestCase):
 		Test including a file and excluding a directory with the same name
 		pattern, scenario A.
 		"""
+		# Confirmed results with git (v2.42.0).
 		spec = GitIgnoreSpec.from_lines([
 			'*.yaml',
 			'!*.yaml/',
 		])
 		files = {
-			'dir.yaml/file.sql',
-			'dir.yaml/file.yaml',
-			'dir.yaml/index.txt',
-			'dir/file.sql',
-			'dir/file.yaml',
-			'dir/index.txt',
-			'file.yaml',
+			'dir.yaml/file.sql',  # -
+			'dir.yaml/file.yaml',  # 1:*.yaml
+			'dir.yaml/index.txt',  # -
+			'dir/file.sql',  # -
+			'dir/file.yaml',  # 1:*.yaml
+			'dir/index.txt',  # -
+			'file.yaml',  # 1:*.yaml
 		}
 		ignores = set(spec.match_files(files))
 		self.assertEqual(ignores, {
@@ -119,18 +120,19 @@ class GitIgnoreSpecTest(unittest.TestCase):
 		Test including a file and excluding a directory with the same name
 		pattern, scenario B.
 		"""
+		# Confirmed results with git (v2.42.0).
 		spec = GitIgnoreSpec.from_lines([
 			'!*.yaml/',
 			'*.yaml',
 		])
 		files = {
-			'dir.yaml/file.sql',
-			'dir.yaml/file.yaml',
-			'dir.yaml/index.txt',
-			'dir/file.sql',
-			'dir/file.yaml',
-			'dir/index.txt',
-			'file.yaml',
+			'dir.yaml/file.sql',  # 2:*.yaml
+			'dir.yaml/file.yaml',  # 2:*.yaml
+			'dir.yaml/index.txt',  # 2:*.yaml
+			'dir/file.sql',  # -
+			'dir/file.yaml',  # 2:*.yaml
+			'dir/index.txt',  # -
+			'file.yaml',  # 2:*.yaml
 		}
 		ignores = set(spec.match_files(files))
 		self.assertEqual(ignores, {
@@ -150,18 +152,19 @@ class GitIgnoreSpecTest(unittest.TestCase):
 		Test including a file and excluding a directory with the same name
 		pattern, scenario C.
 		"""
+		# Confirmed results with git (v2.42.0).
 		spec = GitIgnoreSpec.from_lines([
 			'*.yaml',
 			'!dir.yaml',
 		])
 		files = {
-			'dir.yaml/file.sql',
-			'dir.yaml/file.yaml',
-			'dir.yaml/index.txt',
-			'dir/file.sql',
-			'dir/file.yaml',
-			'dir/index.txt',
-			'file.yaml',
+			'dir.yaml/file.sql',  # -
+			'dir.yaml/file.yaml',  # 1:*.yaml
+			'dir.yaml/index.txt',  # -
+			'dir/file.sql',  # -
+			'dir/file.yaml',  # 1:*.yaml
+			'dir/index.txt',  # -
+			'file.yaml',  # 1:*.yaml
 		}
 		ignores = set(spec.match_files(files))
 		self.assertEqual(ignores, {
@@ -391,54 +394,65 @@ class GitIgnoreSpecTest(unittest.TestCase):
 
 	def test_08_issue_81_a(self):
 		"""
-		Test issue 81.
+		Test issue 81, scenario A.
 		"""
+		# Confirmed results with git (v2.42.0).
 		spec = GitIgnoreSpec.from_lines([
 			"*",
 			"!libfoo",
 			"!libfoo/**",
 		])
 		files = {
-			"./libfoo/__init__.py",
+			"ignore.txt",  # 1:*
+			"libfoo/__init__.py",  # 3:!libfoo/**
 		}
 		ignores = set(spec.match_files(files))
-		self.assertEqual(ignores, set())
+		self.assertEqual(ignores, {
+			"ignore.txt",
+		})
 		self.assertEqual(files - ignores, {
-			"./libfoo/__init__.py",
+			"libfoo/__init__.py",
 		})
 
 	def test_08_issue_81_b(self):
 		"""
-		Test issue 81.
+		Test issue 81, scenario B.
 		"""
+		# Confirmed results with git (v2.42.0).
 		spec = GitIgnoreSpec.from_lines([
 			"*",
 			"!libfoo",
 			"!libfoo/*",
 		])
 		files = {
-			"./libfoo/__init__.py",
+			"ignore.txt",  # 1:*
+			"libfoo/__init__.py",  # 3:!libfoo/*
 		}
 		ignores = set(spec.match_files(files))
-		self.assertEqual(ignores, set())
+		self.assertEqual(ignores, {
+			"ignore.txt",
+		})
 		self.assertEqual(files - ignores, {
-			"./libfoo/__init__.py",
+			"libfoo/__init__.py",
 		})
 
 	def test_08_issue_81_c(self):
 		"""
-		Test issue 81.
+		Test issue 81, scenario C.
 		"""
+		# Confirmed results with git (v2.42.0).
 		spec = GitIgnoreSpec.from_lines([
 			"*",
 			"!libfoo",
 			"!libfoo/",
 		])
 		files = {
-			"./libfoo/__init__.py",
+			"ignore.txt",  # 1:*
+			"libfoo/__init__.py",  # 1:*
 		}
 		ignores = set(spec.match_files(files))
 		self.assertEqual(ignores, {
-			"./libfoo/__init__.py",
+			"ignore.txt",
+			"libfoo/__init__.py",
 		})
 		self.assertEqual(files - ignores, set())

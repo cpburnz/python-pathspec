@@ -2,6 +2,16 @@
 Change History
 ==============
 
+0.11.3 (TDB)
+------------
+
+Bug fixes:
+
+- `Pull #83`_: Fix ReadTheDocs builds.
+
+
+.. _`Pull #83`: https://github.com/cpburnz/python-pathspec/pull/83
+
 
 0.11.2 (2023-07-28)
 -------------------

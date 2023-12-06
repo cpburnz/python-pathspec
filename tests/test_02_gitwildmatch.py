@@ -78,7 +78,7 @@ class GitWildMatchTest(unittest.TestCase):
 		Tests an ignore absolute path pattern.
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('!/foo/build')
-		self.assertFalse(include)
+		self.assertIs(include, False)
 		self.assertEqual(regex, f'^foo/build{RE_SUB}$')
 
 		# NOTE: The pattern match is backwards because the pattern itself
@@ -180,8 +180,7 @@ class GitWildMatchTest(unittest.TestCase):
 			temp/foo
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('!temp')
-		self.assertIsNotNone(include)
-		self.assertFalse(include)
+		self.assertIs(include, False)
 		self.assertEqual(regex, f'^(?:.+/)?temp{RE_SUB}$')
 
 		# NOTE: The pattern match is backwards because the pattern itself
@@ -259,6 +258,7 @@ class GitWildMatchTest(unittest.TestCase):
 		regex, include = GitWildMatchPattern.pattern_to_regex('**')
 		self.assertTrue(include)
 		self.assertEqual(regex, f'^[^/]+{RE_SUB}$')
+
 		pattern = GitWildMatchPattern(re.compile(regex), include)
 		results = set(filter(pattern.match_file, [
 			'x',
@@ -757,38 +757,28 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		Test a relative asterisk path pattern matching a direct child path.
 		"""
-		pattern = GitWildMatchPattern('*')
-		results = set(filter(pattern.match_file, [
-			'file.txt',
-		]))
-		self.assertEqual(results, {
-			'file.txt',
-		})
+		pattern = GitWildMatchPattern("*")
+		self.assertTrue(pattern.match_file("file.txt"))
 
 	def test_12_asterisk_4_descendant(self):
 		"""
 		Test a relative asterisk path pattern matching a descendant path.
 		"""
-		pattern = GitWildMatchPattern('*')
-		results = set(filter(pattern.match_file, [
-			'anydir/file.txt',
-		]))
-		self.assertEqual(results, {
-			'anydir/file.txt',
-		})
+		pattern = GitWildMatchPattern("*")
+		self.assertTrue(pattern.match_file("anydir/file.txt"))
 
 	def test_12_issue_62(self):
 		"""
 		Test including all files, scenario A.
 		"""
-		pattern = GitWildMatchPattern('*')
+		pattern = GitWildMatchPattern("*")
 		results = set(filter(pattern.match_file, [
-			'file.txt',
-			'anydir/file.txt',
+			"file.txt",
+			"anydir/file.txt",
 		]))
 		self.assertEqual(results, {
-			'file.txt',
-			'anydir/file.txt',
+			"file.txt",
+			"anydir/file.txt",
 		})
 
 	def test_13_issue_77_1_negate_with_caret(self):
@@ -802,7 +792,10 @@ class GitWildMatchTest(unittest.TestCase):
 			"abc",
 			"adc",
 		]))
-		self.assertEqual(results, {"abc", "adc"})
+		self.assertEqual(results, {
+			"abc",
+			"adc",
+		})
 
 	def test_13_issue_77_1_negate_with_exclamation_mark(self):
 		"""
@@ -815,7 +808,10 @@ class GitWildMatchTest(unittest.TestCase):
 			"abc",
 			"adc",
 		]))
-		self.assertEqual(results, {"abc", "adc"})
+		self.assertEqual(results, {
+			"abc",
+			"adc",
+		})
 
 	def test_13_issue_77_2_regex(self):
 		"""
