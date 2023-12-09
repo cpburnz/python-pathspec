@@ -5,6 +5,11 @@ Change History
 0.12.0 (TDB)
 ------------
 
+Major changes:
+
+- Dropped support of EOL Python 3.7. See `Pull #82`_.
+
+
 API changes:
 
 - Signature of protected method `pathspec.pathspec.PathSpec._match_file()` has been changed from `def _match_file(patterns: Iterable[Pattern], file: str) -> bool` to `def _match_file(patterns: Iterable[Tuple[int, Pattern]], file: str) -> Tuple[Optional[bool], Optional[int]]`.
@@ -21,11 +26,13 @@ Bug fixes:
 
 Improvements:
 
+- Mark Python 3.12 as supported. See `Pull #82`_.
 - Improve test debugging.
 - Improve type hint on *on_error* parameter on `pathspec.pathspec.PathSpec.match_tree_entries()`.
 - Improve type hint on *on_error* parameter on `pathspec.util.iter_tree_entries()`.
 
 
+.. _`Pull #82`: https://github.com/cpburnz/python-pathspec/pull/82
 .. _`Pull #83`: https://github.com/cpburnz/python-pathspec/pull/83
 
 
