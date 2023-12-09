@@ -42,6 +42,9 @@ else:
 	StrPath = Union[str, PathLike]
 
 TStrPath = TypeVar("TStrPath", bound=StrPath)
+"""
+Type variable for :class:`str` or :class:`os.PathLike`.
+"""
 
 NORMALIZE_PATH_SEPS = [
 	__sep
