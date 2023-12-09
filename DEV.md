@@ -126,5 +126,5 @@ Review the following PyPI packages.
 
 [yamllint](https://pypi.org/project/yamllint/)
 
-- v1.32.0 (latest as of 2023-09-06) requires Python 3.7+.
+- v1.33.0 (latest as of 2023-12-09) requires Python 3.8+.
 - [yamllint on Wheelodex](https://www.wheelodex.org/projects/yamllint/).
