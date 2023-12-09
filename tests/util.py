@@ -9,7 +9,9 @@ import pathlib
 
 from typing import (
 	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
-	Tuple,  # Replaced by `collections.abc.Tuple` in 3.9.
+	List,  # Replaced by `set` in 3.9.
+	Set,  # Replaced by `set` in 3.9.
+	Tuple,  # Replaced by `tuple` in 3.9.
 	cast)
 
 from pathspec import (
@@ -31,7 +33,7 @@ def debug_results(spec: PathSpec, results: Iterable[CheckResult[str]]) -> str:
 
 	Returns the message (:class:`str`).
 	"""
-	patterns = cast(list[RegexPattern], spec.patterns)
+	patterns = cast(List[RegexPattern], spec.patterns)
 
 	pattern_table = []
 	for index, pattern in enumerate(patterns, 1):
@@ -70,7 +72,7 @@ def debug_results(spec: PathSpec, results: Iterable[CheckResult[str]]) -> str:
 	])
 
 
-def get_includes(results: Iterable[CheckResult[TStrPath]]) -> set[TStrPath]:
+def get_includes(results: Iterable[CheckResult[TStrPath]]) -> Set[TStrPath]:
 	"""
 	Get the included files from the check results.
 
