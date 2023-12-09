@@ -96,7 +96,7 @@ Review the following Linux distributions.
 	- [Releases](https://wiki.ubuntu.com/Releases)
 	- Package: [python3](https://packages.ubuntu.com/focal/python3) (focal)
 	- Package: [python3](https://packages.ubuntu.com/jammy/python3) (jammy)
-	- Package: [python3-pathspec](https://packages.ubuntu.com/focal/python3-pathspec) (flocal)
+	- Package: [python3-pathspec](https://packages.ubuntu.com/focal/python3-pathspec) (focal)
 	- Package: [python3-pathspec](https://packages.ubuntu.com/jammy/python3-pathspec) (jammy)
 
 

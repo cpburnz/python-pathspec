@@ -7,8 +7,73 @@ import os.path
 import pathlib
 
 from typing import (
-	Iterable,
-	Tuple)
+	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
+	Tuple,  # Replaced by `collections.abc.Tuple` in 3.9.
+	cast)
+
+from pathspec import (
+	PathSpec,
+	RegexPattern)
+from pathspec.util import (
+	CheckResult,
+	TStrPath)
+
+
+def debug_results(spec: PathSpec, results: Iterable[CheckResult[str]]) -> str:
+	"""
+	Format the check results message.
+
+	*spec* (:class:`~pathspec.PathSpec`) is the path-spec.
+
+	*results* (:class:`~collections.abc.Iterable` or :class:`~pathspec.util.CheckResult`)
+	yields each file check result.
+
+	Returns the message (:class:`str`).
+	"""
+	patterns = cast(list[RegexPattern], spec.patterns)
+
+	result_table = []
+	for result in results:
+		if result.index is not None:
+			pattern = patterns[result.index]
+			result_table.append((f"{result.index + 1}:{pattern.pattern}", result.file))
+		else:
+			result_table.append(("-", result.file))
+
+	result_table.sort(key=lambda r: r[1])
+
+	first_max_len = max((len(__row[0]) for __row in result_table), default=0)
+	first_width = min(first_max_len, 20)
+
+	result_lines = []
+	for row in result_table:
+		result_lines.append(f" {row[0]:<{first_width}}  {row[1]}")
+
+	pattern_lines = []
+	for index, pattern in enumerate(patterns, 1):
+		first_col = f"{index}:{pattern.pattern}"
+		pattern_lines.append(f" {first_col:<{first_width}}  {pattern.regex.pattern!r}")
+
+	return "\n".join([
+		"\n",
+		" DEBUG ".center(32, "-"),
+		*pattern_lines,
+		"-"*32,
+		*result_lines,
+		"-"*32,
+	])
+
+
+def get_includes(results: Iterable[CheckResult[TStrPath]]) -> set[TStrPath]:
+	"""
+	Get the included files from the check results.
+
+	*results* (:class:`~collections.abc.Iterable` or :class:`~pathspec.util.CheckResult`)
+	yields each file check result.
+
+	Returns the included files (:class:`set` of :class:`str`).
+	"""
+	return {__res.file for __res in results if __res.include}
 
 
 def make_dirs(temp_dir: pathlib.Path, dirs: Iterable[str]) -> None:

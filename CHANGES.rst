@@ -2,12 +2,28 @@
 Change History
 ==============
 
-0.11.3 (TDB)
+0.12.0 (TDB)
 ------------
+
+API changes:
+
+- Signature of protected method `pathspec.pathspec.PathSpec._match_file()` has been changed from `def _match_file(patterns: Iterable[Pattern], file: str) -> bool` to `def _match_file(patterns: Iterable[Tuple[int, Pattern]], file: str) -> Tuple[Optional[bool], Optional[int]]`.
+
+New features:
+
+- Added `pathspec.pathspec.PathSpec.check_*()` methods. These methods behave similarly to `.match_*()` but return additional information in the `pathspec.util.CheckResult` objects (e.g., `CheckResult.index` indicates the index of the last pattern that matched the file).
+- Added `pathspec.pattern.RegexPattern.pattern` attribute which stores the original, uncompiled pattern.
+
 
 Bug fixes:
 
 - `Pull #83`_: Fix ReadTheDocs builds.
+
+Improvements:
+
+- Improve test debugging.
+- Improve type hint on *on_error* parameter on `pathspec.pathspec.PathSpec.match_tree_entries()`.
+- Improve type hint on *on_error* parameter on `pathspec.util.iter_tree_entries()`.
 
 
 .. _`Pull #83`: https://github.com/cpburnz/python-pathspec/pull/83
