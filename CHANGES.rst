@@ -22,6 +22,7 @@ New features:
 
 Bug fixes:
 
+- `Issue #81`_: GitIgnoreSpec behaviors differ from git.
 - `Pull #83`_: Fix ReadTheDocs builds.
 
 Improvements:
@@ -32,6 +33,7 @@ Improvements:
 - Improve type hint on *on_error* parameter on `pathspec.util.iter_tree_entries()`.
 
 
+.. _`Issue #81`: https://github.com/cpburnz/python-pathspec/issues/81
 .. _`Pull #82`: https://github.com/cpburnz/python-pathspec/pull/82
 .. _`Pull #83`: https://github.com/cpburnz/python-pathspec/pull/83
 

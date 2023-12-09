@@ -138,9 +138,6 @@ class GitIgnoreSpec(PathSpec):
 					# Check for directory marker.
 					dir_mark = match.match.groupdict().get(_DIR_MARK)
 
-					# TODO: A exclude (whitelist) dir pattern here needs to deprioritize
-					# for 81-c.
-
 					if dir_mark:
 						# Pattern matched by a directory pattern.
 						priority = 1

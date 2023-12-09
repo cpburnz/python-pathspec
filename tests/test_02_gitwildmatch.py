@@ -208,7 +208,7 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('spam/**')
 		self.assertTrue(include)
-		self.assertEqual(regex, f'^spam{RE_DIR}.*$')
+		self.assertEqual(regex, "^spam/.*$")
 
 		pattern = GitWildMatchPattern(re.compile(regex), include)
 		results = set(filter(pattern.match_file, [
@@ -257,7 +257,7 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('**')
 		self.assertTrue(include)
-		self.assertEqual(regex, f'^[^/]+{RE_SUB}$')
+		self.assertEqual(regex, f'^[^/]+(?:/.*)?$')
 
 		pattern = GitWildMatchPattern(re.compile(regex), include)
 		results = set(filter(pattern.match_file, [
@@ -314,7 +314,7 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		regex, include = GitWildMatchPattern.pattern_to_regex('**')
 		self.assertTrue(include)
-		self.assertEqual(regex, f'^[^/]+{RE_SUB}$')
+		self.assertEqual(regex, "^[^/]+(?:/.*)?$")
 
 		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex('**/**')
 		self.assertTrue(include)
@@ -336,9 +336,13 @@ class GitWildMatchTest(unittest.TestCase):
 		self.assertTrue(include)
 		self.assertEqual(regex, f'^(?:.+/)?api{RE_DIR}.*$')
 
-		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex('**/api/**')
+		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex(f'**/**/api/')
 		self.assertTrue(include)
 		self.assertEqual(equivalent_regex, regex)
+
+		regex, include = GitWildMatchPattern.pattern_to_regex('**/api/**')
+		self.assertTrue(include)
+		self.assertEqual(regex, "^(?:.+/)?api/.*$")
 
 		equivalent_regex, include = GitWildMatchPattern.pattern_to_regex('**/**/api/**/**')
 		self.assertTrue(include)
@@ -817,10 +821,41 @@ class GitWildMatchTest(unittest.TestCase):
 		"""
 		Test the resulting regex for regex bracket expression negation.
 		"""
-		regex, include = GitWildMatchPattern.pattern_to_regex('a[^b]c')
+		regex, include = GitWildMatchPattern.pattern_to_regex("a[^b]c")
 		self.assertTrue(include)
 
-		equiv_regex, include = GitWildMatchPattern.pattern_to_regex('a[!b]c')
+		equiv_regex, include = GitWildMatchPattern.pattern_to_regex("a[!b]c")
 		self.assertTrue(include)
 
 		self.assertEqual(regex, equiv_regex)
+
+	def test_14_issue_81_a(self):
+		"""
+		Test ignoring files in a directory, scenario A.
+		"""
+		pattern = GitWildMatchPattern("!libfoo/**")
+
+		self.assertEqual(pattern.regex.pattern, "^libfoo/.*$")
+		self.assertIs(pattern.include, False)
+		self.assertTrue(pattern.match_file("libfoo/__init__.py"))
+
+	def test_14_issue_81_b(self):
+		"""
+		Test ignoring files in a directory, scenario B.
+		"""
+		pattern = GitWildMatchPattern("!libfoo/*")
+
+		self.assertEqual(pattern.regex.pattern, f"^libfoo/[^/]+{RE_SUB}$")
+		self.assertIs(pattern.include, False)
+		self.assertTrue(pattern.match_file("libfoo/__init__.py"))
+
+	def test_14_issue_81_c(self):
+		"""
+		Test ignoring files in a directory, scenario C.
+		"""
+		# GitWildMatchPattern will match the file, but GitIgnoreSpec should not.
+		pattern = GitWildMatchPattern("!libfoo/")
+
+		self.assertEqual(pattern.regex.pattern, f"^(?:.+/)?libfoo{RE_DIR}.*$")
+		self.assertIs(pattern.include, False)
+		self.assertTrue(pattern.match_file("libfoo/__init__.py"))
