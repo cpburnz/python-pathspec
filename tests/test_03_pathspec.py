@@ -2,8 +2,6 @@
 This script tests :class:`.PathSpec`.
 """
 
-import os
-import os.path
 import pathlib
 import shutil
 import tempfile
@@ -13,10 +11,14 @@ from typing import (
 
 from pathspec import (
 	PathSpec)
+from pathspec.patterns.gitwildmatch import (
+	GitWildMatchPatternError)
 from pathspec.util import (
 	iter_tree_entries)
-from pathspec.patterns.gitwildmatch import GitWildMatchPatternError
-from tests.util import (
+
+from .util import (
+	debug_results,
+	get_includes,
 	make_dirs,
 	make_files,
 	ospath)
@@ -58,7 +60,7 @@ class PathSpecTest(unittest.TestCase):
 		spec = PathSpec.from_lines('gitwildmatch', [
 			'foo',
 		])
-		results = set(spec.match_files([
+		files = {
 			'/a.py',
 			'/foo/a.py',
 			'/x/a.py',
@@ -67,13 +69,18 @@ class PathSpecTest(unittest.TestCase):
 			'foo/a.py',
 			'x/a.py',
 			'x/foo/a.py',
-		]))
-		self.assertEqual(results, {
+		}
+
+		results = list(spec.check_files(files))
+		includes = get_includes(results)
+		debug = debug_results(spec, results)
+
+		self.assertEqual(includes, {
 			'/foo/a.py',
 			'/x/foo/a.py',
 			'foo/a.py',
 			'x/foo/a.py',
-		})
+		}, debug)
 
 	def test_01_absolute_dir_paths_2(self):
 		"""
@@ -82,7 +89,7 @@ class PathSpecTest(unittest.TestCase):
 		spec = PathSpec.from_lines('gitwildmatch', [
 			'/foo',
 		])
-		results = set(spec.match_files([
+		files = {
 			'/a.py',
 			'/foo/a.py',
 			'/x/a.py',
@@ -91,11 +98,62 @@ class PathSpecTest(unittest.TestCase):
 			'foo/a.py',
 			'x/a.py',
 			'x/foo/a.py',
-		]))
-		self.assertEqual(results, {
+		}
+
+		results = list(spec.check_files(files))
+		includes = get_includes(results)
+		debug = debug_results(spec, results)
+
+		self.assertEqual(includes, {
 			'/foo/a.py',
 			'foo/a.py',
-		})
+		}, debug)
+
+	def test_01_check_files(self):
+		"""
+		Test that checking files one at a time yields the same results as checking
+		multiples files at once.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'*.txt',
+			'!test1/**',
+		])
+		files = {
+			'src/test1/a.txt',
+			'src/test1/b.txt',
+			'src/test1/c/c.txt',
+			'src/test2/a.txt',
+			'src/test2/b.txt',
+			'src/test2/c/c.txt',
+		}
+
+		single_results = set(map(spec.check_file, files))
+		multi_results = set(spec.check_files(files))
+
+		self.assertEqual(single_results, multi_results)
+
+	def test_01_check_match_files(self):
+		"""
+		Test that checking files and matching files yield the same results.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			'*.txt',
+			'!test1/**',
+		])
+		files = {
+			'src/test1/a.txt',
+			'src/test1/b.txt',
+			'src/test1/c/c.txt',
+			'src/test2/a.txt',
+			'src/test2/b.txt',
+			'src/test2/c/c.txt',
+		}
+
+		check_results = set(spec.check_files(files))
+		check_includes = get_includes(check_results)
+		match_files = set(spec.match_files(files))
+
+		self.assertEqual(check_includes, match_files)
 
 	def test_01_current_dir_paths(self):
 		"""
@@ -106,21 +164,26 @@ class PathSpecTest(unittest.TestCase):
 			'*.txt',
 			'!test1/',
 		])
-		results = set(spec.match_files([
+		files = {
 			'./src/test1/a.txt',
 			'./src/test1/b.txt',
 			'./src/test1/c/c.txt',
 			'./src/test2/a.txt',
 			'./src/test2/b.txt',
 			'./src/test2/c/c.txt',
-		]))
-		self.assertEqual(results, {
+		}
+
+		results = list(spec.check_files(files))
+		includes = get_includes(results)
+		debug = debug_results(spec, results)
+
+		self.assertEqual(includes, {
 			'./src/test2/a.txt',
 			'./src/test2/b.txt',
 			'./src/test2/c/c.txt',
-		})
+		}, debug)
 
-	def test_01_empty_path(self):
+	def test_01_empty_path_1(self):
 		"""
 		Tests that patterns that end with an escaped space will be treated properly.
 		"""
@@ -128,44 +191,55 @@ class PathSpecTest(unittest.TestCase):
 			'\\ ',
 			'abc\\ '
 		])
-		test_files = [
+		files = {
 			' ',
 			'  ',
 			'abc ',
 			'somefile',
-		]
-		results = list(filter(spec.match_file, test_files))
-		self.assertEqual(results, [
+		}
+
+		results = list(spec.check_files(files))
+		includes = get_includes(results)
+		debug = debug_results(spec, results)
+
+		self.assertEqual(includes, {
 			' ',
 			'abc '
-		])
+		}, debug)
 
-		# An escape with double spaces is invalid.
-		# Disallow it. Better to be safe than sorry.
-		self.assertRaises(GitWildMatchPatternError, lambda: PathSpec.from_lines('gitwildmatch', [
-			'\\  '
-		]))
+	def test_01_empty_path_2(self):
+		"""
+		Tests that patterns that end with an escaped space will be treated properly.
+		"""
+		with self.assertRaises(GitWildMatchPatternError):
+			# An escape with double spaces is invalid. Disallow it. Better to be safe
+			# than sorry.
+			PathSpec.from_lines('gitwildmatch', [
+				'\\  ',
+			])
 
 	def test_01_match_files(self):
 		"""
-		Tests that matching files one at a time yields the same results as
-		matching multiples files at once.
+		Test that matching files one at a time yields the same results as matching
+		multiples files at once.
 		"""
 		spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
-			'!test1/',
+			'!test1/**',
 		])
-		test_files = [
+		files = {
 			'src/test1/a.txt',
 			'src/test1/b.txt',
 			'src/test1/c/c.txt',
 			'src/test2/a.txt',
 			'src/test2/b.txt',
 			'src/test2/c/c.txt',
-		]
-		single_results = set(filter(spec.match_file, test_files))
-		multi_results = set(spec.match_files(test_files))
-		self.assertEqual(single_results, multi_results)
+		}
+
+		single_files = set(filter(spec.match_file, files))
+		multi_files = set(spec.match_files(files))
+
+		self.assertEqual(single_files, multi_files)
 
 	def test_01_windows_current_dir_paths(self):
 		"""
@@ -176,19 +250,24 @@ class PathSpecTest(unittest.TestCase):
 			'*.txt',
 			'!test1/',
 		])
-		results = set(spec.match_files([
+		files = {
 			'.\\src\\test1\\a.txt',
 			'.\\src\\test1\\b.txt',
 			'.\\src\\test1\\c\\c.txt',
 			'.\\src\\test2\\a.txt',
 			'.\\src\\test2\\b.txt',
 			'.\\src\\test2\\c\\c.txt',
-		], separators=('\\',)))
-		self.assertEqual(results, {
+		}
+
+		results = list(spec.check_files(files, separators=['\\']))
+		includes = get_includes(results)
+		debug = debug_results(spec, results)
+
+		self.assertEqual(includes, {
 			'.\\src\\test2\\a.txt',
 			'.\\src\\test2\\b.txt',
 			'.\\src\\test2\\c\\c.txt',
-		})
+		}, debug)
 
 	def test_01_windows_paths(self):
 		"""
@@ -198,19 +277,24 @@ class PathSpecTest(unittest.TestCase):
 			'*.txt',
 			'!test1/',
 		])
-		results = set(spec.match_files([
+		files = {
 			'src\\test1\\a.txt',
 			'src\\test1\\b.txt',
 			'src\\test1\\c\\c.txt',
 			'src\\test2\\a.txt',
 			'src\\test2\\b.txt',
 			'src\\test2\\c\\c.txt',
-		], separators=('\\',)))
-		self.assertEqual(results, {
+		}
+
+		results = list(spec.check_files(files, separators=['\\']))
+		includes = get_includes(results)
+		debug = debug_results(spec, results)
+
+		self.assertEqual(includes, {
 			'src\\test2\\a.txt',
 			'src\\test2\\b.txt',
 			'src\\test2\\c\\c.txt',
-		})
+		}, debug)
 
 	def test_02_eq(self):
 		"""
@@ -218,11 +302,11 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		first_spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
-			'!test1/',
+			'!test1/**',
 		])
 		second_spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
-			'!test1/',
+			'!test1/**',
 		])
 		self.assertEqual(first_spec, second_spec)
 
@@ -243,51 +327,61 @@ class PathSpecTest(unittest.TestCase):
 		Test spec addition using :data:`+` operator.
 		"""
 		first_spec = PathSpec.from_lines('gitwildmatch', [
+			'test.png',
 			'test.txt',
-			'test.png'
 		])
 		second_spec = PathSpec.from_lines('gitwildmatch', [
 			'test.html',
-			'test.jpg'
+			'test.jpg',
 		])
 		combined_spec = first_spec + second_spec
-		results = set(combined_spec.match_files([
-			'test.txt',
-			'test.png',
+		files = {
 			'test.html',
-			'test.jpg'
-		]))
-		self.assertEqual(results, {
-			'test.txt',
+			'test.jpg',
 			'test.png',
+			'test.txt',
+		}
+
+		results = list(combined_spec.check_files(files))
+		includes = get_includes(results)
+		debug = debug_results(combined_spec, results)
+
+		self.assertEqual(includes, {
 			'test.html',
-			'test.jpg'
-		})
+			'test.jpg',
+			'test.png',
+			'test.txt',
+		}, debug)
 
 	def test_03_iadd(self):
 		"""
 		Test spec addition using :data:`+=` operator.
 		"""
 		spec = PathSpec.from_lines('gitwildmatch', [
+			'test.png',
 			'test.txt',
-			'test.png'
 		])
 		spec += PathSpec.from_lines('gitwildmatch', [
 			'test.html',
-			'test.jpg'
+			'test.jpg',
 		])
-		results = set(spec.match_files([
-			'test.txt',
-			'test.png',
+		files = {
 			'test.html',
-			'test.jpg'
-		]))
-		self.assertEqual(results, {
-			'test.txt',
+			'test.jpg',
 			'test.png',
+			'test.txt',
+		}
+
+		results = list(spec.check_files(files))
+		includes = get_includes(results)
+		debug = debug_results(spec, results)
+
+		self.assertEqual(includes, {
 			'test.html',
-			'test.jpg'
-		})
+			'test.jpg',
+			'test.png',
+			'test.txt',
+		}, debug)
 
 	def test_04_len(self):
 		"""
@@ -321,12 +415,13 @@ class PathSpecTest(unittest.TestCase):
 			'Y/b.txt',
 			'Y/Z/c.txt',
 		])
+
 		entries = iter_tree_entries(self.temp_dir)
-		results = {
-			__entry.path
-			for __entry in spec.match_entries(entries)
+		includes = {
+			__entry.path for __entry in spec.match_entries(entries)
 		}
-		self.assertEqual(results, set(map(ospath, [
+
+		self.assertEqual(includes, set(map(ospath, [
 			'X/a.txt',
 			'X/Z/c.txt',
 			'Y/a.txt',
@@ -341,15 +436,18 @@ class PathSpecTest(unittest.TestCase):
 			'*.txt',
 			'!b.txt',
 		])
-		results = set(filter(spec.match_file, [
+		files = {
 			'X/a.txt',
 			'X/b.txt',
 			'X/Z/c.txt',
 			'Y/a.txt',
 			'Y/b.txt',
 			'Y/Z/c.txt',
-		]))
-		self.assertEqual(results, {
+		}
+
+		includes = set(filter(spec.match_file, files))
+
+		self.assertEqual(includes, {
 			'X/a.txt',
 			'X/Z/c.txt',
 			'Y/a.txt',
@@ -364,15 +462,18 @@ class PathSpecTest(unittest.TestCase):
 			'*.txt',
 			'!b.txt',
 		])
-		results = set(spec.match_files([
+		files = {
 			'X/a.txt',
 			'X/b.txt',
 			'X/Z/c.txt',
 			'Y/a.txt',
 			'Y/b.txt',
 			'Y/Z/c.txt',
-		]))
-		self.assertEqual(results, {
+		}
+
+		includes = set(spec.match_files(files))
+
+		self.assertEqual(includes, {
 			'X/a.txt',
 			'X/Z/c.txt',
 			'Y/a.txt',
@@ -401,11 +502,12 @@ class PathSpecTest(unittest.TestCase):
 			'Y/b.txt',
 			'Y/Z/c.txt',
 		])
-		results = {
-			__entry.path
-			for __entry in spec.match_tree_entries(self.temp_dir)
+
+		includes = {
+			__entry.path for __entry in spec.match_tree_entries(self.temp_dir)
 		}
-		self.assertEqual(results, set(map(ospath, [
+
+		self.assertEqual(includes, set(map(ospath, [
 			'X/a.txt',
 			'X/Z/c.txt',
 			'Y/a.txt',
@@ -434,8 +536,10 @@ class PathSpecTest(unittest.TestCase):
 			'Y/b.txt',
 			'Y/Z/c.txt',
 		])
-		results = set(spec.match_tree_files(self.temp_dir))
-		self.assertEqual(results, set(map(ospath, [
+
+		includes = set(spec.match_tree_files(self.temp_dir))
+
+		self.assertEqual(includes, set(map(ospath, [
 			'X/a.txt',
 			'X/Z/c.txt',
 			'Y/a.txt',
@@ -444,8 +548,8 @@ class PathSpecTest(unittest.TestCase):
 
 	def test_06_issue_41_a(self):
 		"""
-		Test including a file and excluding a directory with the same name
-		pattern, scenario A.
+		Test including a file and excluding a directory with the same name pattern,
+		scenario A.
 		"""
 		spec = PathSpec.from_lines('gitwildmatch', [
 			'*.yaml',
@@ -460,19 +564,23 @@ class PathSpecTest(unittest.TestCase):
 			'dir/index.txt',
 			'file.yaml',
 		}
-		ignores = set(spec.match_files(files))
+
+		results = list(spec.check_files(files))
+		ignores = get_includes(results)
+		debug = debug_results(spec, results)
+
 		self.assertEqual(ignores, {
 			#'dir.yaml/file.yaml',  # Discrepancy with Git.
 			'dir/file.yaml',
 			'file.yaml',
-		})
+		}, debug)
 		self.assertEqual(files - ignores, {
 			'dir.yaml/file.sql',
 			'dir.yaml/file.yaml',  # Discrepancy with Git.
 			'dir.yaml/index.txt',
 			'dir/file.sql',
 			'dir/index.txt',
-		})
+		}, debug)
 
 	def test_06_issue_41_b(self):
 		"""
@@ -492,18 +600,22 @@ class PathSpecTest(unittest.TestCase):
 			'dir/index.txt',
 			'file.yaml',
 		}
-		ignores = set(spec.match_files(files))
+
+		results = list(spec.check_files(files))
+		ignores = get_includes(results)
+		debug = debug_results(spec, results)
+
 		self.assertEqual(ignores, {
 			'dir.yaml/file.sql',
 			'dir.yaml/file.yaml',
 			'dir.yaml/index.txt',
 			'dir/file.yaml',
 			'file.yaml',
-		})
+		}, debug)
 		self.assertEqual(files - ignores, {
 			'dir/file.sql',
 			'dir/index.txt',
-		})
+		}, debug)
 
 	def test_06_issue_41_c(self):
 		"""
@@ -523,19 +635,23 @@ class PathSpecTest(unittest.TestCase):
 			'dir/index.txt',
 			'file.yaml',
 		}
-		ignores = set(spec.match_files(files))
+
+		results = list(spec.check_files(files))
+		ignores = get_includes(results)
+		debug = debug_results(spec, results)
+
 		self.assertEqual(ignores, {
 			#'dir.yaml/file.yaml',  # Discrepancy with Git.
 			'dir/file.yaml',
 			'file.yaml',
-		})
+		}, debug)
 		self.assertEqual(files - ignores, {
 			'dir.yaml/file.sql',
 			'dir.yaml/file.yaml',  # Discrepancy with Git.
 			'dir.yaml/index.txt',
 			'dir/file.sql',
 			'dir/index.txt',
-		})
+		}, debug)
 
 	def test_07_issue_62(self):
 		"""
@@ -545,13 +661,18 @@ class PathSpecTest(unittest.TestCase):
 			'*',
 			'!product_dir/',
 		])
-		results = set(spec.match_files([
+		files = {
 			'anydir/file.txt',
-			'product_dir/file.txt'
-		]))
-		self.assertEqual(results, {
+			'product_dir/file.txt',
+		}
+
+		results = list(spec.check_files(files))
+		includes = get_includes(results)
+		debug = debug_results(spec, results)
+
+		self.assertEqual(includes, {
 			'anydir/file.txt',
-		})
+		}, debug)
 
 	def test_08_issue_39(self):
 		"""
@@ -569,16 +690,20 @@ class PathSpecTest(unittest.TestCase):
 			'important/e.txt',
 			'trace.c',
 		}
-		ignores = set(spec.match_files(files))
+
+		results = list(spec.check_files(files))
+		ignores = get_includes(results)
+		debug = debug_results(spec, results)
+
 		self.assertEqual(ignores, {
 			'a.log',
 			'trace.c',
-		})
+		}, debug)
 		self.assertEqual(files - ignores, {
 			'b.txt',
 			'important/d.log',
 			'important/e.txt',
-		})
+		}, debug)
 
 	def test_09_issue_80_a(self):
 		"""
@@ -599,7 +724,9 @@ class PathSpecTest(unittest.TestCase):
 			'build/trace.bin',
 			'trace.c',
 		}
+
 		keeps = set(spec.match_files(files, negate=True))
+
 		self.assertEqual(keeps, {
 			'.gitignore',
 			'b.txt',
@@ -625,7 +752,9 @@ class PathSpecTest(unittest.TestCase):
 			'build/trace.bin',
 			'trace.c',
 		}
+
 		keeps = set(spec.match_files(files, negate=True))
 		ignores = set(spec.match_files(files))
+
 		self.assertEqual(files - ignores, keeps)
 		self.assertEqual(files - keeps, ignores)
