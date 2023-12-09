@@ -150,9 +150,11 @@ class GitIgnoreSpec(PathSpec):
 
 					if pattern.include and dir_mark:
 						out_include = pattern.include
+						out_index = index
 						out_priority = priority
 					elif priority >= out_priority:
 						out_include = pattern.include
+						out_index = index
 						out_priority = priority
 
 		return out_include, out_index

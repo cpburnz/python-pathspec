@@ -2,6 +2,7 @@
 This module provides utility functions shared by tests.
 """
 
+import itertools
 import os
 import os.path
 import pathlib
@@ -32,6 +33,10 @@ def debug_results(spec: PathSpec, results: Iterable[CheckResult[str]]) -> str:
 	"""
 	patterns = cast(list[RegexPattern], spec.patterns)
 
+	pattern_table = []
+	for index, pattern in enumerate(patterns, 1):
+		pattern_table.append((f"{index}:{pattern.pattern}", repr(pattern.regex.pattern)))
+
 	result_table = []
 	for result in results:
 		if result.index is not None:
@@ -42,17 +47,18 @@ def debug_results(spec: PathSpec, results: Iterable[CheckResult[str]]) -> str:
 
 	result_table.sort(key=lambda r: r[1])
 
-	first_max_len = max((len(__row[0]) for __row in result_table), default=0)
+	first_max_len = max((
+		len(__row[0]) for __row in itertools.chain(pattern_table, result_table)
+	), default=0)
 	first_width = min(first_max_len, 20)
+
+	pattern_lines = []
+	for row in pattern_table:
+		pattern_lines.append(f" {row[0]:<{first_width}}  {row[1]}")
 
 	result_lines = []
 	for row in result_table:
 		result_lines.append(f" {row[0]:<{first_width}}  {row[1]}")
-
-	pattern_lines = []
-	for index, pattern in enumerate(patterns, 1):
-		first_col = f"{index}:{pattern.pattern}"
-		pattern_lines.append(f" {first_col:<{first_width}}  {pattern.regex.pattern!r}")
 
 	return "\n".join([
 		"\n",
