@@ -5,7 +5,7 @@
 # Updated: 2022-09-01
 #
 
-.PHONY: build create-venv help prebuild publish test test-all update-venv
+.PHONY: build create-venv help prebuild publish test test-all test-doc update-venv
 
 help:
 	@echo "Usage: make [<target>]"
@@ -22,6 +22,7 @@ help:
 	@echo "  create-venv  Create the development Python virtual environment."
 	@echo "  test         Run tests using the development virtual environment."
 	@echo "  test-all     Run tests using Tox for all virtual environments."
+	@echo "  test-doc     Run tests using Tox for just documentation."
 	@echo "  update-venv  Update the development Python virtual environment."
 
 build: dist-build
@@ -36,6 +37,8 @@ test: dev-test-primary
 
 test-all: dev-test-all
 
+test-doc: dev-test-doc
+
 update-venv: dev-venv-install
 
 
@@ -49,10 +52,13 @@ VENV_DIR := ./dev/venv
 PYTHON := python3
 VENV := ./dev/venv.sh "${VENV_DIR}"
 
-.PHONY: dev-test-all dev-test-primary dev-venv-base dev-venv-create dev-venv-install
+.PHONY: dev-test-all dev-test-doc dev-test-primary dev-venv-base dev-venv-create dev-venv-install
 
 dev-test-all:
 	${VENV} tox
+
+dev-test-doc:
+	${VENV} tox -e doc
 
 dev-test-primary:
 	${VENV} python -m unittest -v

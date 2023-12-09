@@ -112,7 +112,7 @@ class PathSpec(object):
 		:data:`None`) optionally contains the path separators to normalize. See
 		:func:`~pathspec.util.normalize_file` for more information.
 
-		Returns the file check result (:class:`CheckResult`).
+		Returns the file check result (:class:`~pathspec.util.CheckResult`).
 		"""
 		norm_file = normalize_file(file, separators)
 		include, index = self._match_file(enumerate(self.patterns), norm_file)
@@ -135,7 +135,7 @@ class PathSpec(object):
 		:func:`~pathspec.util.normalize_file` for more information.
 
 		Returns an :class:`~collections.abc.Iterator` yielding each file check
-		result (:class:`CheckResult`).
+		result (:class:`~pathspec.util.CheckResult`).
 		"""
 		if not _is_iterable(files):
 			raise TypeError(f"files:{files!r} is not an iterable.")
@@ -174,7 +174,7 @@ class PathSpec(object):
 		:data:`False`.
 
 		Returns an :class:`~collections.abc.Iterator` yielding each file check
-		result (:class:`CheckResult`).
+		result (:class:`~pathspec.util.CheckResult`).
 		"""
 		files = util.iter_tree_files(root, on_error=on_error, follow_links=follow_links)
 		yield from self.check_files(files)
