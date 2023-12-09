@@ -2,8 +2,8 @@
 Change History
 ==============
 
-0.12.0 (TDB)
-------------
+0.12.0 (2023-12-09)
+-------------------
 
 Major changes:
 
@@ -18,7 +18,6 @@ New features:
 
 - Added `pathspec.pathspec.PathSpec.check_*()` methods. These methods behave similarly to `.match_*()` but return additional information in the `pathspec.util.CheckResult` objects (e.g., `CheckResult.index` indicates the index of the last pattern that matched the file).
 - Added `pathspec.pattern.RegexPattern.pattern` attribute which stores the original, uncompiled pattern.
-
 
 Bug fixes:
 
