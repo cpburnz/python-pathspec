@@ -1,9 +1,6 @@
 #
 # This Makefile is used to manage development and distribution.
 #
-# Created: 2022-08-11
-# Updated: 2022-09-01
-#
 
 .PHONY: build create-venv help prebuild publish test test-all test-docs update-venv
 

@@ -12,14 +12,15 @@ import unittest
 from functools import (
 	partial)
 from typing import (
-	Iterable,
-	Optional,
-	Tuple)
+	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
+	Optional,  # Replaced by `X | None` in 3.10.
+	Tuple)  # Replaced by `tuple` in 3.9.
 
 from pathspec.patterns.gitwildmatch import (
 	GitWildMatchPattern)
 from pathspec.util import (
 	RecursionError,
+	check_match_file,
 	iter_tree_entries,
 	iter_tree_files,
 	match_file,
@@ -30,6 +31,82 @@ from tests.util import (
 	make_links,
 	mkfile,
 	ospath)
+
+
+class CheckMatchFileTest(unittest.TestCase):
+	"""
+	The :class:`CheckMatchFileTest` class tests the :meth:`.check_match_file`
+	function.
+	"""
+
+	def test_01_single_1_include(self):
+		"""
+		Test checking a single file that is included.
+		"""
+		patterns = list(enumerate(map(GitWildMatchPattern, [
+			"*.txt",
+			"!test/",
+		])))
+
+		include_index = check_match_file(patterns, "include.txt")
+
+		self.assertEqual(include_index, (True, 0))
+
+	def test_01_single_2_exclude(self):
+		"""
+		Test checking a single file that is excluded.
+		"""
+		patterns = list(enumerate(map(GitWildMatchPattern, [
+			"*.txt",
+			"!test/",
+		])))
+
+		include_index = check_match_file(patterns, "test/exclude.txt")
+
+		self.assertEqual(include_index, (False, 1))
+
+	def test_01_single_3_unmatch(self):
+		"""
+		Test checking a single file that is ignored.
+		"""
+		patterns = list(enumerate(map(GitWildMatchPattern, [
+			"*.txt",
+			"!test/",
+		])))
+
+		include_index = check_match_file(patterns, "unmatch.bin")
+
+		self.assertEqual(include_index, (None, None))
+
+	def test_02_many(self):
+		"""
+		Test matching files individually.
+		"""
+		patterns = list(enumerate(map(GitWildMatchPattern, [
+			'*.txt',
+			'!b.txt',
+		])))
+		files = {
+			'X/a.txt',
+			'X/b.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/b.txt',
+			'Y/Z/c.txt',
+		}
+
+		includes = {
+			__file
+			for __file in files
+			if check_match_file(patterns, __file)[0]
+		}
+
+		self.assertEqual(includes, {
+			'X/a.txt',
+			'X/Z/c.txt',
+			'Y/a.txt',
+			'Y/Z/c.txt',
+		})
 
 
 class IterTreeTest(unittest.TestCase):
@@ -345,7 +422,46 @@ class MatchFileTest(unittest.TestCase):
 	function.
 	"""
 
-	def test_01_match_file(self):
+	def test_01_single_1_include(self):
+		"""
+		Test checking a single file that is included.
+		"""
+		patterns = list(map(GitWildMatchPattern, [
+			"*.txt",
+			"!test/",
+		]))
+
+		include = match_file(patterns, "include.txt")
+
+		self.assertIs(include, True)
+
+	def test_01_single_2_exclude(self):
+		"""
+		Test checking a single file that is excluded.
+		"""
+		patterns = list(map(GitWildMatchPattern, [
+			"*.txt",
+			"!test/",
+		]))
+
+		include = match_file(patterns, "test/exclude.txt")
+
+		self.assertIs(include, False)
+
+	def test_01_single_3_unmatch(self):
+		"""
+		Test checking a single file that is ignored.
+		"""
+		patterns = list(map(GitWildMatchPattern, [
+			"*.txt",
+			"!test/",
+		]))
+
+		include = match_file(patterns, "unmatch.bin")
+
+		self.assertIs(include, False)
+
+	def test_02_many(self):
 		"""
 		Test matching files individually.
 		"""
@@ -353,15 +469,18 @@ class MatchFileTest(unittest.TestCase):
 			'*.txt',
 			'!b.txt',
 		]))
-		results = set(filter(partial(match_file, patterns), [
+		files = {
 			'X/a.txt',
 			'X/b.txt',
 			'X/Z/c.txt',
 			'Y/a.txt',
 			'Y/b.txt',
 			'Y/Z/c.txt',
-		]))
-		self.assertEqual(results, {
+		}
+
+		includes = set(filter(partial(match_file, patterns), files))
+
+		self.assertEqual(includes, {
 			'X/a.txt',
 			'X/Z/c.txt',
 			'Y/a.txt',

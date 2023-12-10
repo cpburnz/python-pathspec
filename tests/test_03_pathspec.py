@@ -17,6 +17,7 @@ from pathspec.util import (
 	iter_tree_entries)
 
 from .util import (
+	CheckResult,
 	debug_results,
 	get_includes,
 	make_dirs,
@@ -109,22 +110,61 @@ class PathSpecTest(unittest.TestCase):
 			'foo/a.py',
 		}, debug)
 
-	def test_01_check_files(self):
+	def test_01_check_file_1_include(self):
+		"""
+		Test checking a single file that is included.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			"*.txt",
+			"!test/",
+		])
+
+		result = spec.check_file("include.txt")
+
+		self.assertEqual(result, CheckResult("include.txt", True, 0))
+
+	def test_01_check_file_2_exclude(self):
+		"""
+		Test checking a single file that is excluded.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			"*.txt",
+			"!test/",
+		])
+
+		result = spec.check_file("test/exclude.txt")
+
+		self.assertEqual(result, CheckResult("test/exclude.txt", False, 1))
+
+	def test_01_check_file_3_unmatch(self):
+		"""
+		Test checking a single file that is unmatched.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			"*.txt",
+			"!test/",
+		])
+
+		result = spec.check_file("unmatch.bin")
+
+		self.assertEqual(result, CheckResult("unmatch.bin", None, None))
+
+	def test_01_check_file_4_many(self):
 		"""
 		Test that checking files one at a time yields the same results as checking
 		multiples files at once.
 		"""
 		spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
-			'!test1/**',
+			'!test1/',
 		])
 		files = {
-			'src/test1/a.txt',
-			'src/test1/b.txt',
-			'src/test1/c/c.txt',
-			'src/test2/a.txt',
-			'src/test2/b.txt',
-			'src/test2/c/c.txt',
+			'test1/a.txt',
+			'test1/b.txt',
+			'test1/c/c.txt',
+			'test2/a.txt',
+			'test2/b.txt',
+			'test2/c/c.txt',
 		}
 
 		single_results = set(map(spec.check_file, files))
@@ -218,6 +258,45 @@ class PathSpecTest(unittest.TestCase):
 				'\\  ',
 			])
 
+	def test_01_match_file_1_include(self):
+		"""
+		Test matching a single file that is included.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			"*.txt",
+			"!test/",
+		])
+
+		include = spec.match_file("include.txt")
+
+		self.assertIs(include, True)
+
+	def test_01_match_file_2_exclude(self):
+		"""
+		Test matching a single file that is excluded.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			"*.txt",
+			"!test/",
+		])
+
+		include = spec.match_file("test/exclude.txt")
+
+		self.assertIs(include, False)
+
+	def test_01_match_file_3_unmatch(self):
+		"""
+		Test match a single file that is unmatched.
+		"""
+		spec = PathSpec.from_lines('gitwildmatch', [
+			"*.txt",
+			"!test/",
+		])
+
+		include = spec.match_file("unmatch.bin")
+
+		self.assertIs(include, False)
+
 	def test_01_match_files(self):
 		"""
 		Test that matching files one at a time yields the same results as matching
@@ -225,15 +304,15 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
-			'!test1/**',
+			'!test1/',
 		])
 		files = {
-			'src/test1/a.txt',
-			'src/test1/b.txt',
-			'src/test1/c/c.txt',
-			'src/test2/a.txt',
-			'src/test2/b.txt',
-			'src/test2/c/c.txt',
+			'test1/a.txt',
+			'test1/b.txt',
+			'test1/c/c.txt',
+			'test2/a.txt',
+			'test2/b.txt',
+			'test2/c/c.txt',
 		}
 
 		single_files = set(filter(spec.match_file, files))
@@ -251,12 +330,12 @@ class PathSpecTest(unittest.TestCase):
 			'!test1/',
 		])
 		files = {
-			'.\\src\\test1\\a.txt',
-			'.\\src\\test1\\b.txt',
-			'.\\src\\test1\\c\\c.txt',
-			'.\\src\\test2\\a.txt',
-			'.\\src\\test2\\b.txt',
-			'.\\src\\test2\\c\\c.txt',
+			'.\\test1\\a.txt',
+			'.\\test1\\b.txt',
+			'.\\test1\\c\\c.txt',
+			'.\\test2\\a.txt',
+			'.\\test2\\b.txt',
+			'.\\test2\\c\\c.txt',
 		}
 
 		results = list(spec.check_files(files, separators=['\\']))
@@ -264,9 +343,9 @@ class PathSpecTest(unittest.TestCase):
 		debug = debug_results(spec, results)
 
 		self.assertEqual(includes, {
-			'.\\src\\test2\\a.txt',
-			'.\\src\\test2\\b.txt',
-			'.\\src\\test2\\c\\c.txt',
+			'.\\test2\\a.txt',
+			'.\\test2\\b.txt',
+			'.\\test2\\c\\c.txt',
 		}, debug)
 
 	def test_01_windows_paths(self):
@@ -278,12 +357,12 @@ class PathSpecTest(unittest.TestCase):
 			'!test1/',
 		])
 		files = {
-			'src\\test1\\a.txt',
-			'src\\test1\\b.txt',
-			'src\\test1\\c\\c.txt',
-			'src\\test2\\a.txt',
-			'src\\test2\\b.txt',
-			'src\\test2\\c\\c.txt',
+			'test1\\a.txt',
+			'test1\\b.txt',
+			'test1\\c\\c.txt',
+			'test2\\a.txt',
+			'test2\\b.txt',
+			'test2\\c\\c.txt',
 		}
 
 		results = list(spec.check_files(files, separators=['\\']))
@@ -291,9 +370,9 @@ class PathSpecTest(unittest.TestCase):
 		debug = debug_results(spec, results)
 
 		self.assertEqual(includes, {
-			'src\\test2\\a.txt',
-			'src\\test2\\b.txt',
-			'src\\test2\\c\\c.txt',
+			'test2\\a.txt',
+			'test2\\b.txt',
+			'test2\\c\\c.txt',
 		}, debug)
 
 	def test_02_eq(self):

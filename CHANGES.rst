@@ -2,6 +2,18 @@
 Change History
 ==============
 
+
+0.12.1 (TBD)
+-------------------
+
+- Bug fixes:
+
+- `Issue #84`_: PathSpec.match_file() returns None since 0.12.0.
+
+
+.. _`Issue #84`: https://github.com/cpburnz/python-pathspec/issues/84
+
+
 0.12.0 (2023-12-09)
 -------------------
 
@@ -12,7 +24,7 @@ Major changes:
 
 API changes:
 
-- Signature of protected method `pathspec.pathspec.PathSpec._match_file()` has been changed from `def _match_file(patterns: Iterable[Pattern], file: str) -> bool` to `def _match_file(patterns: Iterable[Tuple[int, Pattern]], file: str) -> Tuple[Optional[bool], Optional[int]]`.
+- Signature of protected method `pathspec.pathspec.PathSpec._match_file()` (with a leading underscore) has been changed from `def _match_file(patterns: Iterable[Pattern], file: str) -> bool` to `def _match_file(patterns: Iterable[Tuple[int, Pattern]], file: str) -> Tuple[Optional[bool], Optional[int]]`.
 
 New features:
 
