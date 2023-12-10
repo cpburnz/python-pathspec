@@ -173,7 +173,7 @@ Change History
 0.12.1 (2023-12-10)
 -------------------
 
-- Bug fixes:
+Bug fixes:
 
 - `Issue #84`_: PathSpec.match_file() returns None since 0.12.0.
 
