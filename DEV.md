@@ -16,7 +16,11 @@ These are notes to myself for things to review before decommissioning EoL versio
 
 **Python 3.8:**
 
-- Becomes EoL in 2024-10.
+- EoL as of 2024-10-07.
+
+**Python 3.9:**
+
+- Becomes EoL in 2025-10.
 
 References:
 

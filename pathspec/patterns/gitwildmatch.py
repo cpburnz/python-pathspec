@@ -74,6 +74,9 @@ class GitWildMatchPattern(RegexPattern):
 		else:
 			pattern = pattern.strip()
 
+		regex: Optional[str]
+		include: Optional[bool]
+
 		if pattern.startswith('#'):
 			# A pattern starting with a hash ('#') serves as a comment (neither
 			# includes nor excludes files). Escape the hash with a back-slash to match
@@ -100,7 +103,7 @@ class GitWildMatchPattern(RegexPattern):
 
 			# Allow a regex override for edge cases that cannot be handled through
 			# normalization.
-			override_regex = None
+			override_regex: Optional[str] = None
 
 			# Split pattern into segments.
 			pattern_segs = pattern.split('/')
