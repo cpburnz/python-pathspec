@@ -3,7 +3,7 @@ This module contains the project meta-data.
 """
 
 __author__ = "Caleb P. Burns"
-__copyright__ = "Copyright © 2013-2023 Caleb P. Burns"
+__copyright__ = "Copyright © 2013-2025 Caleb P. Burns"
 __credits__ = [
 	"dahlia <https://github.com/dahlia>",
 	"highb <https://github.com/highb>",
@@ -55,4 +55,4 @@ __credits__ = [
 	"kurtmckee <https://github.com/kurtmckee>",
 ]
 __license__ = "MPL 2.0"
-__version__ = "0.12.1"
+__version__ = "0.12.2.dev1"
