@@ -58,6 +58,8 @@ class GitIgnoreSpec(PathSpec):
 		cls: Type[Self],
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern]],
 		lines: Iterable[AnyStr],
+		*,
+		optimize: Optional[bool] = None,
 	) -> Self:
 		...
 
@@ -67,6 +69,8 @@ class GitIgnoreSpec(PathSpec):
 		cls: Type[Self],
 		lines: Iterable[AnyStr],
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern], None] = None,
+		*,
+		optimize: Optional[bool] = None,
 	) -> Self:
 		...
 
@@ -75,6 +79,8 @@ class GitIgnoreSpec(PathSpec):
 		cls: Type[Self],
 		lines: Iterable[AnyStr],
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern], None] = None,
+		*,
+		optimize: Optional[bool] = None,
 	) -> Self:
 		"""
 		Compiles the pattern lines.
@@ -91,6 +97,10 @@ class GitIgnoreSpec(PathSpec):
 		(:class:`pathspec.pattern.Pattern`).
 		Default is :data:`None` for :class:`.GitWildMatchPattern`).
 
+		*optimize* (:class:`bool` or :data:`None`) is whether to optimize the
+		patterns using :module:`hyperscan`. Default is :data:`None` for
+		:data:`False`.
+
 		Returns the :class:`GitIgnoreSpec` instance.
 		"""
 		if pattern_factory is None:
@@ -100,13 +110,14 @@ class GitIgnoreSpec(PathSpec):
 			# Support reversed order of arguments from PathSpec.
 			pattern_factory, lines = lines, pattern_factory
 
-		self = super().from_lines(pattern_factory, lines)
+		self = super().from_lines(pattern_factory, lines, optimize=optimize)
 		return cast(Self, self)
 
 	@staticmethod
 	def _match_file(
 		patterns: Iterable[Tuple[int, GitWildMatchPattern]],
 		file: str,
+		is_reversed: Optional[bool] = None,
 	) -> Tuple[Optional[bool], Optional[int]]:
 		"""
 		Check the file against the patterns.
@@ -122,6 +133,10 @@ class GitIgnoreSpec(PathSpec):
 		*file* (:class:`str`) is the normalized file path to be matched against
 		*patterns*.
 
+		*is_reversed* (:class:`bool` or :data:`NOne`) is whether the order of the
+		patterns has been reversed. Default is :data:`None` for :data:`False`.
+		Reversing the order of the patterns is an optimization.
+
 		Returns a :class:`tuple` containing whether to include *file* (:class:`bool`
 		or :data:`None`), and the index of the last matched pattern (:class:`int` or
 		:data:`None`).
@@ -130,28 +145,34 @@ class GitIgnoreSpec(PathSpec):
 		out_index: Optional[int] = None
 		out_priority = 0
 		for index, pattern in patterns:
-			if pattern.include is not None:
-				match = pattern.match_file(file)
-				if match is not None:
-					# Pattern matched.
+			if (
+				pattern.include is not None
+				and (match := pattern.match_file(file)) is not None
+			):
+				# Pattern matched.
 
-					# Check for directory marker.
-					dir_mark = match.match.groupdict().get(_DIR_MARK)
+				# Check for directory marker.
+				dir_mark = match.match.groupdict().get(_DIR_MARK)
 
-					if dir_mark:
-						# Pattern matched by a directory pattern.
-						priority = 1
-					else:
-						# Pattern matched by a file pattern.
-						priority = 2
+				if dir_mark:
+					# Pattern matched by a directory pattern.
+					priority = 1
+				else:
+					# Pattern matched by a file pattern.
+					priority = 2
 
-					if pattern.include and dir_mark:
-						out_include = pattern.include
-						out_index = index
-						out_priority = priority
-					elif priority >= out_priority:
-						out_include = pattern.include
-						out_index = index
-						out_priority = priority
+				if pattern.include and dir_mark:
+					out_include = pattern.include
+					out_index = index
+					out_priority = priority
+				elif priority >= out_priority:
+					out_include = pattern.include
+					out_index = index
+					out_priority = priority
+
+				if is_reversed and priority == 2:
+					# Patterns are being checked in reverse order. The first pattern that
+					# matches with the highest priority takes precedence.
+					break
 
 		return out_include, out_index

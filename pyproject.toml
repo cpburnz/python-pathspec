@@ -32,6 +32,14 @@ name = "pathspec"
 readme = "README-dist.rst"
 requires-python = ">=3.8"
 
+[project.optional-dependencies]
+all = [
+	"pathspec[hyperscan]",
+]
+hyperscan = [
+	"hyperscan >=0.7",
+]
+
 [project.urls]
 "Source Code" = "https://github.com/cpburnz/python-pathspec"
 "Documentation" = "https://python-path-specification.readthedocs.io/en/latest/index.html"

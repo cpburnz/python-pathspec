@@ -86,6 +86,7 @@ def append_dir_sep(path: pathlib.Path) -> str:
 def check_match_file(
 	patterns: Iterable[Tuple[int, Pattern]],
 	file: str,
+	is_reversed: Optional[bool] = None,
 ) -> Tuple[Optional[bool], Optional[int]]:
 	"""
 	Check the file against the patterns.
@@ -97,18 +98,33 @@ def check_match_file(
 	*file* (:class:`str`) is the normalized file path to be matched
 	against *patterns*.
 
+	*is_reversed* (:class:`bool` or :data:`NOne`) is whether the order of the
+	patterns has been reversed. Default is :data:`None` for :data:`False`.
+	Reversing the order of the patterns is an optimization.
+
 	Returns a :class:`tuple` containing whether to include *file* (:class:`bool`
 	or :data:`None`), and the index of the last matched pattern (:class:`int` or
 	:data:`None`).
 	"""
-	out_include: Optional[bool] = None
-	out_index: Optional[int] = None
-	for index, pattern in patterns:
-		if pattern.include is not None and pattern.match_file(file) is not None:
-			out_include = pattern.include
-			out_index = index
+	if is_reversed:
+		# Check patterns in reverse order. The first pattern that matches takes
+		# precedence.
+		for index, pattern in patterns:
+			if pattern.include is not None and pattern.match_file(file) is not None:
+				return pattern.include, index
 
-	return out_include, out_index
+		return None, None
+
+	else:
+		# Check all patterns. The last pattern that matches takes precedence.
+		out_include: Optional[bool] = None
+		out_index: Optional[int] = None
+		for index, pattern in patterns:
+			if pattern.include is not None and pattern.match_file(file) is not None:
+				out_include = pattern.include
+				out_index = index
+
+		return out_include, out_index
 
 
 def detailed_match_files(
@@ -183,7 +199,7 @@ def _is_iterable(value: Any) -> bool:
 
 	*value* is the value to check,
 
-	Returns whether *value* is a iterable (:class:`bool`).
+	Returns whether *value* is an iterable (:class:`bool`).
 	"""
 	return isinstance(value, IterableType) and not isinstance(value, (str, bytes))
 
@@ -330,9 +346,73 @@ def iter_tree_files(
 	Returns an :class:`~collections.abc.Iterator` yielding the path to
 	each file (:class:`str`) relative to *root*.
 	"""
-	for entry in iter_tree_entries(root, on_error=on_error, follow_links=follow_links):
-		if not entry.is_dir(follow_links):
-			yield entry.path
+	if on_error is not None and not callable(on_error):
+		raise TypeError(f"on_error:{on_error!r} is not callable.")
+
+	if follow_links is None:
+		follow_links = True
+
+	yield from _iter_tree_files_next(os.path.abspath(root), '', {}, on_error, follow_links)
+
+
+def _iter_tree_files_next(
+	root_full: str,
+	dir_rel: str,
+	memo: Dict[str, str],
+	on_error: Callable[[OSError], None],
+	follow_links: bool,
+) -> Iterator[str]:
+	"""
+	Scan the directory for all descendant files.
+
+	*root_full* (:class:`str`) the absolute path to the root directory.
+
+	*dir_rel* (:class:`str`) the path to the directory to scan relative to
+	*root_full*.
+
+	*memo* (:class:`dict`) keeps track of ancestor directories
+	encountered. Maps each ancestor real path (:class:`str`) to relative
+	path (:class:`str`).
+
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
+	optionally is the error handler for file-system exceptions.
+
+	*follow_links* (:class:`bool`) is whether to walk symbolic links that
+	resolve to directories.
+
+	Yields each file path (:class:`str`).
+	"""
+	dir_full = os.path.join(root_full, dir_rel)
+	dir_real = os.path.realpath(dir_full)
+
+	# Remember each encountered ancestor directory and its canonical
+	# (real) path. If a canonical path is encountered more than once,
+	# recursion has occurred.
+	if dir_real not in memo:
+		memo[dir_real] = dir_rel
+	else:
+		raise RecursionError(real_path=dir_real, first_path=memo[dir_real], second_path=dir_rel)
+
+	with os.scandir(dir_full) as scan_iter:
+		node_ent: os.DirEntry
+		for node_ent in scan_iter:
+			node_rel = os.path.join(dir_rel, node_ent.name)
+
+			if node_ent.is_dir(follow_symlinks=follow_links):
+				# Child node is a directory, recurse into it and yield its
+				# descendant files.
+				yield from _iter_tree_files_next(root_full, node_rel, memo, on_error, follow_links)
+
+			elif node_ent.is_file() or node_ent.is_symlink():
+				# Child node is either a file or an unfollowed link, yield it.
+				yield node_rel
+
+	# NOTE: Make sure to remove the canonical (real) path of the directory
+	# from the ancestors memo once we are done with it. This allows the
+	# same directory to appear multiple times. If this is not done, the
+	# second occurrence of the directory will be incorrectly interpreted
+	# as a recursion. See <https://github.com/cpburnz/python-path-specification/pull/7>.
+	del memo[dir_real]
 
 
 def iter_tree(root, on_error=None, follow_links=None):
@@ -358,7 +438,7 @@ def lookup_pattern(name: str) -> Callable[[AnyStr], Pattern]:
 	return _registered_patterns[name]
 
 
-def match_file(patterns: Iterable[Pattern], file: str) -> bool:
+def match_file(patterns: Iterable[Pattern], file: str, reversed: bool) -> bool:
 	"""
 	Matches the file to the patterns.
 
