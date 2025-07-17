@@ -56,7 +56,7 @@ pypy_bin := 'pypy3'
 pypy_run := 'dev/venv.sh dev/venv-pypy'
 
 _bench:
-	{{cpy_run}} pytest -c benchmarks/pytest.ini
+	{{cpy_run}} pytest -q -c benchmarks/pytest.ini
 
 _test_all:
 	{{cpy_run}} tox

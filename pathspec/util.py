@@ -438,7 +438,7 @@ def lookup_pattern(name: str) -> Callable[[AnyStr], Pattern]:
 	return _registered_patterns[name]
 
 
-def match_file(patterns: Iterable[Pattern], file: str, reversed: bool) -> bool:
+def match_file(patterns: Iterable[Pattern], file: str) -> bool:
 	"""
 	Matches the file to the patterns.
 

@@ -1,5 +1,5 @@
 """
-This module provides an object oriented interface for pattern matching of files.
+This module provides an object-oriented interface for pattern matching of files.
 """
 
 from collections.abc import (
@@ -19,12 +19,11 @@ from typing import (
 	Union,  # Replaced by `X | Y` in 3.10.
 	cast)
 
-try:
-	import hyperscan
-except ModuleNotFoundError:
-	hyperscan = None
-
 from . import util
+from .match import (
+	DefaultMatcher,
+	HyperscanMatcher,
+	Matcher)
 from .pattern import (
 	Pattern,
 	RegexPattern)
@@ -69,13 +68,19 @@ class PathSpec(object):
 		"""
 		if not isinstance(patterns, SequenceType):
 			patterns = list(patterns)
-		elif optimize and not isinstance(patterns, list):
-			patterns = list(patterns)
 
-		self.__db: Optional['hyperscan.Database'] = None
+		if optimize is None:
+			optimize = True
+
+		self._matcher: Matcher = self._make_matcher(patterns, optimize)
 		"""
-		*__db* (:class:`~hyperscan.Database` or :data:`None`) is the hyperscan
-		database containing the compiled patterns.
+		*_matcher* (:class:`.Matcher`) is the matcher to use.
+		"""
+
+		self._optimize: bool = optimize
+		"""
+		*_optimize* (:class:`bool`) is whether to optimize patterns using
+		:module:`hyperscan`.
 		"""
 
 		self.patterns: Sequence[Pattern] = patterns
@@ -84,16 +89,13 @@ class PathSpec(object):
 		contains the compiled patterns.
 		"""
 
-		if optimize:
-			self.__init_db()
-
 	def __add__(self: Self, other: "PathSpec") -> Self:
 		"""
 		Combines the :attr:`Pathspec.patterns` patterns from two :class:`PathSpec`
 		instances.
 		"""
 		if isinstance(other, PathSpec):
-			return self.__class__(self.patterns + other.patterns, optimize=self.optimize)
+			return self.__class__(self.patterns + other.patterns, optimize=self._optimize)
 		else:
 			return NotImplemented
 
@@ -115,6 +117,7 @@ class PathSpec(object):
 		"""
 		if isinstance(other, PathSpec):
 			self.patterns += other.patterns
+			self._matcher = self._make_matcher(self.patterns, self._optimize)
 			return self
 		else:
 			return NotImplemented
@@ -144,7 +147,7 @@ class PathSpec(object):
 		Returns the file check result (:class:`~pathspec.util.CheckResult`).
 		"""
 		norm_file = normalize_file(file, separators)
-		include, index = self._match_file(enumerate(self.patterns), norm_file)
+		include, index = self._matcher.match_file(norm_file)
 		return CheckResult(file, include, index)
 
 	def check_files(
@@ -169,10 +172,9 @@ class PathSpec(object):
 		if not _is_iterable(files):
 			raise TypeError(f"files:{files!r} is not an iterable.")
 
-		use_patterns = _filter_check_patterns(self.patterns)
 		for orig_file in files:
 			norm_file = normalize_file(orig_file, separators)
-			include, index = self._match_file(use_patterns, norm_file)
+			include, index = self._matcher.match_file(norm_file)
 			yield CheckResult(orig_file, include, index)
 
 	def check_tree_files(
@@ -247,34 +249,26 @@ class PathSpec(object):
 		patterns = [pattern_factory(line) for line in lines if line]
 		return cls(patterns, optimize=optimize)
 
-	def __init_db(self):
+	@staticmethod
+	def _make_matcher(
+		patterns: Sequence[Pattern],
+		optimize: bool,
+	) -> Matcher:
 		"""
-		Create the hyperscan database.
+		Create the matcher for the patterns.
+
+		*patterns* (:class:`~collections.abc.Sequence`) contains each compiled
+		pattern (:class:`.Pattern`).
+
+		*optimize* (:class:`bool`) is whether to optimize the patterns using
+		:module:`hyperscan`.
+
+		Returns the matcher (:class:`Matcher`).
 		"""
-		# Prepare patterns.
-		exprs: list[bytes] = []
-		ids: list[int] = []
-		for i, pattern in enumerate(self.patterns):
-			if pattern.include is None:
-				continue
-
-			assert isinstance(pattern, RegexPattern), pattern
-			regex = pattern.regex.pattern
-
-			if isinstance(regex, bytes):
-				regex_bytes = regex
-			else:
-				assert isinstance(regex, str), regex
-				regex_bytes = regex.encode('utf8')
-
-			exprs.append(regex_bytes)
-			ids.append(i)
-
-		# Create database.
-		self.__db = hyperscan.Database()
-		self.__db.compile(
-			expressions=exprs, ids=ids, elements=len(exprs)
-		)
+		if optimize:
+			return HyperscanMatcher(cast(Sequence[RegexPattern], patterns))
+		else:
+			return DefaultMatcher(patterns)
 
 	def match_entries(
 		self,
@@ -304,23 +298,15 @@ class PathSpec(object):
 		if not _is_iterable(entries):
 			raise TypeError(f"entries:{entries!r} is not an iterable.")
 
-		use_patterns = _filter_check_patterns(self.patterns)
 		for entry in entries:
 			norm_file = normalize_file(entry.path, separators)
-			include, _index = self._match_file(use_patterns, norm_file)
+			include, _index = self._matcher.match_file(norm_file)
 
 			if negate:
 				include = not include
 
 			if include:
 				yield entry
-
-	_match_file = staticmethod(util.check_match_file)
-	"""
-	Match files using the `check_match_file()` utility function. Subclasses may
-	override this method as an instance method. It does not have to be a static
-	method. The signature for this method is subject to change.
-	"""
 
 	def match_file(
 		self,
@@ -340,7 +326,7 @@ class PathSpec(object):
 		Returns :data:`True` if *file* matched; otherwise, :data:`False`.
 		"""
 		norm_file = normalize_file(file, separators)
-		include, _index = self._match_file(enumerate(self.patterns), norm_file)
+		include, _index = self._matcher.match_file(norm_file)
 		return bool(include)
 
 	def match_files(
@@ -372,35 +358,9 @@ class PathSpec(object):
 		if not _is_iterable(files):
 			raise TypeError(f"files:{files!r} is not an iterable.")
 
-		# TODO: Use a matcher class?
-		# - Then test performance.
-
-		if self.__db is not None:
-			patterns = cast(list[RegexPattern], self.patterns)
-			include = False
-
-			def on_match(expr_id: int, _from: int, _to: int, _flags: int, context) -> Optional[bool]:
-				nonlocal include
-				include = patterns[expr_id].include
-				#print(f"[{context}] {expr_id} {include}: {patterns[expr_id].pattern!r}")
-
-			for orig_file in files:
-				include = False
-				use_file = orig_file.encode('utf8')
-				self.__db.scan(use_file, match_event_handler=on_match, context=orig_file)
-				if negate:
-					include = not include
-
-				if include:
-					yield orig_file
-
-			return
-
-		use_patterns = _filter_check_patterns(self.patterns)
-		use_patterns.reverse()
 		for orig_file in files:
 			norm_file = normalize_file(orig_file, separators)
-			include, _index = self._match_file(use_patterns, norm_file, True)
+			include, _index = self._matcher.match_file(norm_file)
 
 			if negate:
 				include = not include
