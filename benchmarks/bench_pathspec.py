@@ -1,3 +1,6 @@
+"""
+This module defines benchmarks for :class:`.PathSpec`.
+"""
 
 import pytest
 from pytest_benchmark.fixture import (
@@ -5,8 +8,14 @@ from pytest_benchmark.fixture import (
 
 from pathspec import (
 	PathSpec)
-from benchmarks.patches import (
-	match_files_v0)
+from pathspec.match import (
+	DefaultMatcher)
+from benchmarks.match import (
+	HyperscanBlockClosureMatcher,
+	HyperscanBlockStateMatcher,
+	HyperscanStreamClosureMatcher,
+	HyperscanStreamStateMatcher)
+
 
 @pytest.mark.benchmark(group="PathSpec.match_files")
 def bench_all_v0(
@@ -15,7 +24,7 @@ def bench_all_v0(
 	cpython_gi_lines_all: list[str],
 ):
 	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all)
-	spec.match_files = match_files_v0.__get__(spec)
+	spec._matcher = DefaultMatcher(spec.patterns, no_filter=True, no_reverse=True)
 	benchmark(run_match, spec, cpython_files)
 
 
@@ -26,6 +35,7 @@ def bench_all_v1(
 	cpython_gi_lines_all: list[str],
 ):
 	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all)
+	spec._matcher = DefaultMatcher(spec.patterns, no_filter=True)
 	benchmark(run_match, spec, cpython_files)
 
 
@@ -36,7 +46,7 @@ def bench_filt_v0(
 	cpython_gi_lines_filt: list[str],
 ):
 	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_filt)
-	spec.match_files = match_files_v0.__get__(spec)
+	spec._matcher = DefaultMatcher(spec.patterns, no_reverse=True)
 	benchmark(run_match, spec, cpython_files)
 
 
@@ -51,17 +61,6 @@ def bench_filt_v1(
 
 
 @pytest.mark.benchmark(group="PathSpec.match_files")
-def bench_opt_v0(
-	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
-	cpython_gi_lines_all: list[str],
-):
-	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize=True)
-	spec.match_files = match_files_v0.__get__(spec)
-	benchmark(run_match, spec, cpython_files)
-
-
-@pytest.mark.benchmark(group="PathSpec.match_files")
 def bench_opt_v1(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
@@ -69,6 +68,51 @@ def bench_opt_v1(
 ):
 	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize=True)
 	benchmark(run_match, spec, cpython_files)
+
+
+@pytest.mark.benchmark(group="PathSpec.match_files")
+def bench_opt_block_closure(
+	benchmark: BenchmarkFixture,
+	cpython_files: set[str],
+	cpython_gi_lines_all: list[str],
+):
+	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize=True)
+	spec._matcher = HyperscanBlockClosureMatcher(spec.patterns)
+	benchmark(run_match, spec, cpython_files)
+
+
+@pytest.mark.benchmark(group="PathSpec.match_files")
+def bench_opt_block_state(
+	benchmark: BenchmarkFixture,
+	cpython_files: set[str],
+	cpython_gi_lines_all: list[str],
+):
+	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize=True)
+	spec._matcher = HyperscanBlockStateMatcher(spec.patterns)
+	benchmark(run_match, spec, cpython_files)
+
+
+@pytest.mark.benchmark(group="PathSpec.match_files")
+def bench_opt_stream_closure(
+	benchmark: BenchmarkFixture,
+	cpython_files: set[str],
+	cpython_gi_lines_all: list[str],
+):
+	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize=True)
+	spec._matcher = HyperscanStreamClosureMatcher(spec.patterns)
+	benchmark(run_match, spec, cpython_files)
+
+
+# WARNING: This segfaults.
+# @pytest.mark.benchmark(group="PathSpec.match_files")
+# def bench_opt_stream_state(
+# 	benchmark: BenchmarkFixture,
+# 	cpython_files: set[str],
+# 	cpython_gi_lines_all: list[str],
+# ):
+# 	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize=True)
+# 	spec._matcher = HyperscanStreamStateMatcher(spec.patterns)
+# 	benchmark(run_match, spec, cpython_files)
 
 
 def run_match(spec: PathSpec, files: set[str]):

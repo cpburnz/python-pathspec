@@ -197,8 +197,6 @@ class _GiDefaultMatcher(DefaultMatcher):
 		return out_include, out_index
 
 
-
-
 class _GiHyperscanMatcher(HyperscanMatcher):
 	"""
 	The :class:`_GiHyperscanMatcher` class uses a hyperscan database in block mode
@@ -215,57 +213,47 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 		or :data:`None`), and the index of the last matched pattern (:class:`int` or
 		:data:`None`).
 		"""
-		is_reversed = self._is_reversed
+		assert not self._is_reversed, self._is_reversed
+		self.__out = (None, None, 0)
+		self._db.scan(
+			file.encode('utf8'), match_event_handler=self.__on_match, context=file,
+		)
+		return self.__out[:2]
 
-		out_include: Optional[bool] = None
-		out_index: Optional[int] = None
-		out_priority = 0
+	def __on_match(
+		self,
+		expr_id: int,
+		_from: int,
+		_to: int,
+		_flags: int,
+		context: Any,
+	) -> Optional[bool]:
+		"""
+		Called on each match.
 
-		def on_match(
-			expr_id: int, _from: int, _to: int, _flags: int, _context: Any,
-		) -> Optional[bool]:
-			nonlocal out_include, out_index, out_priority
-			# TODO: How to use capture group?
-			# - Idea: Run Pythonregex.
-			# - Idea: Generate dir-mark and non-dir-mark regexes for hyperscan, and
-			#   run from there.
+		*expr_id* (:class:`int`) is the expression id (index) of the matched
+		pattern.
 
-			#print(f"[{context}] {expr_id} {include}: {patterns[expr_id].pattern!r}")
+		*context* (:class:`str`) is the normalized file.
+		"""
+		#print(f"[{context}] {expr_id} {include}: {patterns[expr_id].pattern!r}")
+		file: str = context
+		pattern = self._patterns[expr_id]
+		if pattern.include:
+			# Rematch pattern because Hyperscan does not support capture groups.
+			match = pattern.match_file(file)
 
+			# Check for directory marker.
+			dir_mark = match.match.groupdict().get(_DIR_MARK)
 
-		# TODO: Convert this.
-		for index, pattern in self._patterns:
-			if (
-				pattern.include is not None
-				and (match := pattern.match_file(file)) is not None
-			):
-				# Pattern matched.
+			if dir_mark:
+				# Pattern matched by a directory pattern.
+				priority = 1
+			else:
+				# Pattern matched by a file pattern.
+				priority = 2
 
-				# Check for directory marker.
-				dir_mark = match.match.groupdict().get(_DIR_MARK)
-
-				if dir_mark:
-					# Pattern matched by a directory pattern.
-					priority = 1
-				else:
-					# Pattern matched by a file pattern.
-					priority = 2
-
-				if pattern.include and dir_mark:
-					out_include = pattern.include
-					out_index = index
-					out_priority = priority
-				elif priority >= out_priority:
-					out_include = pattern.include
-					out_index = index
-					out_priority = priority
-
-				if is_reversed and priority == 2:
-					# Patterns are being checked in reverse order. The first pattern that
-					# matches with the highest priority takes precedence.
-					break
-
-
-
-		self._db.scan(file.encode('utf8'), match_event_handler=on_match)
-		return out_include, out_index
+			if pattern.include and dir_mark:
+				self.__out = (pattern.include, expr_id, priority)
+			elif priority >= self.__out[2]:
+				self.__out = (pattern.include, expr_id, priority)

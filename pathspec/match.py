@@ -69,7 +69,9 @@ class DefaultMatcher(Matcher):
 		(:data:`True`), or reverse the order (:data:`True`).
 		"""
 		self._is_reversed = not no_reverse
-		self._patterns = _enumerate_patterns(patterns, no_filter, no_reverse)
+		self._patterns = _enumerate_patterns(
+			patterns, no_filter=no_filter, no_reverse=no_reverse,
+		)
 
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
 		"""
@@ -90,12 +92,7 @@ class HyperscanMatcher(Matcher):
 	for matching files.
 	"""
 
-	def __init__(
-		self,
-		patterns: Iterable[RegexPattern],
-		*,
-		no_reverse: Optional[bool] = None,
-	) -> None:
+	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
 		"""
 		Initialize the :class:`HyperscanMatcher` instance.
 
@@ -108,14 +105,13 @@ class HyperscanMatcher(Matcher):
 		if hyperscan is None:
 			raise hyperscan_error
 
-		if no_reverse is None:
-			no_reverse = True
-
-		assert no_reverse is True, no_reverse
-		use_patterns = _enumerate_patterns(patterns, False, no_reverse)
+		use_patterns = _enumerate_patterns(
+			patterns, no_filter=False, no_reverse=True,
+		)
 
 		self._db = self.__make_db(use_patterns)
-		self._is_reversed = not no_reverse
+		self._is_reversed = False
+		self.__out: Tuple[Optional[bool], Optional[int]] = (None, None)
 		self._patterns = dict(use_patterns)
 
 	@staticmethod
@@ -128,9 +124,6 @@ class HyperscanMatcher(Matcher):
 
 		Returns the database (:class:`hyperscan.Database`).
 		"""
-		# TODO: Can I return True (for HS_SCAN_TERMINATED) in the match handler, and
-		# reuse the database in streaming mode?
-
 		# Create database.
 		db = hyperscan.Database(mode=hyperscan.HS_MODE_BLOCK)
 
@@ -172,39 +165,12 @@ class HyperscanMatcher(Matcher):
 		or :data:`None`), and the index of the last matched pattern (:class:`int` or
 		:data:`None`).
 		"""
-		out_include = False
-		out_index: Optional[int] = None
-
-		def on_match(
-			expr_id: int, _from: int, _to: int, _flags: int, _context: Any,
-		) -> Optional[bool]:
-			nonlocal out_include, out_index
-			include = self._patterns[expr_id].include
-			if include:
-				out_include = include
-				out_index = expr_id
-
-			#print(f"[{context}] {expr_id} {include}: {patterns[expr_id].pattern!r}")
-
-		self._db.scan(file.encode('utf8'), match_event_handler=on_match)
-		return out_include, out_index
-
-
-class HyperscanMatcher2(HyperscanMatcher):
-
-	def __init__(
-		self,
-		patterns: Iterable[RegexPattern],
-		*,
-		no_reverse: Optional[bool] = None,
-	) -> None:
-		super().__init__(patterns, no_reverse=no_reverse)
-		self._out: Tuple[Optional[bool], Optional[int]] = (None, None)
-
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
-		self._out = (None, None)
+		assert not self._is_reversed, self._is_reversed
+		# NOTICE: According to benchmarking, a method callback is 33% faster than
+		# using a closure here.
+		self.__out = (None, None)
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
-		return self._out
+		return self.__out
 
 	def __on_match(
 		self,
@@ -214,9 +180,16 @@ class HyperscanMatcher2(HyperscanMatcher):
 		_flags: int,
 		_context: Any,
 	) -> Optional[bool]:
+		"""
+		Called on each match.
+
+		*expr_id* (:class:`int`) is the expression id (index) of the matched
+		pattern.
+		"""
 		include = self._patterns[expr_id].include
 		if include:
-			self._out = (include, expr_id)
+			# Store match.
+			self.__out = (include, expr_id)
 
 
 def _enumerate_patterns(
