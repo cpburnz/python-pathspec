@@ -1,5 +1,5 @@
 """
-This module defines matchers which are used by :class:`pathspec.PathSpec`
+This module defines matchers which are used by :class:`~pathspec.PathSpec` to
 actually match files against patterns.
 """
 from __future__ import annotations
@@ -29,6 +29,10 @@ TPattern = TypeVar("TPattern", bound=Pattern)
 
 
 class Matcher(object):
+	"""
+	The :class:`Matcher` class is the abstract class defining how to match files
+	against patterns.
+	"""
 
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
 		"""
@@ -98,9 +102,6 @@ class HyperscanMatcher(Matcher):
 
 		*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the compiled
 		patterns.
-
-		*no_reverse* (:class:`bool`) is whether to keep the pattern order
-		(:data:`True`), or reverse the order (:data:`True`).
 		"""
 		if hyperscan is None:
 			raise hyperscan_error
@@ -110,8 +111,7 @@ class HyperscanMatcher(Matcher):
 		)
 
 		self._db = self.__make_db(use_patterns)
-		self._is_reversed = False
-		self.__out: Tuple[Optional[bool], Optional[int]] = (None, None)
+		self._out: Tuple[Optional[bool], Optional[int]] = (None, None)
 		self._patterns = dict(use_patterns)
 
 	@staticmethod
@@ -165,12 +165,11 @@ class HyperscanMatcher(Matcher):
 		or :data:`None`), and the index of the last matched pattern (:class:`int` or
 		:data:`None`).
 		"""
-		assert not self._is_reversed, self._is_reversed
 		# NOTICE: According to benchmarking, a method callback is 33% faster than
 		# using a closure here.
-		self.__out = (None, None)
+		self._out = (None, None)
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
-		return self.__out
+		return self._out
 
 	def __on_match(
 		self,
@@ -189,7 +188,7 @@ class HyperscanMatcher(Matcher):
 		include = self._patterns[expr_id].include
 		if include:
 			# Store match.
-			self.__out = (include, expr_id)
+			self._out = (include, expr_id)
 
 
 def _enumerate_patterns(

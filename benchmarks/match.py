@@ -8,7 +8,6 @@ from typing import (
 	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
 	List,  # Replaced by `list` in 3.9.
 	Optional,  # Replaced by `X | None` in 3.10.
-	TypeVar,
 	Tuple)  # Replaced by `tuple` in 3.9.
 
 try:
@@ -18,18 +17,13 @@ except ModuleNotFoundError as e:
 	hyperscan = None
 	hyperscan_error = e
 
-from pathspec.gitignore import (_GiDefaultMatcher, _GiHyperscanMatcher)
 from pathspec.match import (
-	HyperscanMatcher,
 	Matcher,
 	_enumerate_patterns)
 from pathspec.pattern import (
-	Pattern,
 	RegexPattern)
 from pathspec.patterns.gitwildmatch import (
 	_DIR_MARK)
-from pathspec.util import (
-	check_match_file)
 
 
 class _HyperscanBlockMatcher(Matcher):
@@ -56,7 +50,6 @@ class _HyperscanBlockMatcher(Matcher):
 		)
 
 		self._db = self.__make_db(use_patterns)
-		self._is_reversed = False
 		self._patterns = dict(use_patterns)
 
 	@staticmethod
@@ -108,7 +101,6 @@ class HyperscanBlockClosureMatcher(_HyperscanBlockMatcher):
 	"""
 
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
-		assert not self._is_reversed, self._is_reversed
 		out_include = False
 		out_index: Optional[int] = None
 
@@ -137,7 +129,6 @@ class HyperscanBlockStateMatcher(_HyperscanBlockMatcher):
 		self.__out: Tuple[Optional[bool], Optional[int]] = (None, None)
 
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
-		assert not self._is_reversed, self._is_reversed
 		self.__out = (None, None)
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
 		return self.__out
@@ -170,7 +161,6 @@ class _HyperscanStreamMatcher(Matcher):
 		)
 
 		self._db = self.__make_db(use_patterns)
-		self._is_reversed = True
 		self._patterns = dict(use_patterns)
 
 	@staticmethod
@@ -214,7 +204,6 @@ class HyperscanStreamClosureMatcher(_HyperscanStreamMatcher):
 	"""
 
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
-		assert self._is_reversed, self._is_reversed
 		out_include = False
 		out_index: Optional[int] = None
 
@@ -249,7 +238,6 @@ class HyperscanStreamStateMatcher(_HyperscanStreamMatcher):
 		self.__out: Tuple[Optional[bool], Optional[int]] = (None, None)
 
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
-		assert self._is_reversed, self._is_reversed
 		self.__out = (None, None)
 
 		with self._db.stream(match_event_handler=self.__on_match) as stream:
@@ -280,7 +268,6 @@ class GiHyperscanBlockClosureMatcher(_HyperscanBlockMatcher):
 	"""
 
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
-		assert not self._is_reversed, self._is_reversed
 		out_include: Optional[bool] = None
 		out_index: Optional[int] = None
 		out_priority = 0
@@ -328,7 +315,6 @@ class GiHyperscanBlockStateMatcher(_HyperscanBlockMatcher):
 
 	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
 		super().__init__(patterns)
-		self.__file: Optional[str] = None
 		self.__out: Tuple[Optional[bool], Optional[int], Optional[int]] = (None, None, 0)
 
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
@@ -341,7 +327,6 @@ class GiHyperscanBlockStateMatcher(_HyperscanBlockMatcher):
 		or :data:`None`), and the index of the last matched pattern (:class:`int` or
 		:data:`None`).
 		"""
-		assert not self._is_reversed, self._is_reversed
 		self.__out = (None, None, 0)
 		self._db.scan(
 			file.encode('utf8'), match_event_handler=self.__on_match, context=file,
@@ -381,6 +366,68 @@ class GiHyperscanBlockStateMatcher(_HyperscanBlockMatcher):
 				self.__out = (pattern.include, expr_id, priority)
 
 
+# TODO Idea: Generate dir-mark and non-dir-mark regexes for hyperscan, and
+# run from there.
+class GiHyperscanBlockStateMatcher2(_HyperscanBlockMatcher):
+	"""
+	The :class:`GiHyperscanBlockStateMatcher` class uses a hyperscan database in
+	block mode for matching files, and stores state in variables.
+	"""
+
+	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
+		super().__init__(patterns)
+		self.__out: Tuple[Optional[bool], Optional[int], Optional[int]] = (None, None, 0)
+
+	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+		"""
+		Check the file against the patterns.
+
+		*file* (:class:`str`) is the normalized file path to check.
+
+		Returns a :class:`tuple` containing whether to include *file* (:class:`bool`
+		or :data:`None`), and the index of the last matched pattern (:class:`int` or
+		:data:`None`).
+		"""
+		self.__out = (None, None, 0)
+		self._db.scan(
+			file.encode('utf8'), match_event_handler=self.__on_match, context=file,
+		)
+		return self.__out[:2]
+
+	# TODO Idea: Generate dir-mark and non-dir-mark regexes for hyperscan, and
+	# run from there.
+	def __on_match(
+		self,
+		expr_id: int,
+		_from: int,
+		_to: int,
+		_flags: int,
+		context: Any,
+	) -> Optional[bool]:
+		#print(f"[{context}] {expr_id} {include}: {patterns[expr_id].pattern!r}")
+		file: str = context
+		pattern = self._patterns[expr_id]
+		if pattern.include:
+			# Rematch pattern because Hyperscan does not support capture groups.
+			match = pattern.match_file(file)
+
+			# Check for directory marker.
+			dir_mark = match.match.groupdict().get(_DIR_MARK)
+
+			if dir_mark:
+				# Pattern matched by a directory pattern.
+				priority = 1
+			else:
+				# Pattern matched by a file pattern.
+				priority = 2
+
+			if pattern.include and dir_mark:
+				self.__out = (pattern.include, expr_id, priority)
+			elif priority >= self.__out[2]:
+				self.__out = (pattern.include, expr_id, priority)
+
+
+
 class GiHyperscanStreamClosureMatcher(_HyperscanStreamMatcher):
 	"""
 	The :class:`GiHyperscanStreamClosureMatcher` class uses a hyperscan database
@@ -388,7 +435,6 @@ class GiHyperscanStreamClosureMatcher(_HyperscanStreamMatcher):
 	"""
 
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
-		assert self._is_reversed, self._is_reversed
 		out_include: Optional[bool] = None
 		out_index: Optional[int] = None
 		out_priority = 0
@@ -456,8 +502,6 @@ class GiHyperscanStreamStateMatcher(_HyperscanStreamMatcher):
 		or :data:`None`), and the index of the last matched pattern (:class:`int` or
 		:data:`None`).
 		"""
-		assert self._is_reversed, self._is_reversed
-
 		self.__out = (None, None, 0)
 		with self._db.stream(match_event_handler=self.__on_match, context=file) as stream:
 			stream.scan(file.encode('utf8'))

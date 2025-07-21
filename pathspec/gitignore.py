@@ -1,6 +1,6 @@
 """
-This module provides :class:`.GitIgnoreSpec` which replicates
-*.gitignore* behavior.
+This module provides :class:`.GitIgnoreSpec` which replicates *.gitignore*
+behavior.
 """
 
 from typing import (
@@ -34,22 +34,22 @@ from .util import (
 
 Self = TypeVar("Self", bound="GitIgnoreSpec")
 """
-:class:`GitIgnoreSpec` self type hint to support Python v<3.11 using PEP
-673 recommendation.
+:class:`GitIgnoreSpec` self type hint to support Python v<3.11 using PEP 673
+recommendation.
 """
 
 
 class GitIgnoreSpec(PathSpec):
 	"""
-	The :class:`GitIgnoreSpec` class extends :class:`pathspec.pathspec.PathSpec` to
-	replicate *.gitignore* behavior.
+	The :class:`GitIgnoreSpec` class extends :class:`pathspec.pathspec.PathSpec`
+	to replicate *.gitignore* behavior.
 	"""
 
 	def __eq__(self, other: object) -> bool:
 		"""
 		Tests the equality of this gitignore-spec with *other* (:class:`GitIgnoreSpec`)
-		by comparing their :attr:`~pathspec.pattern.Pattern`
-		attributes. A non-:class:`GitIgnoreSpec` will not compare equal.
+		by comparing their :attr:`~pathspec.pattern.Pattern` attributes. A
+		non-:class:`GitIgnoreSpec` will not compare equal.
 		"""
 		if isinstance(other, GitIgnoreSpec):
 			return super().__eq__(other)
@@ -92,21 +92,19 @@ class GitIgnoreSpec(PathSpec):
 		"""
 		Compiles the pattern lines.
 
-		*lines* (:class:`~collections.abc.Iterable`) yields each uncompiled
-		pattern (:class:`str`). This simply has to yield each line so it can
-		be a :class:`io.TextIOBase` (e.g., from :func:`open` or
-		:class:`io.StringIO`) or the result from :meth:`str.splitlines`.
+		*lines* (:class:`~collections.abc.Iterable`) yields each uncompiled pattern
+		(:class:`str`). This simply has to yield each line so it can be a
+		:class:`io.TextIOBase` (e.g., from :func:`open` or :class:`io.StringIO`) or
+		the result from :meth:`str.splitlines`.
 
-		*pattern_factory* can be :data:`None`, the name of a registered
-		pattern factory (:class:`str`), or a :class:`~collections.abc.Callable`
-		used to compile patterns. The callable must accept an uncompiled
-		pattern (:class:`str`) and return the compiled pattern
-		(:class:`pathspec.pattern.Pattern`).
-		Default is :data:`None` for :class:`.GitWildMatchPattern`).
+		*pattern_factory* can be :data:`None`, the name of a registered pattern
+		factory (:class:`str`), or a :class:`~collections.abc.Callable` used to
+		compile patterns. The callable must accept an uncompiled pattern
+		(:class:`str`) and return the compiled pattern (:class:`pathspec.pattern.Pattern`).
+		Default is :data:`None` for :class:`.GitWildMatchPattern`.
 
 		*optimize* (:class:`bool` or :data:`None`) is whether to optimize the
-		patterns using :module:`hyperscan`. Default is :data:`None` for
-		:data:`False`.
+		patterns using :module:`hyperscan`. Default is :data:`None` for :data:`False`.
 
 		Returns the :class:`GitIgnoreSpec` instance.
 		"""
@@ -203,6 +201,16 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 	for matching files.
 	"""
 
+	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
+		"""
+		Initialize the :class:`HyperscanMatcher` instance.
+
+		*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the compiled
+		patterns.
+		"""
+		super().__init__(patterns)
+		self._out: Tuple[Optional[bool], Optional[int], Optional[int]] = (None, None, 0)
+
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
 		"""
 		Check the file against the patterns.
@@ -213,12 +221,11 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 		or :data:`None`), and the index of the last matched pattern (:class:`int` or
 		:data:`None`).
 		"""
-		assert not self._is_reversed, self._is_reversed
-		self.__out = (None, None, 0)
+		self._out = (None, None, 0)
 		self._db.scan(
 			file.encode('utf8'), match_event_handler=self.__on_match, context=file,
 		)
-		return self.__out[:2]
+		return self._out[:2]
 
 	def __on_match(
 		self,
@@ -254,6 +261,6 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 				priority = 2
 
 			if pattern.include and dir_mark:
-				self.__out = (pattern.include, expr_id, priority)
-			elif priority >= self.__out[2]:
-				self.__out = (pattern.include, expr_id, priority)
+				self._out = (pattern.include, expr_id, priority)
+			elif priority >= self._out[2]:
+				self._out = (pattern.include, expr_id, priority)

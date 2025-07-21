@@ -63,8 +63,7 @@ class PathSpec(object):
 		will be converted to a :class:`list`.
 
 		*optimize* (:class:`bool` or :data:`None`) is whether to optimize the
-		patterns using :module:`hyperscan`. Default is :data:`None` for
-		:data:`False`.
+		patterns using :module:`hyperscan`. Default is :data:`None` for :data:`False`.
 		"""
 		if not isinstance(patterns, SequenceType):
 			patterns = list(patterns)
@@ -124,8 +123,7 @@ class PathSpec(object):
 
 	def __len__(self) -> int:
 		"""
-		Returns the number of compiled patterns this path-spec contains
-		(:class:`int`).
+		Returns the number of compiled patterns this path-spec contains (:class:`int`).
 		"""
 		return len(self.patterns)
 
@@ -137,8 +135,8 @@ class PathSpec(object):
 		"""
 		Check the files against this path-spec.
 
-		*file* (:class:`str` or :class:`os.PathLike`) is the file path to be
-		matched against :attr:`self.patterns <PathSpec.patterns>`.
+		*file* (:class:`str` or :class:`os.PathLike`) is the file path to be matched
+		against :attr:`self.patterns <PathSpec.patterns>`.
 
 		*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
 		:data:`None`) optionally contains the path separators to normalize. See
@@ -316,8 +314,8 @@ class PathSpec(object):
 		"""
 		Matches the file to this path-spec.
 
-		*file* (:class:`str` or :class:`os.PathLike`) is the file path to be
-		matched against :attr:`self.patterns <PathSpec.patterns>`.
+		*file* (:class:`str` or :class:`os.PathLike`) is the file path to be matched
+		against :attr:`self.patterns <PathSpec.patterns>`.
 
 		*separators* (:class:`~collections.abc.Collection` of :class:`str`)
 		optionally contains the path separators to normalize. See
@@ -432,8 +430,7 @@ class PathSpec(object):
 		exclude the file rather than include it. Default is :data:`None` for
 		:data:`False`.
 
-		Returns the matched files (:class:`~collections.abc.Iterable` of
-		:class:`str`).
+		Returns the matched files (:class:`~collections.abc.Iterable` of :class:`str`).
 		"""
 		files = util.iter_tree_files(root, on_error=on_error, follow_links=follow_links)
 		yield from self.match_files(files, negate=negate)
