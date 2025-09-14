@@ -17,6 +17,8 @@ except ModuleNotFoundError as e:
 	hyperscan = None
 	hyperscan_error = e
 
+# TODO: Look into re2 <https://pypi.org/project/google-re2>.
+
 from pathspec.match import (
 	Matcher,
 	_enumerate_patterns)

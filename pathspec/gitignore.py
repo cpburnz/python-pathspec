@@ -8,6 +8,7 @@ from typing import (
 	AnyStr,
 	Callable,  # Replaced by `collections.abc.Callable` in 3.9.
 	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
+	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
 	Sequence,  # Replaced by `collections.abc.Sequence` in 3.9.
 	Tuple,  # Replaced by `tuple` in 3.9.
@@ -20,7 +21,8 @@ from typing import (
 from .match import (
 	DefaultMatcher,
 	HyperscanMatcher,
-	Matcher)
+	Matcher,
+	_OPTIMIZE_LIB)
 from .pathspec import (
 	PathSpec)
 from .pattern import (
@@ -66,7 +68,7 @@ class GitIgnoreSpec(PathSpec):
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern]],
 		lines: Iterable[AnyStr],
 		*,
-		optimize: Optional[bool] = None,
+		optimize: Union[bool, Literal['hyperscan'], None] = None,
 	) -> Self:
 		...
 
@@ -77,7 +79,7 @@ class GitIgnoreSpec(PathSpec):
 		lines: Iterable[AnyStr],
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern], None] = None,
 		*,
-		optimize: Optional[bool] = None,
+		optimize: Union[bool, Literal['hyperscan'], None] = None,
 	) -> Self:
 		...
 
@@ -87,7 +89,7 @@ class GitIgnoreSpec(PathSpec):
 		lines: Iterable[AnyStr],
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern], None] = None,
 		*,
-		optimize: Optional[bool] = None,
+		optimize: Union[bool, Literal['hyperscan'], None] = None,
 	) -> Self:
 		"""
 		Compiles the pattern lines.
@@ -103,8 +105,10 @@ class GitIgnoreSpec(PathSpec):
 		(:class:`str`) and return the compiled pattern (:class:`pathspec.pattern.Pattern`).
 		Default is :data:`None` for :class:`.GitWildMatchPattern`.
 
-		*optimize* (:class:`bool` or :data:`None`) is whether to optimize the
-		patterns using :module:`hyperscan`. Default is :data:`None` for :data:`False`.
+		*optimize* (:class:`bool`, :class:`str`, or :data:`None`) is whether to
+		optimize the patterns, and optionally which library to use. If :data:`True`,
+		use the best available library. If :class:`str`, must be one of the
+		following libraries: "hyperscan". Default is :data:`None` for :data:`False`.
 
 		Returns the :class:`GitIgnoreSpec` instance.
 		"""
@@ -121,7 +125,7 @@ class GitIgnoreSpec(PathSpec):
 	@staticmethod
 	def _make_matcher(
 		patterns: Sequence[Pattern],
-		optimize: bool,
+		optimize: Union[bool, Literal['hyperscan']],
 	) -> Matcher:
 		"""
 		Create the matcher for the patterns.
@@ -129,12 +133,15 @@ class GitIgnoreSpec(PathSpec):
 		*patterns* (:class:`~collections.abc.Sequence`) contains each compiled
 		pattern (:class:`.Pattern`).
 
-		*optimize* (:class:`bool`) is whether to optimize the patterns using
-		:module:`hyperscan`.
+		*optimize* (:class:`bool` or :class:`str`) is whether to optimize the
+		patterns, and optionally which library to use.
 
 		Returns the matcher (:class:`Matcher`).
 		"""
-		if optimize:
+		if optimize is True:
+			optimize = _OPTIMIZE_LIB
+
+		if optimize == 'hyperscan':
 			return _GiHyperscanMatcher(cast(Sequence[RegexPattern], patterns))
 		else:
 			return _GiDefaultMatcher(patterns)
@@ -201,6 +208,8 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 	for matching files.
 	"""
 
+	_out: Tuple[Optional[bool], Optional[int], int]
+
 	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
 		"""
 		Initialize the :class:`HyperscanMatcher` instance.
@@ -209,7 +218,7 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 		patterns.
 		"""
 		super().__init__(patterns)
-		self._out: Tuple[Optional[bool], Optional[int], Optional[int]] = (None, None, 0)
+		self._out = (None, None, 0)
 
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
 		"""
@@ -222,9 +231,7 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 		:data:`None`).
 		"""
 		self._out = (None, None, 0)
-		self._db.scan(
-			file.encode('utf8'), match_event_handler=self.__on_match, context=file,
-		)
+		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
 		return self._out[:2]
 
 	def __on_match(
@@ -233,34 +240,26 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 		_from: int,
 		_to: int,
 		_flags: int,
-		context: Any,
+		_context: Any,
 	) -> Optional[bool]:
 		"""
 		Called on each match.
 
 		*expr_id* (:class:`int`) is the expression id (index) of the matched
 		pattern.
-
-		*context* (:class:`str`) is the normalized file.
 		"""
-		#print(f"[{context}] {expr_id} {include}: {patterns[expr_id].pattern!r}")
-		file: str = context
-		pattern = self._patterns[expr_id]
-		if pattern.include:
-			# Rematch pattern because Hyperscan does not support capture groups.
-			match = pattern.match_file(file)
-
-			# Check for directory marker.
-			dir_mark = match.match.groupdict().get(_DIR_MARK)
-
-			if dir_mark:
+		expr_dat = self._expr_data[expr_id]
+		include = expr_dat.include
+		if include:
+			has_dir_mark = expr_dat.has_dir_mark
+			if has_dir_mark:
 				# Pattern matched by a directory pattern.
 				priority = 1
 			else:
 				# Pattern matched by a file pattern.
 				priority = 2
 
-			if pattern.include and dir_mark:
-				self._out = (pattern.include, expr_id, priority)
+			if include and has_dir_mark:
+				self._out = (include, expr_id, priority)
 			elif priority >= self._out[2]:
-				self._out = (pattern.include, expr_id, priority)
+				self._out = (include, expr_id, priority)

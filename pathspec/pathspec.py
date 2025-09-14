@@ -12,6 +12,7 @@ from typing import (
 	Collection,  # Replaced by `collections.abc.Collection` in 3.9.
 	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
 	Iterator,  # Replaced by `collections.abc.Iterator` in 3.9.
+	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
 	Sequence,  # Replaced by `collections.abc.Sequence` in 3.9.
 	Type,  # Replaced by `type` in 3.9.
@@ -23,7 +24,8 @@ from . import util
 from .match import (
 	DefaultMatcher,
 	HyperscanMatcher,
-	Matcher)
+	Matcher,
+	_OPTIMIZE_LIB)
 from .pattern import (
 	Pattern,
 	RegexPattern)
@@ -32,7 +34,6 @@ from .util import (
 	StrPath,
 	TStrPath,
 	TreeEntry,
-	_filter_check_patterns,
 	_is_iterable,
 	normalize_file)
 
@@ -53,7 +54,7 @@ class PathSpec(object):
 		self,
 		patterns: Union[Sequence[Pattern], Iterable[Pattern]],
 		*,
-		optimize: Optional[bool] = None,
+		optimize: Union[bool, Literal['hyperscan'], None] = None,
 	) -> None:
 		"""
 		Initializes the :class:`PathSpec` instance.
@@ -62,8 +63,10 @@ class PathSpec(object):
 		contains each compiled pattern (:class:`.Pattern`). If not a sequence, it
 		will be converted to a :class:`list`.
 
-		*optimize* (:class:`bool` or :data:`None`) is whether to optimize the
-		patterns using :module:`hyperscan`. Default is :data:`None` for :data:`False`.
+		*optimize* (:class:`bool`, :class:`str`, or :data:`None`) is whether to
+		optimize the patterns, and optionally which library to use. If :data:`True`,
+		use the best available library. If :class:`str`, must be one of the
+		following libraries: "hyperscan". Default is :data:`None` for :data:`False`.
 		"""
 		if not isinstance(patterns, SequenceType):
 			patterns = list(patterns)
@@ -76,10 +79,10 @@ class PathSpec(object):
 		*_matcher* (:class:`.Matcher`) is the matcher to use.
 		"""
 
-		self._optimize: bool = optimize
+		self._optimize: Union[bool, Literal['hyperscan']] = optimize
 		"""
-		*_optimize* (:class:`bool`) is whether to optimize patterns using
-		:module:`hyperscan`.
+		*_optimize* (:class:`bool` or :class:`str`) is whether to optimize the
+		patterns, and optionally which library to use.
 		"""
 
 		self.patterns: Sequence[Pattern] = patterns
@@ -214,7 +217,7 @@ class PathSpec(object):
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern]],
 		lines: Iterable[AnyStr],
 		*,
-		optimize: Optional[bool] = None,
+		optimize: Union[bool, Literal['hyperscan'], None] = None,
 	) -> Self:
 		"""
 		Compiles the pattern lines.
@@ -229,9 +232,10 @@ class PathSpec(object):
 		:class:`io.TextIOBase` (e.g., from :func:`open` or :class:`io.StringIO`) or
 		the result from :meth:`str.splitlines`.
 
-		*optimize* (:class:`bool` or :data:`None`) is whether to optimize the
-		patterns using :module:`hyperscan`. Default is :data:`None` for
-		:data:`False`.
+		*optimize* (:class:`bool`, :class:`str`, or :data:`None`) is whether to
+		optimize the patterns, and optionally which library to use. If :data:`True`,
+		use the best available library. If :class:`str`, must be one of the
+		following libraries: "hyperscan". Default is :data:`None` for :data:`False`.
 
 		Returns the :class:`PathSpec` instance.
 		"""
@@ -250,7 +254,7 @@ class PathSpec(object):
 	@staticmethod
 	def _make_matcher(
 		patterns: Sequence[Pattern],
-		optimize: bool,
+		optimize: Union[bool, Literal['hyperscan']],
 	) -> Matcher:
 		"""
 		Create the matcher for the patterns.
@@ -258,12 +262,15 @@ class PathSpec(object):
 		*patterns* (:class:`~collections.abc.Sequence`) contains each compiled
 		pattern (:class:`.Pattern`).
 
-		*optimize* (:class:`bool`) is whether to optimize the patterns using
-		:module:`hyperscan`.
+		*optimize* (:class:`bool` or :class:`str`) is whether to optimize the
+		patterns, and optionally which library to use.
 
 		Returns the matcher (:class:`Matcher`).
 		"""
-		if optimize:
+		if optimize is True:
+			optimize = _OPTIMIZE_LIB
+
+		if optimize == 'hyperscan':
 			return HyperscanMatcher(cast(Sequence[RegexPattern], patterns))
 		else:
 			return DefaultMatcher(patterns)

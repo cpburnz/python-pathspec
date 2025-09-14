@@ -98,7 +98,7 @@ def check_match_file(
 	*file* (:class:`str`) is the normalized file path to be matched
 	against *patterns*.
 
-	*is_reversed* (:class:`bool` or :data:`NOne`) is whether the order of the
+	*is_reversed* (:class:`bool` or :data:`None`) is whether the order of the
 	patterns has been reversed. Default is :data:`None` for :data:`False`.
 	Reversing the order of the patterns is an optimization.
 

@@ -14,7 +14,6 @@ from pathspec.patterns.gitwildmatch import (
 from pathspec.util import (
 	lookup_pattern)
 
-
 RE_DIR = f"(?P<{_DIR_MARK}>/)"
 """
 This regular expression matches the directory marker.
