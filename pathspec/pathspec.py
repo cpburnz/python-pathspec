@@ -72,7 +72,7 @@ class PathSpec(object):
 			patterns = list(patterns)
 
 		if optimize is None:
-			optimize = True
+			optimize = False
 
 		self._matcher: Matcher = self._make_matcher(patterns, optimize)
 		"""

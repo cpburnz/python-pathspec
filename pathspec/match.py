@@ -7,14 +7,14 @@ from __future__ import annotations
 import itertools
 from typing import (
 	Any,
+	ClassVar,
 	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
 	List,  # Replaced by `list` in 3.9.
 	Literal,
 	NamedTuple,
 	Optional,  # Replaced by `X | None` in 3.10.
 	TypeVar,
-	Tuple,  # Replaced by `tuple` in 3.9.
-	Union)  # Replaced by `X | Y` in 3.10.
+	Tuple)  # Replaced by `tuple` in 3.9.
 
 try:
 	import hyperscan
@@ -26,22 +26,8 @@ except ModuleNotFoundError as e:
 from .pattern import (
 	Pattern,
 	RegexPattern)
-from .patterns.gitwildmatch import (
-	GitWildMatchPattern,
-	_BYTES_ENCODING,
-	_DIR_MARK)
 from .util import (
 	check_match_file)
-
-_DIR_MARK_CG = f'(?P<{_DIR_MARK}>/)'
-"""
-This regular expression matches the directory marker.
-"""
-
-_DIR_MARK_OPT = f'(?:{_DIR_MARK_CG}.*)?$'
-"""
-This regular expression matches the optional directory marker and sub-path.
-"""
 
 _OPTIMIZE_LIB: Optional[Literal['hyperscan']] = None
 """
@@ -101,7 +87,7 @@ class DefaultMatcher(Matcher):
 		"""
 		self._is_reversed = not no_reverse
 		self._patterns = _enumerate_patterns(
-			patterns, no_filter=no_filter, no_reverse=no_reverse,
+			patterns, filter=not no_filter, reverse=not no_reverse,
 		)
 
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
@@ -123,44 +109,52 @@ class HyperscanMatcher(Matcher):
 	for matching files.
 	"""
 
-	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
+	_reverse_patterns: ClassVar[bool] = False
+
+	def __init__(
+		self,
+		patterns: Iterable[RegexPattern],
+	) -> None:
 		"""
 		Initialize the :class:`HyperscanMatcher` instance.
 
 		*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the compiled
 		patterns.
+
+		*_reverse* (:class:`bool`) is whether to keep the pattern order
+		(:data:`True`), or reverse the order (:data:`True`).
 		"""
 		if hyperscan is None:
 			raise hyperscan_error
 
 		use_patterns = _enumerate_patterns(
-			patterns, no_filter=False, no_reverse=True,
+			patterns, filter=True, reverse=self._reverse_patterns,
 		)
 
-		db, expr_data = self.__make_db(use_patterns)
-
-		self._db = db
-		self._expr_data = expr_data
+		self._db = self._new_db()
+		self._expr_data = self._init_db(self._db, use_patterns)
 		self._out: Tuple[Optional[bool], Optional[int]] = (None, None)
 		self._patterns = dict(use_patterns)
 
 	@staticmethod
-	def __make_db(
+	def _init_db(
+		db: hyperscan.Database,
 		patterns: List[Tuple[int, RegexPattern]],
-	) -> Tuple[hyperscan.Database, list[_HyperscanExprDat]]:
+	) -> List[_HyperscanExprDat]:
 		"""
-		Create the hyperscan database from the given patterns.
+		WARNING: This method is an implementation detail and not part of the public
+		API.
+
+		Initialize the hyperscan database from the given patterns.
+
+		*db* (:class:`hyperscan.Hyperscan`) is the Hyperscan database.
 
 		*patterns* (:class:`~collections.abc.Sequence` of :class:`.RegexPattern`)
 		contains the patterns.
 
-		Returns :class:`tuple` containing the database (:class:`hyperscan.Database`),
-		and a :class:`list` indexed by expression id (:class:`int`) to its data
+		Returns a :class:`list` indexed by expression id (:class:`int`) to its data
 		(:class:`_HyperscanExprDat`).
 		"""
-		# Create database.
-		db = hyperscan.Database(mode=hyperscan.HS_MODE_BLOCK)
-
 		# Prepare patterns.
 		expr_data: List[_HyperscanExprDat] = []
 		exprs: List[bytes] = []
@@ -174,47 +168,19 @@ class HyperscanMatcher(Matcher):
 			assert isinstance(pattern, RegexPattern), pattern
 			regex = pattern.regex.pattern
 
-			use_regexes: List[Tuple[Union[str, bytes], bool]] = []
-			if isinstance(pattern, GitWildMatchPattern):
-				# GitWildMatch uses capture groups for its directory marker but
-				# Hyperscan does not support capture groups. Check for this scenario.
-				if isinstance(regex, str):
-					regex_str = regex
-				else:
-					assert isinstance(regex, bytes), regex
-					regex_str = regex.decode(_BYTES_ENCODING)
+			if isinstance(regex, bytes):
+				regex_bytes = regex
+			else:
+				assert isinstance(regex, str), regex
+				regex_bytes = regex.encode('utf8')
 
-				if _DIR_MARK_CG in regex_str:
-					# Found directory marker.
-					if regex_str.endswith(_DIR_MARK_OPT):
-						# Regex has optional directory marker. Split regex into directory
-						# and file variants.
-						base_regex = regex_str[:-len(_DIR_MARK_OPT)]
-						use_regexes.append((f'{base_regex}/.*$', True))
-						use_regexes.append((f'{base_regex}$', False))
-					else:
-						# Remove capture group.
-						base_regex = regex_str.replace(_DIR_MARK_CG, '/')
-						use_regexes.append((base_regex, True))
-
-			if not use_regexes:
-				# No special case for regex.
-				use_regexes.append((regex, False))
-
-			for regex, is_dir_pattern in use_regexes:
-				if isinstance(regex, bytes):
-					regex_bytes = regex
-				else:
-					assert isinstance(regex, str), regex
-					regex_bytes = regex.encode('utf8')
-
-				expr_data.append(_HyperscanExprDat(
-					include=pattern.include,
-					index=pattern_index,
-					is_dir_pattern=is_dir_pattern,
-				))
-				exprs.append(regex_bytes)
-				ids.append(next(id_counter))
+			expr_data.append(_HyperscanExprDat(
+				include=pattern.include,
+				index=pattern_index,
+				is_dir_pattern=False,
+			))
+			exprs.append(regex_bytes)
+			ids.append(next(id_counter))
 
 		# Compile patterns.
 		db.compile(
@@ -223,7 +189,7 @@ class HyperscanMatcher(Matcher):
 			elements=len(exprs),
 			flags=hyperscan.HS_FLAG_UTF8,
 		)
-		return db, expr_data
+		return expr_data
 
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
 		"""
@@ -241,6 +207,18 @@ class HyperscanMatcher(Matcher):
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
 		return self._out
 
+	@staticmethod
+	def _new_db() -> hyperscan.Database:
+		"""
+		WARNING: This method is an implementation detail and not part of the public
+		API.
+
+		Create the hyperscan database.
+
+		Returns the database (:class:`hyperscan.Database`).
+		"""
+		return hyperscan.Database(mode=hyperscan.HS_MODE_BLOCK)
+
 	def __on_match(
 		self,
 		expr_id: int,
@@ -256,36 +234,35 @@ class HyperscanMatcher(Matcher):
 		pattern.
 		"""
 		expr_dat = self._expr_data[expr_id]
-		include = expr_dat.include
-		if include:
+		if include := expr_dat.include:
 			# Store match.
-			self._out = (include, expr_id)
+			self._out = (include, expr_dat.index)
 
 
 def _enumerate_patterns(
 	patterns: Iterable[TPattern],
-	no_filter: bool,
-	no_reverse: bool,
+	filter: bool,
+	reverse: bool,
 ) -> List[Tuple[int, TPattern]]:
 	"""
 	Enumerate the patterns.
 
 	*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the patterns.
 
-	*no_filter* (:class:`bool`) is whether to keep null patterns (:data:`True`),
-	or remove them (:data:`False`).
+	*filter* (:class:`bool`) is whether to remove null patterns (:data:`True`),
+	or keep them (:data:`False`).
 
-	*no_reverse* (:class:`bool`) is whether to keep the pattern order
-	(:data:`True`), or reverse the order (:data:`True`).
+	*reverse* (:class:`bool`) is whether to reverse the pattern order
+	(:data:`True`), or keep the order (:data:`True`).
 
 	Returns the enumerated patterns (:class:`list` of :class:`tuple`).
 	"""
 	out_patterns = [
 		(__i, __pat)
 		for __i, __pat in enumerate(patterns)
-		if no_filter or __pat.include is not None
+		if not filter or __pat.include is not None
 	]
-	if not no_reverse:
+	if reverse:
 		out_patterns.reverse()
 
 	return out_patterns

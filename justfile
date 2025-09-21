@@ -2,6 +2,10 @@
 # This justfile is used to manage development and distribution.
 #
 
+_default:
+	@just --list
+
+# Run benchmarks.
 [group('Development')]
 bench: _bench
 

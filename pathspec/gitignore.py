@@ -3,11 +3,13 @@ This module provides :class:`.GitIgnoreSpec` which replicates *.gitignore*
 behavior.
 """
 
+import itertools
 from typing import (
 	Any,
 	AnyStr,
 	Callable,  # Replaced by `collections.abc.Callable` in 3.9.
 	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
+	List,  # Replaced by `list` in 3.9.
 	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
 	Sequence,  # Replaced by `collections.abc.Sequence` in 3.9.
@@ -18,10 +20,16 @@ from typing import (
 	cast,
 	overload)
 
+try:
+	import hyperscan
+except ModuleNotFoundError:
+	hyperscan = None
+
 from .match import (
 	DefaultMatcher,
 	HyperscanMatcher,
 	Matcher,
+	_HyperscanExprDat,
 	_OPTIMIZE_LIB)
 from .pathspec import (
 	PathSpec)
@@ -30,9 +38,20 @@ from .pattern import (
 	RegexPattern)
 from .patterns.gitwildmatch import (
 	GitWildMatchPattern,
+	_BYTES_ENCODING,
 	_DIR_MARK)
 from .util import (
 	_is_iterable)
+
+_DIR_MARK_CG = f'(?P<{_DIR_MARK}>/)'
+"""
+This regular expression matches the directory marker.
+"""
+
+_DIR_MARK_OPT = f'(?:{_DIR_MARK_CG}.*)?$'
+"""
+This regular expression matches the optional directory marker and sub-path.
+"""
 
 Self = TypeVar("Self", bound="GitIgnoreSpec")
 """
@@ -220,6 +239,86 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 		super().__init__(patterns)
 		self._out = (None, None, 0)
 
+	@staticmethod
+	def _init_db(
+		db: hyperscan.Database,
+		patterns: List[Tuple[int, RegexPattern]],
+	) -> List[_HyperscanExprDat]:
+		"""
+		Create the hyperscan database from the given patterns.
+
+		*db* (:class:`hyperscan.Hyperscan`) is the Hyperscan database.
+
+		*patterns* (:class:`~collections.abc.Sequence` of :class:`.RegexPattern`)
+		contains the patterns.
+
+		Returns a :class:`list` indexed by expression id (:class:`int`) to its data
+		(:class:`_HyperscanExprDat`).
+		"""
+		# Prepare patterns.
+		expr_data: List[_HyperscanExprDat] = []
+		exprs: List[bytes] = []
+		id_counter = itertools.count(0)
+		ids: List[int] = []
+		for pattern_index, pattern in patterns:
+			if pattern.include is None:
+				continue
+
+			# Encode regex.
+			assert isinstance(pattern, RegexPattern), pattern
+			regex = pattern.regex.pattern
+
+			use_regexes: List[Tuple[Union[str, bytes], bool]] = []
+			if isinstance(pattern, GitWildMatchPattern):
+				# GitWildMatch uses capture groups for its directory marker but
+				# Hyperscan does not support capture groups. Check for this scenario.
+				if isinstance(regex, str):
+					regex_str = regex
+				else:
+					assert isinstance(regex, bytes), regex
+					regex_str = regex.decode(_BYTES_ENCODING)
+
+				if _DIR_MARK_CG in regex_str:
+					# Found directory marker.
+					if regex_str.endswith(_DIR_MARK_OPT):
+						# Regex has optional directory marker. Split regex into directory
+						# and file variants.
+						base_regex = regex_str[:-len(_DIR_MARK_OPT)]
+						use_regexes.append((f'{base_regex}/.*$', True))
+						use_regexes.append((f'{base_regex}$', False))
+					else:
+						# Remove capture group.
+						base_regex = regex_str.replace(_DIR_MARK_CG, '/')
+						use_regexes.append((base_regex, True))
+
+			if not use_regexes:
+				# No special case for regex.
+				use_regexes.append((regex, False))
+
+			for regex, is_dir_pattern in use_regexes:
+				if isinstance(regex, bytes):
+					regex_bytes = regex
+				else:
+					assert isinstance(regex, str), regex
+					regex_bytes = regex.encode('utf8')
+
+				expr_data.append(_HyperscanExprDat(
+					include=pattern.include,
+					index=pattern_index,
+					is_dir_pattern=is_dir_pattern,
+				))
+				exprs.append(regex_bytes)
+				ids.append(next(id_counter))
+
+		# Compile patterns.
+		db.compile(
+			expressions=exprs,
+			ids=ids,
+			elements=len(exprs),
+			flags=hyperscan.HS_FLAG_UTF8,
+		)
+		return expr_data
+
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
 		"""
 		Check the file against the patterns.
@@ -249,17 +348,16 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 		pattern.
 		"""
 		expr_dat = self._expr_data[expr_id]
-		include = expr_dat.include
-		if include:
-			has_dir_mark = expr_dat.has_dir_mark
-			if has_dir_mark:
+		if include := expr_dat.include:
+			is_dir_pattern = expr_dat.is_dir_pattern
+			if is_dir_pattern:
 				# Pattern matched by a directory pattern.
 				priority = 1
 			else:
 				# Pattern matched by a file pattern.
 				priority = 2
 
-			if include and has_dir_mark:
-				self._out = (include, expr_id, priority)
+			if include and is_dir_pattern:
+				self._out = (include, expr_dat.index, priority)
 			elif priority >= self._out[2]:
-				self._out = (include, expr_id, priority)
+				self._out = (include, expr_dat.index, priority)

@@ -10,11 +10,11 @@ from pathspec import (
 	PathSpec)
 from pathspec.match import (
 	DefaultMatcher)
-from benchmarks.match import (
-	HyperscanBlockClosureMatcher,
-	HyperscanBlockStateMatcher,
-	HyperscanStreamClosureMatcher,
-	HyperscanStreamStateMatcher)
+from benchmarks.match_pathspec import (
+	HyperscanR1BlockClosureMatcher,
+	HyperscanR1BlockStateMatcher,
+	HyperscanR1StreamClosureMatcher,
+	HyperscanR1StreamStateMatcher)
 
 
 @pytest.mark.benchmark(group="PathSpec.match_files")
@@ -73,47 +73,47 @@ def bench_def_v1(
 
 
 @pytest.mark.benchmark(group="PathSpec.match_files")
-def bench_hs_block_closure(
+def bench_hs_r1_block_closure(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
 	cpython_gi_lines_all: list[str],
 ):
-	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize=True)
-	spec._matcher = HyperscanBlockClosureMatcher(spec.patterns)
+	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize='hyperscan')
+	spec._matcher = HyperscanR1BlockClosureMatcher(spec.patterns)
 	benchmark(run_match, spec, cpython_files)
 
 
 @pytest.mark.benchmark(group="PathSpec.match_files")
-def bench_hs_block_state(
+def bench_hs_r1_block_state(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
 	cpython_gi_lines_all: list[str],
 ):
-	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize=True)
-	spec._matcher = HyperscanBlockStateMatcher(spec.patterns)
+	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize='hyperscan')
+	spec._matcher = HyperscanR1BlockStateMatcher(spec.patterns)
 	benchmark(run_match, spec, cpython_files)
 
 
 @pytest.mark.benchmark(group="PathSpec.match_files")
-def bench_hs_stream_closure(
+def bench_hs_r1_stream_closure(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
 	cpython_gi_lines_all: list[str],
 ):
-	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize=True)
-	spec._matcher = HyperscanStreamClosureMatcher(spec.patterns)
+	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize='hyperscan')
+	spec._matcher = HyperscanR1StreamClosureMatcher(spec.patterns)
 	benchmark(run_match, spec, cpython_files)
 
 
 # WARNING: This segfaults.
 # @pytest.mark.benchmark(group="PathSpec.match_files")
-# def bench_hs_stream_state(
+# def bench_hs_r1_stream_state(
 # 	benchmark: BenchmarkFixture,
 # 	cpython_files: set[str],
 # 	cpython_gi_lines_all: list[str],
 # ):
-# 	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize=True)
-# 	spec._matcher = HyperscanStreamStateMatcher(spec.patterns)
+# 	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize='hyperscan')
+# 	spec._matcher = HyperscanR1StreamStateMatcher(spec.patterns)
 # 	benchmark(run_match, spec, cpython_files)
 
 
@@ -123,7 +123,7 @@ def bench_hs_v1(
 	cpython_files: set[str],
 	cpython_gi_lines_all: list[str],
 ):
-	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize=True)
+	spec = PathSpec.from_lines('gitwildmatch', cpython_gi_lines_all, optimize='hyperscan')
 	benchmark(run_match, spec, cpython_files)
 
 

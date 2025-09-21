@@ -10,11 +10,14 @@ from pathspec import (
 	GitIgnoreSpec)
 from pathspec.gitignore import (
 	_GiDefaultMatcher)
-from benchmarks.match import (
-	GiHyperscanBlockClosureMatcher,
-	GiHyperscanBlockStateMatcher,
-	GiHyperscanStreamClosureMatcher,
-	GiHyperscanStreamStateMatcher)
+from benchmarks.match_gitignore import (
+	GiHyperscanR1BlockClosureMatcher,
+	GiHyperscanR1BlockStateMatcher,
+	GiHyperscanR1StreamClosureMatcher,
+	GiHyperscanR1StreamStateMatcher,
+	GiHyperscanR2BlockClosureMatcher,
+	GiHyperscanR2BlockStateMatcher,
+	GiHyperscanR2StreamClosureMatcher)
 
 
 @pytest.mark.benchmark(group="GitIgnore.match_files")
@@ -72,48 +75,81 @@ def bench_def_v1(
 
 
 @pytest.mark.benchmark(group="GitIgnore.match_files")
-def bench_hs_block_closure(
+def bench_hs_r1_block_closure(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
 	cpython_gi_lines_all: list[str],
 ):
-	spec = GitIgnoreSpec.from_lines(cpython_gi_lines_all, optimize=True)
-	spec._matcher = GiHyperscanBlockClosureMatcher(spec.patterns)
+	spec = GitIgnoreSpec.from_lines(cpython_gi_lines_all, optimize='hyperscan')
+	spec._matcher = GiHyperscanR1BlockClosureMatcher(spec.patterns)
 	benchmark(run_match, spec, cpython_files)
 
 
 @pytest.mark.benchmark(group="GitIgnore.match_files")
-def bench_hs_block_state(
+def bench_hs_r1_block_state(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
 	cpython_gi_lines_all: list[str],
 ):
-	spec = GitIgnoreSpec.from_lines(cpython_gi_lines_all, optimize=True)
-	spec._matcher = GiHyperscanBlockStateMatcher(spec.patterns)
+	spec = GitIgnoreSpec.from_lines(cpython_gi_lines_all, optimize='hyperscan')
+	spec._matcher = GiHyperscanR1BlockStateMatcher(spec.patterns)
 	benchmark(run_match, spec, cpython_files)
 
 
 @pytest.mark.benchmark(group="GitIgnore.match_files")
-def bench_hs_stream_closure(
+def bench_hs_r1_stream_closure(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
 	cpython_gi_lines_all: list[str],
 ):
-	spec = GitIgnoreSpec.from_lines(cpython_gi_lines_all, optimize=True)
-	spec._matcher = GiHyperscanStreamClosureMatcher(spec.patterns)
+	spec = GitIgnoreSpec.from_lines(cpython_gi_lines_all, optimize='hyperscan')
+	spec._matcher = GiHyperscanR1StreamClosureMatcher(spec.patterns)
 	benchmark(run_match, spec, cpython_files)
 
 
 # WARNING: This segfaults.
 # @pytest.mark.benchmark(group="GitIgnore.match_files")
-# def bench_hs_stream_state(
+# def bench_hs_r1_stream_state(
 # 	benchmark: BenchmarkFixture,
 # 	cpython_files: set[str],
 # 	cpython_gi_lines_all: list[str],
 # ):
-# 	spec = GitIgnoreSpec.from_lines(cpython_gi_lines_all, optimize=True)
+# 	spec = GitIgnoreSpec.from_lines(cpython_gi_lines_all, optimize='hyperscan')
 # 	spec._matcher = GiHyperscanStreamStateMatcher(spec.patterns)
 # 	benchmark(run_match, spec, cpython_files)
+
+
+@pytest.mark.benchmark(group="GitIgnore.match_files")
+def bench_hs_r2_block_closure(
+	benchmark: BenchmarkFixture,
+	cpython_files: set[str],
+	cpython_gi_lines_all: list[str],
+):
+	spec = GitIgnoreSpec.from_lines(cpython_gi_lines_all, optimize='hyperscan')
+	spec._matcher = GiHyperscanR2BlockClosureMatcher(spec.patterns)
+	benchmark(run_match, spec, cpython_files)
+
+
+@pytest.mark.benchmark(group="GitIgnore.match_files")
+def bench_hs_r2_block_state(
+	benchmark: BenchmarkFixture,
+	cpython_files: set[str],
+	cpython_gi_lines_all: list[str],
+):
+	spec = GitIgnoreSpec.from_lines(cpython_gi_lines_all, optimize='hyperscan')
+	spec._matcher = GiHyperscanR2BlockStateMatcher(spec.patterns)
+	benchmark(run_match, spec, cpython_files)
+
+
+@pytest.mark.benchmark(group="GitIgnore.match_files")
+def bench_hs_r2_stream_closure(
+	benchmark: BenchmarkFixture,
+	cpython_files: set[str],
+	cpython_gi_lines_all: list[str],
+):
+	spec = GitIgnoreSpec.from_lines(cpython_gi_lines_all, optimize='hyperscan')
+	spec._matcher = GiHyperscanR2StreamClosureMatcher(spec.patterns)
+	benchmark(run_match, spec, cpython_files)
 
 
 @pytest.mark.benchmark(group="GitIgnore.match_files")
@@ -122,7 +158,7 @@ def bench_hs_v1(
 	cpython_files: set[str],
 	cpython_gi_lines_all: list[str],
 ):
-	spec = GitIgnoreSpec.from_lines(cpython_gi_lines_all, optimize=True)
+	spec = GitIgnoreSpec.from_lines(cpython_gi_lines_all, optimize='hyperscan')
 	benchmark(run_match, spec, cpython_files)
 
 
