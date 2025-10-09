@@ -212,23 +212,21 @@ def iter_tree_entries(
 	"""
 	Walks the specified directory for all files and directories.
 
-	*root* (:class:`str` or :class:`os.PathLike`) is the root directory to
-	search.
+	*root* (:class:`str` or :class:`os.PathLike`) is the root directory to search.
 
-	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
-	optionally is the error handler for file-system exceptions. It will be
-	called with the exception (:exc:`OSError`). Reraise the exception to
-	abort the walk. Default is :data:`None` to ignore file-system
-	exceptions.
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`) optionally is
+	the error handler for file-system exceptions. It will be called with the
+	exception (:exc:`OSError`). Reraise the exception to abort the walk. Default
+	is :data:`None` to ignore file-system exceptions.
 
-	*follow_links* (:class:`bool` or :data:`None`) optionally is whether
-	to walk symbolic links that resolve to directories. Default is
-	:data:`None` for :data:`True`.
+	*follow_links* (:class:`bool` or :data:`None`) optionally is whether to walk
+	symbolic links that resolve to directories. Default is :data:`None` for
+	:data:`True`.
 
 	Raises :exc:`RecursionError` if recursion is detected.
 
-	Returns an :class:`~collections.abc.Iterator` yielding each file or
-	directory entry (:class:`.TreeEntry`) relative to *root*.
+	Returns an :class:`~collections.abc.Iterator` yielding each file or directory
+	entry (:class:`.TreeEntry`) relative to *root*.
 	"""
 	if on_error is not None and not callable(on_error):
 		raise TypeError(f"on_error:{on_error!r} is not callable.")
@@ -254,24 +252,22 @@ def _iter_tree_entries_next(
 	*dir_rel* (:class:`str`) the path to the directory to scan relative to
 	*root_full*.
 
-	*memo* (:class:`dict`) keeps track of ancestor directories
-	encountered. Maps each ancestor real path (:class:`str`) to relative
-	path (:class:`str`).
+	*memo* (:class:`dict`) keeps track of ancestor directories encountered. Maps
+	each ancestor real path (:class:`str`) to relative path (:class:`str`).
 
-	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
-	optionally is the error handler for file-system exceptions.
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`) optionally is
+	the error handler for file-system exceptions.
 
-	*follow_links* (:class:`bool`) is whether to walk symbolic links that
-	resolve to directories.
+	*follow_links* (:class:`bool`) is whether to walk symbolic links that resolve
+	to directories.
 
 	Yields each entry (:class:`.TreeEntry`).
 	"""
 	dir_full = os.path.join(root_full, dir_rel)
 	dir_real = os.path.realpath(dir_full)
 
-	# Remember each encountered ancestor directory and its canonical
-	# (real) path. If a canonical path is encountered more than once,
-	# recursion has occurred.
+	# Remember each encountered ancestor directory and its canonical (real) path.
+	# If a canonical path is encountered more than once, recursion has occurred.
 	if dir_real not in memo:
 		memo[dir_real] = dir_rel
 	else:
@@ -302,8 +298,8 @@ def _iter_tree_entries_next(
 				node_stat = node_lstat
 
 			if node_ent.is_dir(follow_symlinks=follow_links):
-				# Child node is a directory, recurse into it and yield its
-				# descendant files.
+				# Child node is a directory, recurse into it and yield its descendant
+				# files.
 				yield TreeEntry(node_ent.name, node_rel, node_lstat, node_stat)
 
 				yield from _iter_tree_entries_next(root_full, node_rel, memo, on_error, follow_links)
@@ -312,11 +308,11 @@ def _iter_tree_entries_next(
 				# Child node is either a file or an unfollowed link, yield it.
 				yield TreeEntry(node_ent.name, node_rel, node_lstat, node_stat)
 
-	# NOTE: Make sure to remove the canonical (real) path of the directory
-	# from the ancestors memo once we are done with it. This allows the
-	# same directory to appear multiple times. If this is not done, the
-	# second occurrence of the directory will be incorrectly interpreted
-	# as a recursion. See <https://github.com/cpburnz/python-path-specification/pull/7>.
+	# NOTE: Make sure to remove the canonical (real) path of the directory from
+	# the ancestors memo once we are done with it. This allows the same directory
+	# to appear multiple times. If this is not done, the second occurrence of the
+	# directory will be incorrectly interpreted as a recursion. See
+	# <https://github.com/cpburnz/python-path-specification/pull/7>.
 	del memo[dir_real]
 
 
@@ -328,23 +324,22 @@ def iter_tree_files(
 	"""
 	Walks the specified directory for all files.
 
-	*root* (:class:`str` or :class:`os.PathLike`) is the root directory to
-	search for files.
+	*root* (:class:`str` or :class:`os.PathLike`) is the root directory to search
+	for files.
 
-	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
-	optionally is the error handler for file-system exceptions. It will be
-	called with the exception (:exc:`OSError`). Reraise the exception to
-	abort the walk. Default is :data:`None` to ignore file-system
-	exceptions.
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`) optionally is
+	the error handler for file-system exceptions. It will be called with the
+	exception (:exc:`OSError`). Reraise the exception to abort the walk. Default
+	is :data:`None` to ignore file-system exceptions.
 
-	*follow_links* (:class:`bool` or :data:`None`) optionally is whether
-	to walk symbolic links that resolve to directories. Default is
-	:data:`None` for :data:`True`.
+	*follow_links* (:class:`bool` or :data:`None`) optionally is whether to walk
+	symbolic links that resolve to directories. Default is :data:`None` for
+	:data:`True`.
 
 	Raises :exc:`RecursionError` if recursion is detected.
 
-	Returns an :class:`~collections.abc.Iterator` yielding the path to
-	each file (:class:`str`) relative to *root*.
+	Returns an :class:`~collections.abc.Iterator` yielding the path to each file
+	(:class:`str`) relative to *root*.
 	"""
 	if on_error is not None and not callable(on_error):
 		raise TypeError(f"on_error:{on_error!r} is not callable.")
@@ -370,24 +365,22 @@ def _iter_tree_files_next(
 	*dir_rel* (:class:`str`) the path to the directory to scan relative to
 	*root_full*.
 
-	*memo* (:class:`dict`) keeps track of ancestor directories
-	encountered. Maps each ancestor real path (:class:`str`) to relative
-	path (:class:`str`).
+	*memo* (:class:`dict`) keeps track of ancestor directories encountered. Maps
+	each ancestor real path (:class:`str`) to relative path (:class:`str`).
 
-	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
-	optionally is the error handler for file-system exceptions.
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`) optionally is
+	the error handler for file-system exceptions.
 
-	*follow_links* (:class:`bool`) is whether to walk symbolic links that
-	resolve to directories.
+	*follow_links* (:class:`bool`) is whether to walk symbolic links that resolve
+	to directories.
 
 	Yields each file path (:class:`str`).
 	"""
 	dir_full = os.path.join(root_full, dir_rel)
 	dir_real = os.path.realpath(dir_full)
 
-	# Remember each encountered ancestor directory and its canonical
-	# (real) path. If a canonical path is encountered more than once,
-	# recursion has occurred.
+	# Remember each encountered ancestor directory and its canonical (real) path.
+	# If a canonical path is encountered more than once, recursion has occurred.
 	if dir_real not in memo:
 		memo[dir_real] = dir_rel
 	else:
@@ -399,19 +392,23 @@ def _iter_tree_files_next(
 			node_rel = os.path.join(dir_rel, node_ent.name)
 
 			if node_ent.is_dir(follow_symlinks=follow_links):
-				# Child node is a directory, recurse into it and yield its
-				# descendant files.
+				# Child node is a directory, recurse into it and yield its descendant
+				# files.
 				yield from _iter_tree_files_next(root_full, node_rel, memo, on_error, follow_links)
 
-			elif node_ent.is_file() or node_ent.is_symlink():
-				# Child node is either a file or an unfollowed link, yield it.
+			elif node_ent.is_file():
+				# Child node is a file, yield it.
 				yield node_rel
 
-	# NOTE: Make sure to remove the canonical (real) path of the directory
-	# from the ancestors memo once we are done with it. This allows the
-	# same directory to appear multiple times. If this is not done, the
-	# second occurrence of the directory will be incorrectly interpreted
-	# as a recursion. See <https://github.com/cpburnz/python-path-specification/pull/7>.
+			elif not follow_links and node_ent.is_symlink():
+				# Child node is an unfollowed link, yield it.
+				yield node_rel
+
+	# NOTE: Make sure to remove the canonical (real) path of the directory from
+	# the ancestors memo once we are done with it. This allows the same directory
+	# to appear multiple times. If this is not done, the second occurrence of the
+	# directory will be incorrectly interpreted as a recursion. See
+	# <https://github.com/cpburnz/python-path-specification/pull/7>.
 	del memo[dir_real]
 
 

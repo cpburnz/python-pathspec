@@ -172,6 +172,8 @@ class _GiDefaultMatcher(DefaultMatcher):
 	:class:`.GitIgnoreSpec` for matching files.
 	"""
 
+	_patterns: List[Tuple[int, GitWildMatchPattern]]
+
 	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
 		"""
 		Check the file against the patterns.
@@ -189,7 +191,7 @@ class _GiDefaultMatcher(DefaultMatcher):
 		out_priority = 0
 		for index, pattern in self._patterns:
 			if (
-				pattern.include is not None
+				(include := pattern.include) is not None
 				and (match := pattern.match_file(file)) is not None
 			):
 				# Pattern matched.
@@ -204,14 +206,17 @@ class _GiDefaultMatcher(DefaultMatcher):
 					# Pattern matched by a file pattern.
 					priority = 2
 
-				if pattern.include and dir_mark:
-					out_include = pattern.include
+				is_changed = False
+				if include and dir_mark:
+					out_include = include
 					out_index = index
 					out_priority = priority
+					is_changed = True
 				elif priority >= out_priority:
-					out_include = pattern.include
+					out_include = include
 					out_index = index
 					out_priority = priority
+					is_changed = True
 
 				if is_reversed and priority == 2:
 					# Patterns are being checked in reverse order. The first pattern that

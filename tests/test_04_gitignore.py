@@ -5,13 +5,15 @@ This script tests :class:`.GitIgnoreSpec`.
 import unittest
 
 from pathspec.gitignore import (
-	GitIgnoreSpec)
+	GitIgnoreSpec,
+	_GiDefaultMatcher)
 
 from .util import (
 	debug_results,
 	get_includes)
 
 
+# TODO: Parameterize all tests. ~Caleb, 2025-10-05
 class GitIgnoreSpecTest(unittest.TestCase):
 	"""
 	The :class:`GitIgnoreSpecTest` class tests the :class:`.GitIgnoreSpec` class.
@@ -109,6 +111,8 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			'*.yaml',
 			'!*.yaml/',
 		])
+		# TODO BUG: filtered and reversed has bug. ~Caleb, 2025-10-05
+		#spec._matcher = _GiDefaultMatcher(spec.patterns, no_filter=True, no_reverse=True)
 		files = {
 			'dir.yaml/file.sql',   # -
 			'dir.yaml/file.yaml',  # 1:*.yaml
@@ -145,6 +149,8 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			'!*.yaml/',
 			'*.yaml',
 		])
+		# TODO BUG: filtered and reversed has bug. ~Caleb, 2025-10-05
+		#spec._matcher = _GiDefaultMatcher(spec.patterns, no_filter=True, no_reverse=True)
 		files = {
 			'dir.yaml/file.sql',   # 2:*.yaml
 			'dir.yaml/file.yaml',  # 2:*.yaml
@@ -181,6 +187,8 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			'*.yaml',
 			'!dir.yaml',
 		])
+		# TODO BUG: filtered and reversed has bug. ~Caleb, 2025-10-05
+		#spec._matcher = _GiDefaultMatcher(spec.patterns, no_filter=True, no_reverse=True)
 		files = {
 			'dir.yaml/file.sql',   # -
 			'dir.yaml/file.yaml',  # 1:*.yaml

@@ -1,25 +1,66 @@
 """
 This module provides utility functions shared by tests.
 """
+from __future__ import annotations
 
 import itertools
 import os
 import os.path
 import pathlib
+from unittest import (
+	SkipTest)
 
 from typing import (
 	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
 	List,  # Replaced by `set` in 3.9.
+	Literal,
+	Optional,  # Replaced by `X | None` in 3.10.
 	Set,  # Replaced by `set` in 3.9.
 	Tuple,  # Replaced by `tuple` in 3.9.
 	cast)
+
+try:
+	import hyperscan
+	hyperscan_error: Optional[ModuleNotFoundError] = None
+except ModuleNotFoundError as e:
+	hyperscan = None
+	hyperscan_error = e
 
 from pathspec import (
 	PathSpec,
 	RegexPattern)
 from pathspec.util import (
 	CheckResult,
-	TStrPath)
+	TStrPath,
+	TreeEntry)
+
+OPTIMIZE_PARAMS: List[Tuple[str, Optional[Literal['hyperscan']]]] = [
+	('default', None),
+	# ('hyperscan', 'hyperscan'),
+]
+"""
+The optimize parameters.
+"""
+
+
+def debug_includes(spec: PathSpec, files: Set[str], includes: Set[str]) -> str:
+	"""
+	Format the match files message.
+
+	*spec* (:class:`~pathspec.PathSpec`) is the path-spec.
+
+	*files* (:class:`set` of :class:`str`) contains the source files.
+
+	*include* (:class:`set` of :class:`str`) contains the matched files.
+
+	Returns the message (:class:`str`).
+	"""
+	results = []
+	for result in spec.check_files(files):
+		assert (result.file in includes) == bool(result.include), (result, includes)
+		results.append(result)
+
+	return debug_results(spec, results)
 
 
 def debug_results(spec: PathSpec, results: Iterable[CheckResult[str]]) -> str:
@@ -84,6 +125,17 @@ def get_includes(results: Iterable[CheckResult[TStrPath]]) -> Set[TStrPath]:
 	return {__res.file for __res in results if __res.include}
 
 
+def get_paths_from_entries(entries: Iterable[TreeEntry]) -> Set[str]:
+	"""
+	Get the entry paths.
+
+	*entries* (:class:`Iterable` of :class:`TreeEntry`) yields the entries.
+
+	Returns the paths (:class:`set` of :class:`str`).
+	"""
+	return {__ent.path for __ent in entries}
+
+
 def make_dirs(temp_dir: pathlib.Path, dirs: Iterable[str]) -> None:
 	"""
 	Create the specified directories.
@@ -146,3 +198,15 @@ def ospath(path: str) -> str:
 	Returns the native path (:class:`str`).
 	"""
 	return os.path.join(*path.split('/'))
+
+
+def require_optimize(optimize: Optional[Literal['hyperscan']]) -> None:
+	"""
+	Skip the test if the optimize library is not installed.
+
+	*optimize* (:class:`str` or :data:`None`) is the optimize value.
+
+	Raises :class:`SkipTest` if the optimize library is not installed.
+	"""
+	if optimize == 'hyperscan' and hyperscan is None:
+		raise SkipTest(str(hyperscan_error))

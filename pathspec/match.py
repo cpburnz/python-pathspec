@@ -201,7 +201,7 @@ class HyperscanMatcher(Matcher):
 		or :data:`None`), and the index of the last matched pattern (:class:`int` or
 		:data:`None`).
 		"""
-		# NOTICE: According to benchmarking, a method callback is 33% faster than
+		# NOTICE: According to benchmarking, a method callback is 22% faster than
 		# using a closure here.
 		self._out = (None, None)
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)

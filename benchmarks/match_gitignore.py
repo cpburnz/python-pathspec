@@ -71,7 +71,7 @@ class GiHyperscanR1BlockClosureMatcher(_GiHyperscanR1BlockBaseMatcher):
 		) -> Optional[bool]:
 			nonlocal out_include, out_index, out_priority
 			expr_dat = self._expr_data[expr_id]
-			if include := expr_dat.include:
+			if (include := expr_dat.include) is not None:
 				index = expr_dat.index
 
 				# Rematch pattern because Hyperscan does not support capture groups.
@@ -128,7 +128,7 @@ class GiHyperscanR1BlockStateMatcher(_GiHyperscanR1BlockBaseMatcher):
 	) -> Optional[bool]:
 		file: str = context
 		expr_dat = self._expr_data[expr_id]
-		if include := expr_dat.include:
+		if (include := expr_dat.include) is not None:
 			index = expr_dat.index
 
 			# Rematch pattern because Hyperscan does not support capture groups.
@@ -180,7 +180,7 @@ class GiHyperscanR1StreamClosureMatcher(_GiHyperscanR1StreamBaseMatcher):
 		) -> Optional[bool]:
 			nonlocal out_include, out_index, out_priority
 			expr_dat = self._expr_data[expr_id]
-			if include := expr_dat.include:
+			if (include := expr_dat.include) is not None:
 				index = expr_dat.index
 
 				# Rematch pattern because Hyperscan does not support capture groups.
@@ -246,7 +246,7 @@ class GiHyperscanR1StreamStateMatcher(_GiHyperscanR1StreamBaseMatcher):
 		#print(f"[{context}] {expr_id} {include}: {patterns[expr_id].pattern!r}")
 		file: str = context
 		expr_dat = self._expr_data[expr_id]
-		if include := expr_dat.include:
+		if (include := expr_dat.include) is not None:
 			index = expr_dat.index
 
 			# Rematch pattern because Hyperscan does not support capture groups.
@@ -383,7 +383,7 @@ class GiHyperscanR2BlockClosureMatcher(_GiHyperscanR2BlockBaseMatcher):
 		) -> Optional[bool]:
 			nonlocal out_include, out_index, out_priority
 			expr_dat = self._expr_data[expr_id]
-			if include := expr_dat.include:
+			if (include := expr_dat.include) is not None:
 				is_dir_pattern = expr_dat.is_dir_pattern
 				if is_dir_pattern:
 					# Pattern matched by a directory pattern.
@@ -429,7 +429,7 @@ class GiHyperscanR2BlockStateMatcher(_GiHyperscanR2BlockBaseMatcher):
 		context: Any,
 	) -> Optional[bool]:
 		expr_dat = self._expr_data[expr_id]
-		if include := expr_dat.include:
+		if (include := expr_dat.include) is not None:
 			is_dir_pattern = expr_dat.is_dir_pattern
 			if is_dir_pattern:
 				# Pattern matched by a directory pattern.
@@ -473,7 +473,7 @@ class GiHyperscanR2StreamClosureMatcher(_GiHyperscanR2StreamBaseMatcher):
 		) -> Optional[bool]:
 			nonlocal out_include, out_index, out_priority
 			expr_dat = self._expr_data[expr_id]
-			if include := expr_dat.include:
+			if (include := expr_dat.include) is not None:
 				is_dir_pattern = expr_dat.is_dir_pattern
 				if is_dir_pattern:
 					# Pattern matched by a directory pattern.
@@ -495,6 +495,8 @@ class GiHyperscanR2StreamClosureMatcher(_GiHyperscanR2StreamBaseMatcher):
 					# Patterns are being checked in reverse order. The first pattern that
 					# matches with the highest priority takes precedence.
 					return True
+
+			return None
 
 		with self._db.stream(match_event_handler=on_match) as stream:
 			stream.scan(file.encode('utf8'))
