@@ -4,17 +4,15 @@ behavior.
 """
 
 import itertools
+from collections.abc import (
+	Callable,
+	Iterable,
+	Sequence)
 from typing import (
 	Any,
 	AnyStr,
-	Callable,  # Replaced by `collections.abc.Callable` in 3.9.
-	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
-	List,  # Replaced by `list` in 3.9.
 	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
-	Sequence,  # Replaced by `collections.abc.Sequence` in 3.9.
-	Tuple,  # Replaced by `tuple` in 3.9.
-	Type,  # Replaced by `type` in 3.9.
 	TypeVar,
 	Union,  # Replaced by `X | Y` in 3.10.
 	cast,
@@ -83,7 +81,7 @@ class GitIgnoreSpec(PathSpec):
 	@overload
 	@classmethod
 	def from_lines(
-		cls: Type[Self],
+		cls: type[Self],
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern]],
 		lines: Iterable[AnyStr],
 		*,
@@ -94,7 +92,7 @@ class GitIgnoreSpec(PathSpec):
 	@overload
 	@classmethod
 	def from_lines(
-		cls: Type[Self],
+		cls: type[Self],
 		lines: Iterable[AnyStr],
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern], None] = None,
 		*,
@@ -104,7 +102,7 @@ class GitIgnoreSpec(PathSpec):
 
 	@classmethod
 	def from_lines(
-		cls: Type[Self],
+		cls: type[Self],
 		lines: Iterable[AnyStr],
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern], None] = None,
 		*,
@@ -172,9 +170,9 @@ class _GiDefaultMatcher(DefaultMatcher):
 	:class:`.GitIgnoreSpec` for matching files.
 	"""
 
-	_patterns: List[Tuple[int, GitWildMatchPattern]]
+	_patterns: list[tuple[int, GitWildMatchPattern]]
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		"""
 		Check the file against the patterns.
 
@@ -232,7 +230,7 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 	for matching files.
 	"""
 
-	_out: Tuple[Optional[bool], Optional[int], int]
+	_out: tuple[Optional[bool], Optional[int], int]
 
 	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
 		"""
@@ -247,8 +245,8 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 	@staticmethod
 	def _init_db(
 		db: hyperscan.Database,
-		patterns: List[Tuple[int, RegexPattern]],
-	) -> List[_HyperscanExprDat]:
+		patterns: list[tuple[int, RegexPattern]],
+	) -> list[_HyperscanExprDat]:
 		"""
 		Create the hyperscan database from the given patterns.
 
@@ -261,10 +259,10 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 		(:class:`_HyperscanExprDat`).
 		"""
 		# Prepare patterns.
-		expr_data: List[_HyperscanExprDat] = []
-		exprs: List[bytes] = []
+		expr_data: list[_HyperscanExprDat] = []
+		exprs: list[bytes] = []
 		id_counter = itertools.count(0)
-		ids: List[int] = []
+		ids: list[int] = []
 		for pattern_index, pattern in patterns:
 			if pattern.include is None:
 				continue
@@ -273,7 +271,7 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 			assert isinstance(pattern, RegexPattern), pattern
 			regex = pattern.regex.pattern
 
-			use_regexes: List[Tuple[Union[str, bytes], bool]] = []
+			use_regexes: list[tuple[Union[str, bytes], bool]] = []
 			if isinstance(pattern, GitWildMatchPattern):
 				# GitWildMatch uses capture groups for its directory marker but
 				# Hyperscan does not support capture groups. Check for this scenario.
@@ -324,7 +322,7 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 		)
 		return expr_data
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		"""
 		Check the file against the patterns.
 

@@ -10,8 +10,11 @@ import stat
 import sys
 import warnings
 from collections.abc import (
-	Collection as CollectionType,
-	Iterable as IterableType)
+	Callable,
+	Collection,
+	Iterable,
+	Iterator,
+	Sequence)
 from dataclasses import (
 	dataclass)
 from os import (
@@ -19,17 +22,8 @@ from os import (
 from typing import (
 	Any,
 	AnyStr,
-	Callable,  # Replaced by `collections.abc.Callable` in 3.9.
-	Collection,  # Replaced by `collections.abc.Collection` in 3.9.
-	Dict,  # Replaced by `dict` in 3.9.
 	Generic,
-	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
-	Iterator,  # Replaced by `collections.abc.Iterator` in 3.9.
-	List,  # Replaced by `list` in 3.9.
 	Optional,  # Replaced by `X | None` in 3.10.
-	Sequence,  # Replaced by `collections.abc.Sequence` in 3.9.
-	Set,  # Replaced by `set` in 3.9.
-	Tuple,  # Replaced by `tuple` in 3.9.
 	TypeVar,
 	Union)  # Replaced by `X | Y` in 3.10.
 
@@ -84,10 +78,10 @@ def append_dir_sep(path: pathlib.Path) -> str:
 
 
 def check_match_file(
-	patterns: Iterable[Tuple[int, Pattern]],
+	patterns: Iterable[tuple[int, Pattern]],
 	file: str,
 	is_reversed: Optional[bool] = None,
-) -> Tuple[Optional[bool], Optional[int]]:
+) -> tuple[Optional[bool], Optional[int]]:
 	"""
 	Check the file against the patterns.
 
@@ -131,7 +125,7 @@ def detailed_match_files(
 	patterns: Iterable[Pattern],
 	files: Iterable[str],
 	all_matches: Optional[bool] = None,
-) -> Dict[str, 'MatchDetail']:
+) -> dict[str, 'MatchDetail']:
 	"""
 	Matches the files to the patterns, and returns which patterns matched
 	the files.
@@ -149,7 +143,7 @@ def detailed_match_files(
 	Returns the matched files (:class:`dict`) which maps each matched file
 	(:class:`str`) to the patterns that matched in order (:class:`.MatchDetail`).
 	"""
-	all_files = files if isinstance(files, CollectionType) else list(files)
+	all_files = files if isinstance(files, Collection) else list(files)
 	return_files = {}
 	for pattern in patterns:
 		if pattern.include is not None:
@@ -175,7 +169,7 @@ def detailed_match_files(
 
 def _filter_check_patterns(
 	patterns: Iterable[Pattern],
-) -> List[Tuple[int, Pattern]]:
+) -> list[tuple[int, Pattern]]:
 	"""
 	Filters out null-patterns.
 
@@ -201,7 +195,7 @@ def _is_iterable(value: Any) -> bool:
 
 	Returns whether *value* is an iterable (:class:`bool`).
 	"""
-	return isinstance(value, IterableType) and not isinstance(value, (str, bytes))
+	return isinstance(value, Iterable) and not isinstance(value, (str, bytes))
 
 
 def iter_tree_entries(
@@ -240,7 +234,7 @@ def iter_tree_entries(
 def _iter_tree_entries_next(
 	root_full: str,
 	dir_rel: str,
-	memo: Dict[str, str],
+	memo: dict[str, str],
 	on_error: Callable[[OSError], None],
 	follow_links: bool,
 ) -> Iterator['TreeEntry']:
@@ -353,7 +347,7 @@ def iter_tree_files(
 def _iter_tree_files_next(
 	root_full: str,
 	dir_rel: str,
-	memo: Dict[str, str],
+	memo: dict[str, str],
 	on_error: Callable[[OSError], None],
 	follow_links: bool,
 ) -> Iterator[str]:
@@ -458,7 +452,7 @@ def match_file(patterns: Iterable[Pattern], file: str) -> bool:
 def match_files(
 	patterns: Iterable[Pattern],
 	files: Iterable[str],
-) -> Set[str]:
+) -> set[str]:
 	"""
 	DEPRECATED: This is an old function no longer used. Use the
 	:func:`~pathspec.util.match_file` function with a loop for better results.
@@ -531,7 +525,7 @@ def normalize_file(
 def normalize_files(
 	files: Iterable[StrPath],
 	separators: Optional[Collection[str]] = None,
-) -> Dict[str, List[StrPath]]:
+) -> dict[str, list[StrPath]]:
 	"""
 	DEPRECATED: This function is no longer used. Use the :func:`.normalize_file`
 	function with a loop for better results.

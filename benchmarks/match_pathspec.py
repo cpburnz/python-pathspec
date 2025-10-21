@@ -5,16 +5,15 @@ included in the released library.
 from __future__ import annotations
 
 import itertools
+from collections.abc import (
+	Iterable)
 from typing import (
 	Any,
-	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
-	List,  # Replaced by `list` in 3.9.
-	Optional,  # Replaced by `X | None` in 3.10.
-	Tuple)  # Replaced by `tuple` in 3.9.
+	Optional)  # Replaced by `X | None` in 3.10.
 
 try:
 	import hyperscan
-except ModuleNotFoundError as e:
+except ModuleNotFoundError:
 	hyperscan = None
 
 # TODO: Look into re2 <https://pypi.org/project/google-re2>.
@@ -35,15 +34,15 @@ class HyperscanR1BaseMatcher(HyperscanMatcher):
 	@staticmethod
 	def _init_db(
 		db: hyperscan.Database,
-		patterns: List[Tuple[int, RegexPattern]],
-	) -> List[_HyperscanExprDat]:
+		patterns: list[tuple[int, RegexPattern]],
+	) -> list[_HyperscanExprDat]:
 		# NOTICE: This is the current implementation.
 
 		# Prepare patterns.
-		expr_data: List[_HyperscanExprDat] = []
-		exprs: List[bytes] = []
+		expr_data: list[_HyperscanExprDat] = []
+		exprs: list[bytes] = []
 		id_counter = itertools.count(0)
-		ids: List[int] = []
+		ids: list[int] = []
 		for pattern_index, pattern in patterns:
 			if pattern.include is None:
 				continue
@@ -97,7 +96,7 @@ class HyperscanR1BlockClosureMatcher(_HyperscanR1BlockBaseMatcher):
 	block mode for matching files, and uses a closure to capture state.
 	"""
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include = False
 		out_index: Optional[int] = None
 
@@ -122,9 +121,9 @@ class HyperscanR1BlockStateMatcher(_HyperscanR1BlockBaseMatcher):
 
 	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
 		super().__init__(patterns)
-		self.__out: Tuple[Optional[bool], Optional[int]] = (None, None)
+		self.__out: tuple[Optional[bool], Optional[int]] = (None, None)
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		self.__out = (None, None)
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
 		return self.__out
@@ -160,7 +159,7 @@ class HyperscanR1StreamClosureMatcher(_HyperscanR1StreamBaseMatcher):
 	in streaming mode for matching files, and uses a closure to capture state.
 	"""
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include = False
 		out_index: Optional[int] = None
 
@@ -191,9 +190,9 @@ class HyperscanR1StreamStateMatcher(_HyperscanR1StreamBaseMatcher):
 
 	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
 		super().__init__(patterns)
-		self.__out: Tuple[Optional[bool], Optional[int]] = (None, None)
+		self.__out: tuple[Optional[bool], Optional[int]] = (None, None)
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		self.__out = (None, None)
 
 		with self._db.stream(match_event_handler=self.__on_match) as stream:

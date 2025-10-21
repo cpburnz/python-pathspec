@@ -5,12 +5,11 @@ the released library.
 from __future__ import annotations
 
 import itertools
+from collections.abc import (
+	Iterable)
 from typing import (
 	Any,
-	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
-	List,  # Replaced by `list` in 3.9.
 	Optional,  # Replaced by `X | None` in 3.10.
-	Tuple,  # Replaced by `tuple` in 3.9.
 	Union)  # Replaced by `X | Y` in 3.10.
 
 try:
@@ -61,7 +60,7 @@ class GiHyperscanR1BlockClosureMatcher(_GiHyperscanR1BlockBaseMatcher):
 	in block mode for matching files, and uses a closure to capture state.
 	"""
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include: Optional[bool] = None
 		out_index: Optional[int] = None
 		out_priority = 0
@@ -109,9 +108,9 @@ class GiHyperscanR1BlockStateMatcher(_GiHyperscanR1BlockBaseMatcher):
 
 	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
 		super().__init__(patterns)
-		self.__out: Tuple[Optional[bool], Optional[int], Optional[int]] = (None, None, 0)
+		self.__out: tuple[Optional[bool], Optional[int], Optional[int]] = (None, None, 0)
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		self.__out = (None, None, 0)
 		self._db.scan(
 			file.encode('utf8'), match_event_handler=self.__on_match, context=file,
@@ -170,7 +169,7 @@ class GiHyperscanR1StreamClosureMatcher(_GiHyperscanR1StreamBaseMatcher):
 	in streaming mode for matching files, and uses a closure to capture state.
 	"""
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include: Optional[bool] = None
 		out_index: Optional[int] = None
 		out_priority = 0
@@ -226,9 +225,9 @@ class GiHyperscanR1StreamStateMatcher(_GiHyperscanR1StreamBaseMatcher):
 
 	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
 		super().__init__(patterns)
-		self.__out: Tuple[Optional[bool], Optional[int], Optional[int]] = (None, None, 0)
+		self.__out: tuple[Optional[bool], Optional[int], Optional[int]] = (None, None, 0)
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		self.__out = (None, None, 0)
 		with self._db.stream(match_event_handler=self.__on_match, context=file) as stream:
 			stream.scan(file.encode('utf8'))
@@ -283,15 +282,15 @@ class _GiHyperscanR2BaseMatcher(HyperscanMatcher):
 	@staticmethod
 	def _init_db(
 		db: hyperscan.Database,
-		patterns: List[Tuple[int, RegexPattern]],
-	) -> List[_HyperscanExprDat]:
+		patterns: list[tuple[int, RegexPattern]],
+	) -> list[_HyperscanExprDat]:
 		# NOTICE: This is the current implementation.
 
 		# Prepare patterns.
-		expr_data: List[_HyperscanExprDat] = []
-		exprs: List[bytes] = []
+		expr_data: list[_HyperscanExprDat] = []
+		exprs: list[bytes] = []
 		id_counter = itertools.count(0)
-		ids: List[int] = []
+		ids: list[int] = []
 		for pattern_index, pattern in patterns:
 			if pattern.include is None:
 				continue
@@ -300,7 +299,7 @@ class _GiHyperscanR2BaseMatcher(HyperscanMatcher):
 			assert isinstance(pattern, RegexPattern), pattern
 			regex = pattern.regex.pattern
 
-			use_regexes: List[Tuple[Union[str, bytes], bool]] = []
+			use_regexes: list[tuple[Union[str, bytes], bool]] = []
 			if isinstance(pattern, GitWildMatchPattern):
 				# GitWildMatch uses capture groups for its directory marker but
 				# Hyperscan does not support capture groups. Check for this scenario.
@@ -373,7 +372,7 @@ class GiHyperscanR2BlockClosureMatcher(_GiHyperscanR2BlockBaseMatcher):
 	in block mode for matching files, and uses a closure to capture state.
 	"""
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include: Optional[bool] = None
 		out_index: Optional[int] = None
 		out_priority = 0
@@ -413,9 +412,9 @@ class GiHyperscanR2BlockStateMatcher(_GiHyperscanR2BlockBaseMatcher):
 
 	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
 		super().__init__(patterns)
-		self.__out: Tuple[Optional[bool], Optional[int], Optional[int]] = (None, None, 0)
+		self.__out: tuple[Optional[bool], Optional[int], Optional[int]] = (None, None, 0)
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		self.__out = (None, None, 0)
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
 		return self.__out[:2]
@@ -463,7 +462,7 @@ class GiHyperscanR2StreamClosureMatcher(_GiHyperscanR2StreamBaseMatcher):
 	in streaming mode for matching files, and uses a closure to capture state.
 	"""
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include: Optional[bool] = None
 		out_index: Optional[int] = None
 		out_priority = 0

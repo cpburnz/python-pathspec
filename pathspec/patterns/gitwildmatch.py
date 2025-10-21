@@ -7,8 +7,7 @@ import re
 import warnings
 from typing import (
 	AnyStr,
-	Optional,  # Replaced by `X | None` in 3.10.
-	Tuple)  # Replaced by `tuple` in 3.9.
+	Optional)  # Replaced by `X | None` in 3.10.
 
 from .. import util
 from ..pattern import RegexPattern
@@ -46,7 +45,7 @@ class GitWildMatchPattern(RegexPattern):
 	def pattern_to_regex(
 		cls,
 		pattern: AnyStr,
-	) -> Tuple[Optional[AnyStr], Optional[bool]]:
+	) -> tuple[Optional[AnyStr], Optional[bool]]:
 		"""
 		Convert the pattern into a regular expression.
 

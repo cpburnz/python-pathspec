@@ -2,6 +2,8 @@
 This module defines benchmarks for :class:`.GitIgnoreSpec`.
 """
 
+# TODO: Hatchling uses GitIgnoreSpec.match_file(). Benchmark individual files.
+
 import pytest
 from pytest_benchmark.fixture import (
 	BenchmarkFixture)

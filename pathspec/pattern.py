@@ -5,14 +5,13 @@ This module provides the base definition for patterns.
 import dataclasses
 import re
 import warnings
+from collections.abc import (
+	Iterable,
+	Iterator)
 from typing import (
 	Any,
 	AnyStr,
-	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
-	Iterator,  # Replaced by `collections.abc.Iterator` in 3.9.
-	Match as MatchHint,  # Replaced by `re.Match` in 3.9.
 	Optional,  # Replaced by `X | None` in 3.10.
-	Pattern as PatternHint,  # Replaced by `re.Pattern` in 3.9.
 	Tuple,  # Replaced by `tuple` in 3.9.
 	Union)  # Replaced by `X | Y` in 3.10.
 
@@ -94,7 +93,7 @@ class RegexPattern(Pattern):
 
 	def __init__(
 		self,
-		pattern: Union[AnyStr, PatternHint, None],
+		pattern: Union[AnyStr, re.Pattern, None],
 		include: Optional[bool] = None,
 	) -> None:
 		"""
@@ -132,21 +131,23 @@ class RegexPattern(Pattern):
 			assert include is None, (
 				f"include:{include!r} must be null when pattern:{pattern!r} is null."
 			)
+			regex = None
 
 		else:
 			raise TypeError(f"pattern:{pattern!r} is not a string, re.Pattern, or None.")
 
 		super(RegexPattern, self).__init__(include)
 
-		self.pattern: Union[AnyStr, PatternHint, None] = pattern
+		self.pattern: Union[AnyStr, re.Pattern, None] = pattern
 		"""
 		*pattern* (:class:`str`, :class:`bytes`, :class:`re.Pattern`, or
 		:data:`None`) is the uncompiled, input pattern. This is for reference.
 		"""
 
-		self.regex: PatternHint = regex
+		self.regex: Optional[re.Pattern] = regex
 		"""
-		*regex* (:class:`re.Pattern`) is the regular expression for the pattern.
+		*regex* (:class:`re.Pattern` or :data:`None`) is the compiled regular
+		expression for the pattern.
 		"""
 
 	def __eq__(self, other: 'RegexPattern') -> bool:
@@ -207,7 +208,7 @@ class RegexMatchResult(object):
 		'match',
 	)
 
-	match: MatchHint
+	match: re.Match
 	"""
 	*match* (:class:`re.Match`) is the regex match result.
 	"""

@@ -3,19 +3,17 @@ This module provides an object-oriented interface for pattern matching of files.
 """
 
 from collections.abc import (
-	Sequence as SequenceType)
+	Callable,
+	Collection,
+	Iterable,
+	Iterator,
+	Sequence)
 from itertools import (
 	zip_longest)
 from typing import (
 	AnyStr,
-	Callable,  # Replaced by `collections.abc.Callable` in 3.9.
-	Collection,  # Replaced by `collections.abc.Collection` in 3.9.
-	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
-	Iterator,  # Replaced by `collections.abc.Iterator` in 3.9.
 	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
-	Sequence,  # Replaced by `collections.abc.Sequence` in 3.9.
-	Type,  # Replaced by `type` in 3.9.
 	TypeVar,
 	Union,  # Replaced by `X | Y` in 3.10.
 	cast)
@@ -68,7 +66,7 @@ class PathSpec(object):
 		use the best available library. If :class:`str`, must be one of the
 		following libraries: "hyperscan". Default is :data:`None` for :data:`False`.
 		"""
-		if not isinstance(patterns, SequenceType):
+		if not isinstance(patterns, Sequence):
 			patterns = list(patterns)
 
 		if optimize is None:
@@ -213,7 +211,7 @@ class PathSpec(object):
 
 	@classmethod
 	def from_lines(
-		cls: Type[Self],
+		cls: type[Self],
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern]],
 		lines: Iterable[AnyStr],
 		*,

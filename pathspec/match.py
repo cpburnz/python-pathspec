@@ -5,16 +5,15 @@ actually match files against patterns.
 from __future__ import annotations
 
 import itertools
+from collections.abc import (
+	Iterable)
 from typing import (
 	Any,
 	ClassVar,
-	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
-	List,  # Replaced by `list` in 3.9.
 	Literal,
 	NamedTuple,
 	Optional,  # Replaced by `X | None` in 3.10.
-	TypeVar,
-	Tuple)  # Replaced by `tuple` in 3.9.
+	TypeVar)
 
 try:
 	import hyperscan
@@ -47,7 +46,7 @@ class Matcher(object):
 	against patterns.
 	"""
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		"""
 		Check the file against the patterns.
 
@@ -90,7 +89,7 @@ class DefaultMatcher(Matcher):
 			patterns, filter=not no_filter, reverse=not no_reverse,
 		)
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		"""
 		Check the file against the patterns.
 
@@ -133,14 +132,14 @@ class HyperscanMatcher(Matcher):
 
 		self._db = self._new_db()
 		self._expr_data = self._init_db(self._db, use_patterns)
-		self._out: Tuple[Optional[bool], Optional[int]] = (None, None)
+		self._out: tuple[Optional[bool], Optional[int]] = (None, None)
 		self._patterns = dict(use_patterns)
 
 	@staticmethod
 	def _init_db(
 		db: hyperscan.Database,
-		patterns: List[Tuple[int, RegexPattern]],
-	) -> List[_HyperscanExprDat]:
+		patterns: list[tuple[int, RegexPattern]],
+	) -> list[_HyperscanExprDat]:
 		"""
 		WARNING: This method is an implementation detail and not part of the public
 		API.
@@ -156,10 +155,10 @@ class HyperscanMatcher(Matcher):
 		(:class:`_HyperscanExprDat`).
 		"""
 		# Prepare patterns.
-		expr_data: List[_HyperscanExprDat] = []
-		exprs: List[bytes] = []
+		expr_data: list[_HyperscanExprDat] = []
+		exprs: list[bytes] = []
 		id_counter = itertools.count(0)
-		ids: List[int] = []
+		ids: list[int] = []
 		for pattern_index, pattern in patterns:
 			if pattern.include is None:
 				continue
@@ -191,7 +190,7 @@ class HyperscanMatcher(Matcher):
 		)
 		return expr_data
 
-	def match_file(self, file: str) -> Tuple[Optional[bool], Optional[int]]:
+	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		"""
 		Check the file against the patterns.
 
@@ -243,7 +242,7 @@ def _enumerate_patterns(
 	patterns: Iterable[TPattern],
 	filter: bool,
 	reverse: bool,
-) -> List[Tuple[int, TPattern]]:
+) -> list[tuple[int, TPattern]]:
 	"""
 	Enumerate the patterns.
 
