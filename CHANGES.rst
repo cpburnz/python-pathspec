@@ -8,7 +8,7 @@ Change History
 
 Major changes:
 
-- `Issue #91`_: Dropped support of EOL Python 3.8.
+- `Issue #91`_: Dropped support of EoL Python 3.8.
 
 Improvements:
 
@@ -34,7 +34,7 @@ Bug fixes:
 
 Major changes:
 
-- Dropped support of EOL Python 3.7. See `Pull #82`_.
+- Dropped support of EoL Python 3.7. See `Pull #82`_.
 
 
 API changes:
@@ -189,7 +189,7 @@ Improvements:
 
 Major changes:
 
-- Dropped support of EOL Python 2.7, 3.5, 3.6. See `Issue #47`_.
+- Dropped support of EoL Python 2.7, 3.5, 3.6. See `Issue #47`_.
 - The *gitwildmatch* pattern `dir/*` is now handled the same as `dir/`. This means `dir/*` will now match all descendants rather than only direct children. See `Issue #19`_.
 - Added `pathspec.GitIgnoreSpec` class (see new features).
 - Changed build system to `pyproject.toml`_ and build backend to `setuptools.build_meta`_ which may have unforeseen consequences.
