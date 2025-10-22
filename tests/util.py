@@ -35,8 +35,7 @@ from pathspec.util import (
 	TreeEntry)
 
 OPTIMIZE_PARAMS: List[Tuple[str, Optional[Literal['hyperscan']]]] = [
-	('default', None),
-	# ('hyperscan', 'hyperscan'),
+	('hyperscan', 'hyperscan'),
 ]
 """
 The optimize parameters.
