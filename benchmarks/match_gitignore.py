@@ -87,11 +87,7 @@ class GiHyperscanR1BlockClosureMatcher(_GiHyperscanR1BlockBaseMatcher):
 					# Pattern matched by a file pattern.
 					priority = 2
 
-				if include and dir_mark:
-					out_include = include
-					out_index = index
-					out_priority = priority
-				elif priority >= out_priority:
+				if (include and dir_mark) or priority >= out_priority:
 					out_include = include
 					out_index = index
 					out_priority = priority
@@ -144,9 +140,7 @@ class GiHyperscanR1BlockStateMatcher(_GiHyperscanR1BlockBaseMatcher):
 				# Pattern matched by a file pattern.
 				priority = 2
 
-			if include and dir_mark:
-				self.__out = (include, index, priority)
-			elif priority >= self.__out[2]:
+			if (include and dir_mark) or priority >= self.__out[2]:
 				self.__out = (include, index, priority)
 
 
@@ -177,6 +171,7 @@ class GiHyperscanR1StreamClosureMatcher(_GiHyperscanR1StreamBaseMatcher):
 		def on_match(
 			expr_id: int, _from: int, _to: int, _flags: int, _context: Any,
 		) -> Optional[bool]:
+			# NOTICE: Patterns are being checked in reverse order.
 			nonlocal out_include, out_index, out_priority
 			expr_dat = self._expr_data[expr_id]
 			if (include := expr_dat.include) is not None:
@@ -196,11 +191,7 @@ class GiHyperscanR1StreamClosureMatcher(_GiHyperscanR1StreamBaseMatcher):
 					# Pattern matched by a file pattern.
 					priority = 2
 
-				if include and dir_mark:
-					out_include = include
-					out_index = index
-					out_priority = priority
-				elif priority >= out_priority:
+				if priority > out_priority:
 					out_include = include
 					out_index = index
 					out_priority = priority
@@ -209,6 +200,8 @@ class GiHyperscanR1StreamClosureMatcher(_GiHyperscanR1StreamBaseMatcher):
 					# Patterns are being checked in reverse order. The first pattern that
 					# matches with the highest priority takes precedence.
 					return True
+
+			return None
 
 		with self._db.stream(match_event_handler=on_match) as stream:
 			stream.scan(file.encode('utf8'))
@@ -242,7 +235,7 @@ class GiHyperscanR1StreamStateMatcher(_GiHyperscanR1StreamBaseMatcher):
 		_flags: int,
 		context: Any,
 	) -> Optional[bool]:
-		#print(f"[{context}] {expr_id} {include}: {patterns[expr_id].pattern!r}")
+		# NOTICE: Patterns are being checked in reverse order.
 		file: str = context
 		expr_dat = self._expr_data[expr_id]
 		if (include := expr_dat.include) is not None:
@@ -262,15 +255,15 @@ class GiHyperscanR1StreamStateMatcher(_GiHyperscanR1StreamBaseMatcher):
 				# Pattern matched by a file pattern.
 				priority = 2
 
-			if include and dir_mark:
-				self.__out = (include, index, priority)
-			elif priority >= self.__out[2]:
+			if priority > self.__out[2]:
 				self.__out = (include, index, priority)
 
 			if priority == 2:
 				# Patterns are being checked in reverse order. The first pattern that
 				# matches with the highest priority takes precedence.
 				return True
+
+		return None
 
 
 class _GiHyperscanR2BaseMatcher(HyperscanMatcher):
@@ -391,11 +384,7 @@ class GiHyperscanR2BlockClosureMatcher(_GiHyperscanR2BlockBaseMatcher):
 					# Pattern matched by a file pattern.
 					priority = 2
 
-				if include and is_dir_pattern:
-					out_include = include
-					out_index = expr_dat.index
-					out_priority = priority
-				elif priority >= out_priority:
+				if (include and is_dir_pattern) or priority >= out_priority:
 					out_include = include
 					out_index = expr_dat.index
 					out_priority = priority
@@ -425,7 +414,7 @@ class GiHyperscanR2BlockStateMatcher(_GiHyperscanR2BlockBaseMatcher):
 		_from: int,
 		_to: int,
 		_flags: int,
-		context: Any,
+		_context: Any,
 	) -> Optional[bool]:
 		expr_dat = self._expr_data[expr_id]
 		if (include := expr_dat.include) is not None:
@@ -437,9 +426,7 @@ class GiHyperscanR2BlockStateMatcher(_GiHyperscanR2BlockBaseMatcher):
 				# Pattern matched by a file pattern.
 				priority = 2
 
-			if include and is_dir_pattern:
-				self.__out = (include, expr_dat.index, priority)
-			elif priority >= self.__out[2]:
+			if (include and is_dir_pattern) or priority >= self.__out[2]:
 				self.__out = (include, expr_dat.index, priority)
 
 
@@ -470,6 +457,7 @@ class GiHyperscanR2StreamClosureMatcher(_GiHyperscanR2StreamBaseMatcher):
 		def on_match(
 			expr_id: int, _from: int, _to: int, _flags: int, _context: Any,
 		) -> Optional[bool]:
+			# NOTICE: Patterns are being checked in reverse order.
 			nonlocal out_include, out_index, out_priority
 			expr_dat = self._expr_data[expr_id]
 			if (include := expr_dat.include) is not None:
@@ -481,11 +469,7 @@ class GiHyperscanR2StreamClosureMatcher(_GiHyperscanR2StreamBaseMatcher):
 					# Pattern matched by a file pattern.
 					priority = 2
 
-				if include and is_dir_pattern:
-					out_include = include
-					out_index = expr_dat.index
-					out_priority = priority
-				elif priority >= out_priority:
+				if priority > out_priority:
 					out_include = include
 					out_index = expr_dat.index
 					out_priority = priority

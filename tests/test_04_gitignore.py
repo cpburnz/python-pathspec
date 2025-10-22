@@ -111,8 +111,6 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			'*.yaml',
 			'!*.yaml/',
 		])
-		# TODO BUG: filtered and reversed has bug. ~Caleb, 2025-10-05
-		#spec._matcher = _GiDefaultMatcher(spec.patterns, no_filter=True, no_reverse=True)
 		files = {
 			'dir.yaml/file.sql',   # -
 			'dir.yaml/file.yaml',  # 1:*.yaml
@@ -149,8 +147,6 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			'!*.yaml/',
 			'*.yaml',
 		])
-		# TODO BUG: filtered and reversed has bug. ~Caleb, 2025-10-05
-		#spec._matcher = _GiDefaultMatcher(spec.patterns, no_filter=True, no_reverse=True)
 		files = {
 			'dir.yaml/file.sql',   # 2:*.yaml
 			'dir.yaml/file.yaml',  # 2:*.yaml
@@ -187,8 +183,6 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			'*.yaml',
 			'!dir.yaml',
 		])
-		# TODO BUG: filtered and reversed has bug. ~Caleb, 2025-10-05
-		#spec._matcher = _GiDefaultMatcher(spec.patterns, no_filter=True, no_reverse=True)
 		files = {
 			'dir.yaml/file.sql',   # -
 			'dir.yaml/file.yaml',  # 1:*.yaml

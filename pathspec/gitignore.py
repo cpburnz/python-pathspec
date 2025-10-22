@@ -204,21 +204,21 @@ class _GiDefaultMatcher(DefaultMatcher):
 					# Pattern matched by a file pattern.
 					priority = 2
 
-				is_changed = False
-				if include and dir_mark:
-					out_include = include
-					out_index = index
-					out_priority = priority
-					is_changed = True
-				elif priority >= out_priority:
-					out_include = include
-					out_index = index
-					out_priority = priority
-					is_changed = True
+				if is_reversed:
+					if priority > out_priority:
+						out_include = include
+						out_index = index
+						out_priority = priority
+				else:
+					# Forward.
+					if (include and dir_mark) or priority >= out_priority:
+						out_include = include
+						out_index = index
+						out_priority = priority
 
 				if is_reversed and priority == 2:
 					# Patterns are being checked in reverse order. The first pattern that
-					# matches with the highest priority takes precedence.
+					# matches with priority 2 takes precedence.
 					break
 
 		return out_include, out_index
@@ -332,6 +332,8 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 		or :data:`None`), and the index of the last matched pattern (:class:`int` or
 		:data:`None`).
 		"""
+		# NOTICE: According to benchmarking, a method callback is 13% faster than
+		# using a closure here.
 		self._out = (None, None, 0)
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
 		return self._out[:2]
@@ -360,7 +362,5 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 				# Pattern matched by a file pattern.
 				priority = 2
 
-			if include and is_dir_pattern:
-				self._out = (include, expr_dat.index, priority)
-			elif priority >= self._out[2]:
+			if (include and is_dir_pattern) or priority >= self._out[2]:
 				self._out = (include, expr_dat.index, priority)

@@ -78,7 +78,7 @@ class DefaultMatcher(Matcher):
 		*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the compiled
 		patterns.
 
-		*no_filter* (:class:`bool`) is whether to keep null patterns (:data:`True`),
+		*no_filter* (:class:`bool`) is whether to keep no-op patterns (:data:`True`),
 		or remove them (:data:`False`).
 
 		*no_reverse* (:class:`bool`) is whether to keep the pattern order
@@ -200,7 +200,7 @@ class HyperscanMatcher(Matcher):
 		or :data:`None`), and the index of the last matched pattern (:class:`int` or
 		:data:`None`).
 		"""
-		# NOTICE: According to benchmarking, a method callback is 22% faster than
+		# NOTICE: According to benchmarking, a method callback is 20% faster than
 		# using a closure here.
 		self._out = (None, None)
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
@@ -248,7 +248,7 @@ def _enumerate_patterns(
 
 	*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the patterns.
 
-	*filter* (:class:`bool`) is whether to remove null patterns (:data:`True`),
+	*filter* (:class:`bool`) is whether to remove no-op patterns (:data:`True`),
 	or keep them (:data:`False`).
 
 	*reverse* (:class:`bool`) is whether to reverse the pattern order
