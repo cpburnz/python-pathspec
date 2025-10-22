@@ -7,17 +7,14 @@ import itertools
 import os
 import os.path
 import pathlib
-from unittest import (
-	SkipTest)
-
+from collections.abc import (
+	Iterable)
 from typing import (
-	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
-	List,  # Replaced by `set` in 3.9.
 	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
-	Set,  # Replaced by `set` in 3.9.
-	Tuple,  # Replaced by `tuple` in 3.9.
 	cast)
+from unittest import (
+	SkipTest)
 
 try:
 	import hyperscan
@@ -34,7 +31,7 @@ from pathspec.util import (
 	TStrPath,
 	TreeEntry)
 
-OPTIMIZE_PARAMS: List[Tuple[str, Optional[Literal['hyperscan']]]] = [
+OPTIMIZE_PARAMS: list[tuple[str, Optional[Literal['hyperscan']]]] = [
 	('hyperscan', 'hyperscan'),
 ]
 """
@@ -42,7 +39,7 @@ The optimize parameters.
 """
 
 
-def debug_includes(spec: PathSpec, files: Set[str], includes: Set[str]) -> str:
+def debug_includes(spec: PathSpec, files: set[str], includes: set[str]) -> str:
 	"""
 	Format the match files message.
 
@@ -73,7 +70,7 @@ def debug_results(spec: PathSpec, results: Iterable[CheckResult[str]]) -> str:
 
 	Returns the message (:class:`str`).
 	"""
-	patterns = cast(List[RegexPattern], spec.patterns)
+	patterns = cast(list[RegexPattern], spec.patterns)
 
 	pattern_table = []
 	for index, pattern in enumerate(patterns, 1):
@@ -112,7 +109,7 @@ def debug_results(spec: PathSpec, results: Iterable[CheckResult[str]]) -> str:
 	])
 
 
-def get_includes(results: Iterable[CheckResult[TStrPath]]) -> Set[TStrPath]:
+def get_includes(results: Iterable[CheckResult[TStrPath]]) -> set[TStrPath]:
 	"""
 	Get the included files from the check results.
 
@@ -124,7 +121,7 @@ def get_includes(results: Iterable[CheckResult[TStrPath]]) -> Set[TStrPath]:
 	return {__res.file for __res in results if __res.include}
 
 
-def get_paths_from_entries(entries: Iterable[TreeEntry]) -> Set[str]:
+def get_paths_from_entries(entries: Iterable[TreeEntry]) -> set[str]:
 	"""
 	Get the entry paths.
 
@@ -161,7 +158,7 @@ def make_files(temp_dir: pathlib.Path, files: Iterable[str]) -> None:
 		mkfile(temp_dir / ospath(file))
 
 
-def make_links(temp_dir: pathlib.Path, links: Iterable[Tuple[str, str]]) -> None:
+def make_links(temp_dir: pathlib.Path, links: Iterable[tuple[str, str]]) -> None:
 	"""
 	Create the specified links.
 

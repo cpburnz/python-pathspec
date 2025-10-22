@@ -9,13 +9,13 @@ import pathlib
 import shutil
 import tempfile
 import unittest
+from collections.abc import (
+	Iterable)
 from functools import (
 	partial)
 from typing import (
 	ClassVar,
-	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
-	Optional,  # Replaced by `X | None` in 3.10.
-	Tuple)  # Replaced by `tuple` in 3.9.
+	Optional)  # Replaced by `X | None` in 3.10.
 
 from pathspec.patterns.gitwildmatch import (
 	GitWildMatchPattern)
@@ -134,7 +134,7 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		make_files(self.temp_dir, files)
 
-	def make_links(self, links: Iterable[Tuple[str, str]]) -> None:
+	def make_links(self, links: Iterable[tuple[str, str]]) -> None:
 		"""
 		Create the specified links.
 		"""
