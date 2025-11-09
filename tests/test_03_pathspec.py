@@ -77,7 +77,7 @@ class PathSpecTest(unittest.TestCase):
 
 		*lines* (:class:`Iterable` of :class:`str`) yields the lines.
 
-		Returns an :class:`Iterator` yielding each :class:`PathSpec`.
+		Returns an :class:`Iterator` yielding each context for the :class:`PathSpec`.
 		"""
 		lines = list(lines)
 
@@ -904,13 +904,13 @@ class PathSpecTest(unittest.TestCase):
 		]):
 			with sub_test() as spec:
 				files = {
-					'.c-tmp',
-					'.gitignore',
-					'a.log',
-					'b.txt',
-					'build/d.log',
-					'build/trace.bin',
-					'trace.c',
+					'.c-tmp',           # 3:.*
+					'.gitignore',       # 4:!.gitignore
+					'a.log',            # 2:*.log
+					'b.txt',            # -
+					'build/d.log',      # 1:build
+					'build/trace.bin',  # 1:build
+					'trace.c',          # -
 				}
 
 				keeps = set(spec.match_files(files, negate=True))
@@ -935,13 +935,13 @@ class PathSpecTest(unittest.TestCase):
 		]):
 			with sub_test() as spec:
 				files = {
-					'.c-tmp',
-					'.gitignore',
-					'a.log',
-					'b.txt',
-					'build/d.log',
-					'build/trace.bin',
-					'trace.c',
+					'.c-tmp',           # 3:.*
+					'.gitignore',       # 4:!.gitignore
+					'a.log',            # 2:*.log
+					'b.txt',            # -
+					'build/d.log',      # 1:build
+					'build/trace.bin',  # 1:build
+					'trace.c',          # -
 				}
 
 				keeps = set(spec.match_files(files, negate=True))

@@ -47,7 +47,7 @@ def debug_includes(spec: PathSpec, files: set[str], includes: set[str]) -> str:
 
 	*files* (:class:`set` of :class:`str`) contains the source files.
 
-	*include* (:class:`set` of :class:`str`) contains the matched files.
+	*includes* (:class:`set` of :class:`str`) contains the matched files.
 
 	Returns the message (:class:`str`).
 	"""

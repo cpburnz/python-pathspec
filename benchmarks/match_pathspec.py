@@ -105,7 +105,7 @@ class HyperscanR1BlockClosureMatcher(_HyperscanR1BlockBaseMatcher):
 		) -> Optional[bool]:
 			nonlocal out_include, out_index
 			expr_dat = self._expr_data[expr_id]
-			if include := expr_dat.include:
+			if (include := expr_dat.include) is not None:
 				out_include = include
 				out_index = expr_dat.index
 
@@ -168,7 +168,7 @@ class HyperscanR1StreamClosureMatcher(_HyperscanR1StreamBaseMatcher):
 		) -> Optional[bool]:
 			nonlocal out_include, out_index
 			expr_dat = self._expr_data[expr_id]
-			if include := expr_dat.include:
+			if (include := expr_dat.include) is not None:
 				out_include = include
 				out_index = expr_dat.index
 				return True
@@ -209,7 +209,7 @@ class HyperscanR1StreamStateMatcher(_HyperscanR1StreamBaseMatcher):
 		_context: Any,
 	) -> Optional[bool]:
 		expr_dat = self._expr_data[expr_id]
-		if include := expr_dat.include:
+		if (include := expr_dat.include) is not None:
 			self.__out = (include, expr_dat.index)
 			return True
 		else:

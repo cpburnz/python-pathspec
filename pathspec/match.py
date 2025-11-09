@@ -119,9 +119,6 @@ class HyperscanMatcher(Matcher):
 
 		*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the compiled
 		patterns.
-
-		*_reverse* (:class:`bool`) is whether to keep the pattern order
-		(:data:`True`), or reverse the order (:data:`True`).
 		"""
 		if hyperscan is None:
 			raise hyperscan_error
@@ -233,7 +230,7 @@ class HyperscanMatcher(Matcher):
 		pattern.
 		"""
 		expr_dat = self._expr_data[expr_id]
-		if include := expr_dat.include:
+		if (include := expr_dat.include) is not None:
 			# Store match.
 			self._out = (include, expr_dat.index)
 

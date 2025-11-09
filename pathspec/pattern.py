@@ -12,7 +12,6 @@ from typing import (
 	Any,
 	AnyStr,
 	Optional,  # Replaced by `X | None` in 3.10.
-	Tuple,  # Replaced by `tuple` in 3.9.
 	Union)  # Replaced by `X | Y` in 3.10.
 
 
@@ -179,7 +178,7 @@ class RegexPattern(Pattern):
 		return None
 
 	@classmethod
-	def pattern_to_regex(cls, pattern: str) -> Tuple[str, bool]:
+	def pattern_to_regex(cls, pattern: str) -> tuple[str, bool]:
 		"""
 		Convert the pattern into an uncompiled regular expression.
 

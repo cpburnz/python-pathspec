@@ -353,7 +353,7 @@ class _GiHyperscanMatcher(HyperscanMatcher):
 		pattern.
 		"""
 		expr_dat = self._expr_data[expr_id]
-		if include := expr_dat.include:
+		if (include := expr_dat.include) is not None:
 			is_dir_pattern = expr_dat.is_dir_pattern
 			if is_dir_pattern:
 				# Pattern matched by a directory pattern.

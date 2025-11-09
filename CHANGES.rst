@@ -10,12 +10,17 @@ Major changes:
 
 - `Issue #91`_: Dropped support of EoL Python 3.8.
 
+Bug fixes:
+
+- `Issue #98`_: UnboundLocalError in RegexPattern when initialized with pattern=None.
+
 Improvements:
 
 - Mark Python 3.13 and 3.14 as supported.
 
 
 .. _`Issue #91`: https://github.com/cpburnz/python-pathspec/issues/91
+.. _`Issue #98`: https://github.com/cpburnz/python-pathspec/issues/98
 
 
 0.12.1 (2023-12-10)
@@ -35,7 +40,6 @@ Bug fixes:
 Major changes:
 
 - Dropped support of EoL Python 3.7. See `Pull #82`_.
-
 
 API changes:
 
