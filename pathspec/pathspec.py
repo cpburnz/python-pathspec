@@ -19,6 +19,8 @@ from typing import (
 	cast)
 
 from . import util
+from ._backends.base import (
+	Backend)
 from .match import (
 	DefaultMatcher,
 	HyperscanMatcher,
@@ -72,9 +74,10 @@ class PathSpec(object):
 		if optimize is None:
 			optimize = False
 
-		self._matcher: Matcher = self._make_matcher(patterns, optimize)
+		self._backend: Backend = self._make_backend(patterns, optimize)
 		"""
-		*_matcher* (:class:`.Matcher`) is the matcher to use.
+		*_backend* (:class:`.Backend`) is the pattern (or regex) matching backend to
+		use.
 		"""
 
 		self._optimize: Union[bool, Literal['hyperscan']] = optimize
@@ -117,7 +120,7 @@ class PathSpec(object):
 		"""
 		if isinstance(other, PathSpec):
 			self.patterns += other.patterns
-			self._matcher = self._make_matcher(self.patterns, self._optimize)
+			self._backend = self._make_backend(self.patterns, self._optimize)
 			return self
 		else:
 			return NotImplemented
@@ -146,7 +149,7 @@ class PathSpec(object):
 		Returns the file check result (:class:`~pathspec.util.CheckResult`).
 		"""
 		norm_file = normalize_file(file, separators)
-		include, index = self._matcher.match_file(norm_file)
+		include, index = self._backend.match_file(norm_file)
 		return CheckResult(file, include, index)
 
 	def check_files(
@@ -173,7 +176,7 @@ class PathSpec(object):
 
 		for orig_file in files:
 			norm_file = normalize_file(orig_file, separators)
-			include, index = self._matcher.match_file(norm_file)
+			include, index = self._backend.match_file(norm_file)
 			yield CheckResult(orig_file, include, index)
 
 	def check_tree_files(
@@ -250,12 +253,12 @@ class PathSpec(object):
 		return cls(patterns, optimize=optimize)
 
 	@staticmethod
-	def _make_matcher(
+	def _make_backend(
 		patterns: Sequence[Pattern],
 		optimize: Union[bool, Literal['hyperscan']],
-	) -> Matcher:
+	) -> Backend:
 		"""
-		Create the matcher for the patterns.
+		Create the backend for the patterns.
 
 		*patterns* (:class:`~collections.abc.Sequence`) contains each compiled
 		pattern (:class:`.Pattern`).
@@ -263,7 +266,7 @@ class PathSpec(object):
 		*optimize* (:class:`bool` or :class:`str`) is whether to optimize the
 		patterns, and optionally which library to use.
 
-		Returns the matcher (:class:`Matcher`).
+		Returns the matcher (:class:`Backend`).
 		"""
 		if optimize is True:
 			optimize = _OPTIMIZE_LIB
@@ -303,7 +306,7 @@ class PathSpec(object):
 
 		for entry in entries:
 			norm_file = normalize_file(entry.path, separators)
-			include, _index = self._matcher.match_file(norm_file)
+			include, _index = self._backend.match_file(norm_file)
 
 			if negate:
 				include = not include
@@ -329,7 +332,7 @@ class PathSpec(object):
 		Returns :data:`True` if *file* matched; otherwise, :data:`False`.
 		"""
 		norm_file = normalize_file(file, separators)
-		include, _index = self._matcher.match_file(norm_file)
+		include, _index = self._backend.match_file(norm_file)
 		return bool(include)
 
 	def match_files(
@@ -363,7 +366,7 @@ class PathSpec(object):
 
 		for orig_file in files:
 			norm_file = normalize_file(orig_file, separators)
-			include, _index = self._matcher.match_file(norm_file)
+			include, _index = self._backend.match_file(norm_file)
 
 			if negate:
 				include = not include

@@ -24,6 +24,8 @@ try:
 except ModuleNotFoundError:
 	hyperscan = None
 
+from ._backends.base import (
+	Backend)
 from .match import (
 	DefaultMatcher,
 	HyperscanMatcher,
@@ -141,12 +143,12 @@ class GitIgnoreSpec(PathSpec):
 		return cast(Self, self)
 
 	@staticmethod
-	def _make_matcher(
+	def _make_backend(
 		patterns: Sequence[Pattern],
 		optimize: Union[bool, Literal['hyperscan']],
-	) -> Matcher:
+	) -> Backend:
 		"""
-		Create the matcher for the patterns.
+		Create the backend for the patterns.
 
 		*patterns* (:class:`~collections.abc.Sequence`) contains each compiled
 		pattern (:class:`.Pattern`).
@@ -154,7 +156,7 @@ class GitIgnoreSpec(PathSpec):
 		*optimize* (:class:`bool` or :class:`str`) is whether to optimize the
 		patterns, and optionally which library to use.
 
-		Returns the matcher (:class:`Matcher`).
+		Returns the backend (:class:`Backend`).
 		"""
 		if optimize is True:
 			optimize = _OPTIMIZE_LIB
