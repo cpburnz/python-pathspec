@@ -2,6 +2,7 @@
 This module provides :class:`.GitIgnoreSpec` which replicates *.gitignore*
 behavior.
 """
+from __future__ import annotations
 
 import itertools
 from collections.abc import (

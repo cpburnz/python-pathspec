@@ -17,6 +17,8 @@ from pathlib import (
 	Path)
 from typing import (
 	AnyStr)
+from unittest import (
+	SkipTest)
 
 from pathspec import (
 	PathSpec)
@@ -102,11 +104,17 @@ class PathSpecTest(unittest.TestCase):
 		yield _minopt_sub_test
 
 		for label, optimize in OPTIMIZE_PARAMS:
+			try:
+				require_optimize(optimize)
+			except SkipTest:
+				with self.subTest(label):
+					raise
+				continue
+
 			@contextmanager
 			def _optimize_sub_test(label=label, optimize=optimize):
 				self.clear_temp_dir()
 				with self.subTest(label):
-					require_optimize(optimize)
 					yield PathSpec.from_lines(pattern_factory, lines, optimize=optimize)
 
 			yield _optimize_sub_test
