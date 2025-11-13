@@ -19,12 +19,13 @@ except ModuleNotFoundError:
 
 # TODO: Look into re2 <https://pypi.org/project/google-re2>.
 
-from pathspec.gitignore import (
+from pathspec._backends.hyperscan._base import (
+	HyperscanExprDat)
+from pathspec._backends.hyperscan.gitignore import (
 	_DIR_MARK_CG,
 	_DIR_MARK_OPT)
-from pathspec.match import (
-	HyperscanMatcher,
-	_HyperscanExprDat)
+from pathspec._backends.hyperscan.pathspec import (
+	HyperscanPsBackend)
 from pathspec.pattern import (
 	RegexPattern)
 from pathspec.patterns.gitwildmatch import (
@@ -33,19 +34,19 @@ from pathspec.patterns.gitwildmatch import (
 	_DIR_MARK)
 
 from benchmarks.match_pathspec import (
-	HyperscanR1BaseMatcher)
+	HyperscanPsR1BaseBackend)
 
 
-class _GiHyperscanR1BaseMatcher(HyperscanR1BaseMatcher):
+class _HyperscanGiR1BaseBackend(HyperscanPsR1BaseBackend):
 	"""
-	The :class:`_GiHyperscanR1BaseMatcher` base class uses a hyperscan database in
+	The :class:`_HyperscanGiR1BaseBackend` base class uses a hyperscan database in
 	block mode for matching files.
 	"""
 
 
-class _GiHyperscanR1BlockBaseMatcher(_GiHyperscanR1BaseMatcher):
+class _HyperscanGiR1BlockBaseBackend(_HyperscanGiR1BaseBackend):
 	"""
-	The :class:`_GiHyperscanR1BlockBaseMatcher` base class uses a hyperscan
+	The :class:`_HyperscanGiR1BlockBaseBackend` base class uses a hyperscan
 	database in block mode for matching files.
 	"""
 
@@ -54,9 +55,9 @@ class _GiHyperscanR1BlockBaseMatcher(_GiHyperscanR1BaseMatcher):
 		return hyperscan.Database(mode=hyperscan.HS_MODE_BLOCK)
 
 
-class GiHyperscanR1BlockClosureMatcher(_GiHyperscanR1BlockBaseMatcher):
+class HyperscanGiR1BlockClosureBackend(_HyperscanGiR1BlockBaseBackend):
 	"""
-	The :class:`GiHyperscanR1BlockClosureMatcher` class uses a hyperscan database
+	The :class:`HyperscanGiR1BlockClosureBackend` class uses a hyperscan database
 	in block mode for matching files, and uses a closure to capture state.
 	"""
 
@@ -96,9 +97,9 @@ class GiHyperscanR1BlockClosureMatcher(_GiHyperscanR1BlockBaseMatcher):
 		return out_include, out_index
 
 
-class GiHyperscanR1BlockStateMatcher(_GiHyperscanR1BlockBaseMatcher):
+class HyperscanGiR1BlockStateBackend(_HyperscanGiR1BlockBaseBackend):
 	"""
-	The :class:`GiHyperscanR1BlockStateMatcher` class uses a hyperscan database in
+	The :class:`HyperscanGiR1BlockStateBackend` class uses a hyperscan database in
 	block mode for matching files, and stores state in variables.
 	"""
 
@@ -144,9 +145,9 @@ class GiHyperscanR1BlockStateMatcher(_GiHyperscanR1BlockBaseMatcher):
 				self.__out = (include, index, priority)
 
 
-class _GiHyperscanR1StreamBaseMatcher(_GiHyperscanR1BaseMatcher):
+class _HyperscanGiR1StreamBaseBackend(_HyperscanGiR1BaseBackend):
 	"""
-	The :class:`_GiHyperscanR1StreamBaseMatcher` base class uses a hyperscan
+	The :class:`_HyperscanGiR1StreamBaseBackend` base class uses a hyperscan
 	database in streaming mode for matching files.
 	"""
 
@@ -157,9 +158,9 @@ class _GiHyperscanR1StreamBaseMatcher(_GiHyperscanR1BaseMatcher):
 		return hyperscan.Database(mode=hyperscan.HS_MODE_STREAM)
 
 
-class GiHyperscanR1StreamClosureMatcher(_GiHyperscanR1StreamBaseMatcher):
+class HyperscanGiR1StreamClosureBackend(_HyperscanGiR1StreamBaseBackend):
 	"""
-	The :class:`GiHyperscanR1StreamClosureMatcher` class uses a hyperscan database
+	The :class:`HyperscanGiR1StreamClosureBackend` class uses a hyperscan database
 	in streaming mode for matching files, and uses a closure to capture state.
 	"""
 
@@ -210,9 +211,9 @@ class GiHyperscanR1StreamClosureMatcher(_GiHyperscanR1StreamBaseMatcher):
 
 
 # WARNING: This segfaults.
-class GiHyperscanR1StreamStateMatcher(_GiHyperscanR1StreamBaseMatcher):
+class HyperscanGiR1StreamStateBackend(_HyperscanGiR1StreamBaseBackend):
 	"""
-	The :class:`GiHyperscanR1StreamStateMatcher` class uses a hyperscan database
+	The :class:`HyperscanGiR1StreamStateBackend` class uses a hyperscan database
 	in streaming mode for matching files, and stores state in variables.
 	"""
 
@@ -266,9 +267,9 @@ class GiHyperscanR1StreamStateMatcher(_GiHyperscanR1StreamBaseMatcher):
 		return None
 
 
-class _GiHyperscanR2BaseMatcher(HyperscanMatcher):
+class _HyperscanGiR2BaseBackend(HyperscanPsBackend):
 	"""
-	The :class:`_GiHyperscanR2BaseMatcher` base class uses a hyperscan database in
+	The :class:`_HyperscanGiR2BaseBackend` base class uses a hyperscan database in
 	block mode for matching files.
 	"""
 
@@ -276,11 +277,11 @@ class _GiHyperscanR2BaseMatcher(HyperscanMatcher):
 	def _init_db(
 		db: hyperscan.Database,
 		patterns: list[tuple[int, RegexPattern]],
-	) -> list[_HyperscanExprDat]:
+	) -> list[HyperscanExprDat]:
 		# NOTICE: This is the current implementation.
 
 		# Prepare patterns.
-		expr_data: list[_HyperscanExprDat] = []
+		expr_data: list[HyperscanExprDat] = []
 		exprs: list[bytes] = []
 		id_counter = itertools.count(0)
 		ids: list[int] = []
@@ -326,7 +327,7 @@ class _GiHyperscanR2BaseMatcher(HyperscanMatcher):
 					assert isinstance(regex, str), regex
 					regex_bytes = regex.encode('utf8')
 
-				expr_data.append(_HyperscanExprDat(
+				expr_data.append(HyperscanExprDat(
 					include=pattern.include,
 					index=pattern_index,
 					is_dir_pattern=is_dir_pattern,
@@ -348,9 +349,9 @@ class _GiHyperscanR2BaseMatcher(HyperscanMatcher):
 		raise NotImplementedError()
 
 
-class _GiHyperscanR2BlockBaseMatcher(_GiHyperscanR2BaseMatcher):
+class _HyperscanGiR2BlockBaseBackend(_HyperscanGiR2BaseBackend):
 	"""
-	The :class:`_GiHyperscanR2BlockBaseMatcher` base class uses a hyperscan
+	The :class:`_HyperscanGiR2BlockBaseBackend` base class uses a hyperscan
 	database in block mode for matching files.
 	"""
 
@@ -359,9 +360,9 @@ class _GiHyperscanR2BlockBaseMatcher(_GiHyperscanR2BaseMatcher):
 		return hyperscan.Database(mode=hyperscan.HS_MODE_BLOCK)
 
 
-class GiHyperscanR2BlockClosureMatcher(_GiHyperscanR2BlockBaseMatcher):
+class HyperscanGiR2BlockClosureBackend(_HyperscanGiR2BlockBaseBackend):
 	"""
-	The :class:`GiHyperscanR2BlockClosureMatcher` class uses a hyperscan database
+	The :class:`HyperscanGiR2BlockClosureBackend` class uses a hyperscan database
 	in block mode for matching files, and uses a closure to capture state.
 	"""
 
@@ -393,9 +394,9 @@ class GiHyperscanR2BlockClosureMatcher(_GiHyperscanR2BlockBaseMatcher):
 		return out_include, out_index
 
 
-class GiHyperscanR2BlockStateMatcher(_GiHyperscanR2BlockBaseMatcher):
+class HyperscanGiR2BlockStateBackend(_HyperscanGiR2BlockBaseBackend):
 	"""
-	The :class:`GiHyperscanR2BlockStateMatcher` class uses a hyperscan database in
+	The :class:`HyperscanGiR2BlockStateBackend` class uses a hyperscan database in
 	block mode for matching files, and stores state in variables.
 	"""
 
@@ -430,9 +431,9 @@ class GiHyperscanR2BlockStateMatcher(_GiHyperscanR2BlockBaseMatcher):
 				self.__out = (include, expr_dat.index, priority)
 
 
-class _GiHyperscanR2StreamBaseMatcher(_GiHyperscanR2BaseMatcher):
+class _HyperscanGiR2StreamBaseBackend(_HyperscanGiR2BaseBackend):
 	"""
-	The :class:`_GiHyperscanR2StreamBaseMatcher` base class uses a hyperscan
+	The :class:`_HyperscanGiR2StreamBaseBackend` base class uses a hyperscan
 	database in streaming mode for matching files.
 	"""
 
@@ -443,9 +444,9 @@ class _GiHyperscanR2StreamBaseMatcher(_GiHyperscanR2BaseMatcher):
 		return hyperscan.Database(mode=hyperscan.HS_MODE_STREAM)
 
 
-class GiHyperscanR2StreamClosureMatcher(_GiHyperscanR2StreamBaseMatcher):
+class HyperscanGiR2StreamClosureBackend(_HyperscanGiR2StreamBaseBackend):
 	"""
-	The :class:`GiHyperscanR2StreamClosureMatcher` class uses a hyperscan database
+	The :class:`HyperscanGiR2StreamClosureBackend` class uses a hyperscan database
 	in streaming mode for matching files, and uses a closure to capture state.
 	"""
 

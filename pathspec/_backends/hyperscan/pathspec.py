@@ -8,11 +8,10 @@ from __future__ import annotations
 
 import itertools
 from collections.abc import (
-	Iterable)
+	Sequence)
 from typing import (
 	Any,
 	ClassVar,
-	NamedTuple,
 	Optional)  # Replaced by `X | None` in 3.10.
 
 try:
@@ -30,38 +29,65 @@ from .._utils import (
 
 from .base import (
 	hyperscan_error)
+from ._base import (
+	HyperscanExprDat)
 
 
 class HyperscanPsBackend(Backend):
 	"""
 	The :class:`HyperscanPsBackend` class is the :module:`hyperscan`
 	implementation used by :class:`~pathspec.pathspec.PathSpec` for matching
-	files.
+	files. The Hyperscan database uses block mode for matching files.
 	"""
 
 	_reverse_patterns: ClassVar[bool] = False
+	"""
+	*_reverse_patterns* (:class:`bool`) is whether the patterns are reversed.
+	"""
 
 	def __init__(
 		self,
-		patterns: Iterable[RegexPattern],
+		patterns: Sequence[RegexPattern],
 	) -> None:
 		"""
-		Initialize the :class:`HyperscanMatcher` instance.
+		Initialize the :class:`HyperscanPsBackend` instance.
 
-		*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the compiled
+		*patterns* (:class:`Sequence` of :class:`.Pattern`) contains the compiled
 		patterns.
 		"""
 		if hyperscan is None:
 			raise hyperscan_error
+
+		if not patterns:
+			raise ValueError(f"{patterns=!r} cannot be empty.")
+		elif not isinstance(patterns[0], RegexPattern):
+			raise TypeError(f"{patterns[0]=!r} must be a RegexPattern.")
 
 		use_patterns = enumerate_patterns(
 			patterns, filter=True, reverse=self._reverse_patterns,
 		)
 
 		self._db = self._make_db()
-		self._expr_data = self._init_db(self._db, use_patterns)
+		"""
+		*_db* (:class:`hyperscan.Database`) is the Hyperscan database.
+		"""
+
+		self._expr_data: list[HyperscanExprDat] = self._init_db(self._db, use_patterns)
+		"""
+		*_expr_data* (:class:`list`) maps expression index (:class:`int`) to
+		expression data (:class:`:class:`HyperscanExprDat`).
+		"""
+
 		self._out: tuple[Optional[bool], Optional[int]] = (None, None)
-		self._patterns = dict(use_patterns)
+		"""
+		*_out* (:class:`tuple`) stores the current match.
+		"""
+
+		self._patterns: dict[int, RegexPattern] = dict(use_patterns)
+		"""
+		*_patterns* (:class:`dict`) maps pattern index (:class:`int`) to pattern
+		(:class:`RegexPattern`).
+		"""
 
 	@staticmethod
 	def _init_db(
@@ -69,7 +95,7 @@ class HyperscanPsBackend(Backend):
 		patterns: list[tuple[int, RegexPattern]],
 	) -> list[HyperscanExprDat]:
 		"""
-		Initialize the hyperscan database from the given patterns.
+		Initialize the Hyperscan database from the given patterns.
 
 		*db* (:class:`hyperscan.Hyperscan`) is the Hyperscan database.
 
@@ -134,7 +160,7 @@ class HyperscanPsBackend(Backend):
 	@staticmethod
 	def _make_db() -> hyperscan.Database:
 		"""
-		Create the hyperscan database.
+		Create the Hyperscan database.
 
 		Returns the database (:class:`hyperscan.Database`).
 		"""
@@ -158,27 +184,3 @@ class HyperscanPsBackend(Backend):
 
 		# Store match.
 		self._out = (expr_dat.include, expr_dat.index)
-
-
-class HyperscanExprDat(NamedTuple):
-	"""
-	The :class:`HyperscanExprDat` class is used to store data related to an
-	expression.
-	"""
-
-	include: bool
-	"""
-	*include* (:class:`bool`) is whether is whether the matched files should be
-	included (:data:`True`), or excluded (:data:`False`).
-	"""
-
-	index: int
-	"""
-	*index* (:class:`int`) is the pattern index.
-	"""
-
-	is_dir_pattern: bool
-	"""
-	*is_dir_pattern* (:class:`bool`) is whether the pattern is a directory
-	pattern for gitignore.
-	"""

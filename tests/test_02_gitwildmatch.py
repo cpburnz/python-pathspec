@@ -5,7 +5,7 @@ This script tests :class:`.GitWildMatchPattern`.
 import re
 import unittest
 
-import pathspec.patterns.gitwildmatch
+import pathspec
 from pathspec.patterns.gitwildmatch import (
 	GitWildMatchPattern,
 	GitWildMatchPatternError,

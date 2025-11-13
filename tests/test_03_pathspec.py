@@ -13,6 +13,8 @@ from collections.abc import (
 from contextlib import (
 	AbstractContextManager,
 	contextmanager)
+from functools import (
+	partial)
 from pathlib import (
 	Path)
 from typing import (
@@ -22,16 +24,16 @@ from unittest import (
 
 from pathspec import (
 	PathSpec)
-from pathspec.match import (
-	DefaultMatcher)
+from pathspec._backends.simple.pathspec import (
+	SimplePsBackend)
 from pathspec.patterns.gitwildmatch import (
 	GitWildMatchPatternError)
 from pathspec.util import (
 	iter_tree_entries)
 
 from .util import (
+	BACKEND_PARAMS,
 	CheckResult,
-	OPTIMIZE_PARAMS,
 	debug_includes,
 	debug_results,
 	get_includes,
@@ -39,7 +41,7 @@ from .util import (
 	make_dirs,
 	make_files,
 	ospath,
-	require_optimize)
+	require_backend)
 
 
 class PathSpecTest(unittest.TestCase):
@@ -86,10 +88,12 @@ class PathSpecTest(unittest.TestCase):
 		@contextmanager
 		def _unopt_sub_test():
 			self.clear_temp_dir()
-			with self.subTest("default (unopt)"):
-				spec = PathSpec.from_lines(pattern_factory, lines)
-				spec._matcher = DefaultMatcher(
-					patterns=spec.patterns, no_filter=True, no_reverse=True,
+			with self.subTest("simple (unopt)"):
+				spec = PathSpec.from_lines(
+					pattern_factory,
+					lines,
+					backend='simple',
+					_test_backend_cls=partial(SimplePsBackend, no_filter=True, no_reverse=True)
 				)
 				yield spec
 
@@ -98,24 +102,24 @@ class PathSpecTest(unittest.TestCase):
 		@contextmanager
 		def _minopt_sub_test():
 			self.clear_temp_dir()
-			with self.subTest("default (minopt)"):
-				yield PathSpec.from_lines(pattern_factory, lines)
+			with self.subTest("simple (minopt)"):
+				yield PathSpec.from_lines(pattern_factory, lines, backend='simple')
 
 		yield _minopt_sub_test
 
-		for label, optimize in OPTIMIZE_PARAMS:
+		for label, backend in BACKEND_PARAMS:
 			try:
-				require_optimize(optimize)
+				require_backend(backend)
 			except SkipTest:
 				with self.subTest(label):
 					raise
 				continue
 
 			@contextmanager
-			def _optimize_sub_test(label=label, optimize=optimize):
+			def _optimize_sub_test(label=label, backend=backend):
 				self.clear_temp_dir()
 				with self.subTest(label):
-					yield PathSpec.from_lines(pattern_factory, lines, optimize=optimize)
+					yield PathSpec.from_lines(pattern_factory, lines, backend=backend)
 
 			yield _optimize_sub_test
 

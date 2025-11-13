@@ -12,7 +12,6 @@ from itertools import (
 	zip_longest)
 from typing import (
 	AnyStr,
-	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
 	TypeVar,
 	Union,  # Replaced by `X | Y` in 3.10.
@@ -20,15 +19,12 @@ from typing import (
 
 from . import util
 from ._backends.base import (
-	Backend)
-from .match import (
-	DefaultMatcher,
-	HyperscanMatcher,
-	Matcher,
-	_OPTIMIZE_LIB)
+	Backend,
+	BackendNamesHint)
+from ._backends.agg import (
+	make_pathspec_backend)
 from .pattern import (
-	Pattern,
-	RegexPattern)
+	Pattern)
 from .util import (
 	CheckResult,
 	StrPath,
@@ -54,7 +50,8 @@ class PathSpec(object):
 		self,
 		patterns: Union[Sequence[Pattern], Iterable[Pattern]],
 		*,
-		optimize: Union[bool, Literal['hyperscan'], None] = None,
+		backend: Union[BackendNamesHint, str, None] = None,
+		_test_backend_cls: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
 	) -> None:
 		"""
 		Initializes the :class:`PathSpec` instance.
@@ -63,27 +60,31 @@ class PathSpec(object):
 		contains each compiled pattern (:class:`.Pattern`). If not a sequence, it
 		will be converted to a :class:`list`.
 
-		*optimize* (:class:`bool`, :class:`str`, or :data:`None`) is whether to
-		optimize the patterns, and optionally which library to use. If :data:`True`,
-		use the best available library. If :class:`str`, must be one of the
-		following libraries: "hyperscan". Default is :data:`None` for :data:`False`.
+		*backend* (:class:`str` or :data:`None`) is the pattern (or regex) matching
+		backend to use. Default is :data:`None` for "best" to use the best available
+		backend. Priority of backends is: "hyperscan", "simple". The "simple"
+		backend is always available.
 		"""
 		if not isinstance(patterns, Sequence):
 			patterns = list(patterns)
 
-		if optimize is None:
-			optimize = False
+		if backend is None:
+			backend = 'best'
 
-		self._backend: Backend = self._make_backend(patterns, optimize)
+		backend = cast(BackendNamesHint, backend)
+		if _test_backend_cls is not None:
+			use_backend = _test_backend_cls(patterns)
+		else:
+			use_backend = self._make_backend(backend, patterns)
+
+		self._backend: Backend = use_backend
 		"""
-		*_backend* (:class:`.Backend`) is the pattern (or regex) matching backend to
-		use.
+		*_backend* (:class:`.Backend`) is the pattern (or regex) matching backend.
 		"""
 
-		self._optimize: Union[bool, Literal['hyperscan']] = optimize
+		self._backend_name: BackendNamesHint = backend
 		"""
-		*_optimize* (:class:`bool` or :class:`str`) is whether to optimize the
-		patterns, and optionally which library to use.
+		*_backend_name* (:class:`str`) is the name of backend to use.
 		"""
 
 		self.patterns: Sequence[Pattern] = patterns
@@ -98,7 +99,7 @@ class PathSpec(object):
 		instances.
 		"""
 		if isinstance(other, PathSpec):
-			return self.__class__(self.patterns + other.patterns, optimize=self._optimize)
+			return self.__class__(self.patterns + other.patterns, backend=self._backend_name)
 		else:
 			return NotImplemented
 
@@ -120,7 +121,7 @@ class PathSpec(object):
 		"""
 		if isinstance(other, PathSpec):
 			self.patterns += other.patterns
-			self._backend = self._make_backend(self.patterns, self._optimize)
+			self._backend = self._make_backend(self._backend_name, self.patterns)
 			return self
 		else:
 			return NotImplemented
@@ -218,7 +219,8 @@ class PathSpec(object):
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern]],
 		lines: Iterable[AnyStr],
 		*,
-		optimize: Union[bool, Literal['hyperscan'], None] = None,
+		backend: Union[BackendNamesHint, str, None] = None,
+		_test_backend_cls: Optional[Callable[[], Backend]] = None,
 	) -> Self:
 		"""
 		Compiles the pattern lines.
@@ -233,10 +235,10 @@ class PathSpec(object):
 		:class:`io.TextIOBase` (e.g., from :func:`open` or :class:`io.StringIO`) or
 		the result from :meth:`str.splitlines`.
 
-		*optimize* (:class:`bool`, :class:`str`, or :data:`None`) is whether to
-		optimize the patterns, and optionally which library to use. If :data:`True`,
-		use the best available library. If :class:`str`, must be one of the
-		following libraries: "hyperscan". Default is :data:`None` for :data:`False`.
+		*backend* (:class:`str` or :data:`None`) is the pattern (or regex) matching
+		backend to use. Default is :data:`None` for "best" to use the best available
+		backend. Priority of backends is: "hyperscan", "simple". The "simple"
+		backend is always available.
 
 		Returns the :class:`PathSpec` instance.
 		"""
@@ -250,31 +252,24 @@ class PathSpec(object):
 			raise TypeError(f"lines:{lines!r} is not an iterable.")
 
 		patterns = [pattern_factory(line) for line in lines if line]
-		return cls(patterns, optimize=optimize)
+		return cls(patterns, backend=backend, _test_backend_cls=_test_backend_cls)
 
 	@staticmethod
 	def _make_backend(
+		name: BackendNamesHint,
 		patterns: Sequence[Pattern],
-		optimize: Union[bool, Literal['hyperscan']],
 	) -> Backend:
 		"""
 		Create the backend for the patterns.
 
-		*patterns* (:class:`~collections.abc.Sequence`) contains each compiled
-		pattern (:class:`.Pattern`).
+		*name* (:class:`str`) is the name of the backend.
 
-		*optimize* (:class:`bool` or :class:`str`) is whether to optimize the
-		patterns, and optionally which library to use.
+		*patterns* (:class:`.Sequence` of :class:`.Pattern`) contains the compiled
+		patterns.
 
-		Returns the matcher (:class:`Backend`).
+		Returns the matcher (:class:`.Backend`).
 		"""
-		if optimize is True:
-			optimize = _OPTIMIZE_LIB
-
-		if optimize == 'hyperscan':
-			return HyperscanMatcher(cast(Sequence[RegexPattern], patterns))
-		else:
-			return DefaultMatcher(patterns)
+		return make_pathspec_backend(name, patterns)
 
 	def match_entries(
 		self,

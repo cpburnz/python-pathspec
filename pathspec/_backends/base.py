@@ -7,7 +7,10 @@ contents and structure are likely to change.
 """
 
 from typing import (
+	Literal,
 	Optional)
+
+BackendNamesHint = Literal['best', 'hyperscan', 'simple']
 
 
 class Backend(object):

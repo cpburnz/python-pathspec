@@ -10,32 +10,28 @@ import pathlib
 from collections.abc import (
 	Iterable)
 from typing import (
-	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
 	cast)
 from unittest import (
 	SkipTest)
 
-try:
-	import hyperscan
-	hyperscan_error: Optional[ModuleNotFoundError] = None
-except ModuleNotFoundError as e:
-	hyperscan = None
-	hyperscan_error = e
-
 from pathspec import (
 	PathSpec,
 	RegexPattern)
+from pathspec._backends.base import (
+	BackendNamesHint)
+from pathspec._backends.hyperscan.base import (
+	hyperscan_error)
 from pathspec.util import (
 	CheckResult,
 	TStrPath,
 	TreeEntry)
 
-OPTIMIZE_PARAMS: list[tuple[str, Optional[Literal['hyperscan']]]] = [
+BACKEND_PARAMS: list[tuple[str, BackendNamesHint]] = [
 	('hyperscan', 'hyperscan'),
 ]
 """
-The optimize parameters.
+The backend parameters.
 """
 
 
@@ -196,13 +192,13 @@ def ospath(path: str) -> str:
 	return os.path.join(*path.split('/'))
 
 
-def require_optimize(optimize: Optional[Literal['hyperscan']]) -> None:
+def require_backend(name: Optional[BackendNamesHint]) -> None:
 	"""
-	Skip the test if the optimize library is not installed.
+	Skip the test if the backend library is not installed.
 
-	*optimize* (:class:`str` or :data:`None`) is the optimize value.
+	*name* (:class:`str` or :data:`None`) is the backend name.
 
-	Raises :class:`SkipTest` if the optimize library is not installed.
+	Raises :class:`SkipTest` if the backend library is not installed.
 	"""
-	if optimize == 'hyperscan' and hyperscan is None:
+	if name == 'hyperscan' and hyperscan_error is not None:
 		raise SkipTest(str(hyperscan_error))

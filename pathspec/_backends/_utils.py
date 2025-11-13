@@ -1,5 +1,5 @@
 """
-This module defines private utility functions for backends.
+This module provides private utility functions for backends.
 
 WARNING: The *pathspec._backends* package is not part of the public API. Its
 contents and structure are likely to change.
@@ -8,15 +8,16 @@ contents and structure are likely to change.
 from collections.abc import (
 	Iterable)
 from typing import (
-	Literal,
-	TypeVar)
+	Optional,  # Replaced by `X | None` in 3.10.
+	TypeVar,
+	Union,  # Replaced by `X | Y` in 3.10.
+	overload)
 
 from ..pattern import (
 	Pattern)
 
-from .hyperscan.base import (
-	hyperscan_error)
-
+T = TypeVar("T")
+U = TypeVar("U")
 TPattern = TypeVar("TPattern", bound=Pattern)
 
 
@@ -49,13 +50,27 @@ def enumerate_patterns(
 	return out_patterns
 
 
-def get_best_backend() -> Literal['hyperscan', 'simple']:
-	"""
-	Find the best available backend.
+@overload
+def first(iterable: Iterable[T], default: T) -> T:
+	...
 
-	Returns the backend name (:class:`str`).
+
+@overload
+def first(iterable: Iterable[T], default: None) -> Optional[T]:
+	...
+
+
+def first(iterable: Iterable[T], default: Optional[T]) -> Optional[T]:
 	"""
-	if hyperscan_error is None:
-		return 'hyperscan'
-	else:
-		return 'simple'
+	Get the first value of the iterable.
+
+	*iterable* (:class:`.Iterable`) is the iterable.
+
+	*default* is the default value to return if the iterable is empty.
+
+	Returns the first value of the iterable or the default value.
+	"""
+	for val in iterable:
+		return val
+
+	return default

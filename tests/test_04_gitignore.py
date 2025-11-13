@@ -10,23 +10,25 @@ from collections.abc import (
 from contextlib import (
 	AbstractContextManager,
 	contextmanager)
+from functools import (
+	partial)
 from typing import (
 	AnyStr)
 from unittest import (
 	SkipTest)
 
+from pathspec._backends.simple.gitignore import (
+	SimpleGiBackend)
 from pathspec.gitignore import (
-	GitIgnoreSpec,
-	_GiDefaultMatcher)
+	GitIgnoreSpec)
 
 from .util import (
-	OPTIMIZE_PARAMS,
+	BACKEND_PARAMS,
 	debug_results,
 	get_includes,
-	require_optimize)
+	require_backend)
 
 
-# TODO: Parameterize all tests. ~Caleb, 2025-10-05
 class GitIgnoreSpecTest(unittest.TestCase):
 	"""
 	The :class:`GitIgnoreSpecTest` class tests the :class:`.GitIgnoreSpec` class.
@@ -51,10 +53,11 @@ class GitIgnoreSpecTest(unittest.TestCase):
 
 		@contextmanager
 		def _unopt_sub_test():
-			with self.subTest("default (unopt)"):
-				spec = GitIgnoreSpec.from_lines(lines)
-				spec._matcher = _GiDefaultMatcher(
-					patterns=spec.patterns, no_filter=True, no_reverse=True,
+			with self.subTest("simple (unopt)"):
+				spec = GitIgnoreSpec.from_lines(
+					lines,
+					backend='simple',
+					_test_backend_cls=partial(SimpleGiBackend, no_filter=True, no_reverse=True),
 				)
 				yield spec
 
@@ -62,23 +65,23 @@ class GitIgnoreSpecTest(unittest.TestCase):
 
 		@contextmanager
 		def _minopt_sub_test():
-			with self.subTest("default (minopt)"):
-				yield GitIgnoreSpec.from_lines(lines)
+			with self.subTest("simple (minopt)"):
+				yield GitIgnoreSpec.from_lines(lines, backend='simple')
 
 		yield _minopt_sub_test
 
-		for label, optimize in OPTIMIZE_PARAMS:
+		for label, backend in BACKEND_PARAMS:
 			try:
-				require_optimize(optimize)
+				require_backend(backend)
 			except SkipTest:
 				with self.subTest(label):
 					raise
 				continue
 
 			@contextmanager
-			def _optimize_sub_test(label=label, optimize=optimize):
+			def _optimize_sub_test(label=label, backend=backend):
 				with self.subTest(label):
-					yield GitIgnoreSpec.from_lines(lines, optimize=optimize)
+					yield GitIgnoreSpec.from_lines(lines, backend=backend)
 
 			yield _optimize_sub_test
 

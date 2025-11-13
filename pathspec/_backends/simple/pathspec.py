@@ -6,7 +6,7 @@ Its contents and structure are likely to change.
 """
 
 from collections.abc import (
-	Iterable)
+	Sequence)
 from typing import (
 	Optional)  # Replaced by `X | None` in 3.10.
 
@@ -23,21 +23,21 @@ from .._utils import (
 
 class SimplePsBackend(Backend):
 	"""
-	The :class:`SimplePsBackend` class is the default or simple implementation
+	The :class:`SimplePsBackend` class is the default (or simple) implementation
 	used by :class:`~pathspec.pathspec.PathSpec` for matching files.
 	"""
 
 	def __init__(
 		self,
-		patterns: Iterable[Pattern],
+		patterns: Sequence[Pattern],
 		*,
 		no_filter: Optional[bool] = None,
 		no_reverse: Optional[bool] = None,
 	) -> None:
 		"""
-		Initialize the :class:`DefaultMatcher` instance.
+		Initialize the :class:`SimplePsBackend` instance.
 
-		*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the compiled
+		*patterns* (:class:`Sequence` of :class:`.Pattern`) contains the compiled
 		patterns.
 
 		*no_filter* (:class:`bool`) is whether to keep no-op patterns (:data:`True`),

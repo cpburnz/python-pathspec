@@ -18,16 +18,17 @@ except ModuleNotFoundError:
 
 # TODO: Look into re2 <https://pypi.org/project/google-re2>.
 
-from pathspec.match import (
-	HyperscanMatcher,
-	_HyperscanExprDat)
+from pathspec._backends.hyperscan._base import (
+	HyperscanExprDat)
+from pathspec._backends.hyperscan.pathspec import (
+	HyperscanPsBackend)
 from pathspec.pattern import (
 	RegexPattern)
 
 
-class HyperscanR1BaseMatcher(HyperscanMatcher):
+class HyperscanPsR1BaseBackend(HyperscanPsBackend):
 	"""
-	The :class:`HyperscanR1BaseMatcher` base class uses a hyperscan database in
+	The :class:`HyperscanPsR1BaseBackend` base class uses a hyperscan database in
 	block mode for matching files.
 	"""
 
@@ -35,11 +36,11 @@ class HyperscanR1BaseMatcher(HyperscanMatcher):
 	def _init_db(
 		db: hyperscan.Database,
 		patterns: list[tuple[int, RegexPattern]],
-	) -> list[_HyperscanExprDat]:
+	) -> list[HyperscanExprDat]:
 		# NOTICE: This is the current implementation.
 
 		# Prepare patterns.
-		expr_data: list[_HyperscanExprDat] = []
+		expr_data: list[HyperscanExprDat] = []
 		exprs: list[bytes] = []
 		id_counter = itertools.count(0)
 		ids: list[int] = []
@@ -57,7 +58,7 @@ class HyperscanR1BaseMatcher(HyperscanMatcher):
 				assert isinstance(regex, str), regex
 				regex_bytes = regex.encode('utf8')
 
-			expr_data.append(_HyperscanExprDat(
+			expr_data.append(HyperscanExprDat(
 				include=pattern.include,
 				index=pattern_index,
 				is_dir_pattern=False,
@@ -79,10 +80,10 @@ class HyperscanR1BaseMatcher(HyperscanMatcher):
 		raise NotImplementedError()
 
 
-class _HyperscanR1BlockBaseMatcher(HyperscanR1BaseMatcher):
+class _HyperscanPsR1BlockBaseBackend(HyperscanPsR1BaseBackend):
 	"""
-	The :class:`_HyperscanR1BlockBaseMatcher` base class uses a hyperscan database in
-	block mode for matching files.
+	The :class:`_HyperscanPsR1BlockBaseBackend` base class uses a hyperscan
+	database in block mode for matching files.
 	"""
 
 	@staticmethod
@@ -90,10 +91,10 @@ class _HyperscanR1BlockBaseMatcher(HyperscanR1BaseMatcher):
 		return hyperscan.Database(mode=hyperscan.HS_MODE_BLOCK)
 
 
-class HyperscanR1BlockClosureMatcher(_HyperscanR1BlockBaseMatcher):
+class HyperscanPsR1BlockClosureBackend(_HyperscanPsR1BlockBaseBackend):
 	"""
-	The :class:`HyperscanR1BlockClosureMatcher` class uses a hyperscan database in
-	block mode for matching files, and uses a closure to capture state.
+	The :class:`HyperscanPsR1BlockClosureBackend` class uses a hyperscan database
+	in block mode for matching files, and uses a closure to capture state.
 	"""
 
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
@@ -113,9 +114,9 @@ class HyperscanR1BlockClosureMatcher(_HyperscanR1BlockBaseMatcher):
 		return out_include, out_index
 
 
-class HyperscanR1BlockStateMatcher(_HyperscanR1BlockBaseMatcher):
+class HyperscanPsR1BlockStateBackend(_HyperscanPsR1BlockBaseBackend):
 	"""
-	The :class:`HyperscanR1BlockStateMatcher` class uses a hyperscan database in
+	The :class:`HyperscanPsR1BlockStateBackend` class uses a hyperscan database in
 	block mode for matching files, and stores state in variables.
 	"""
 
@@ -142,9 +143,9 @@ class HyperscanR1BlockStateMatcher(_HyperscanR1BlockBaseMatcher):
 			self.__out = (include, expr_dat.index)
 
 
-class _HyperscanR1StreamBaseMatcher(HyperscanR1BaseMatcher):
+class _HyperscanPsR1StreamBaseBackend(HyperscanPsR1BaseBackend):
 	"""
-	The :class:`_HyperscanR1StreamBaseMatcher` base class uses a hyperscan
+	The :class:`_HyperscanPsR1StreamBaseBackend` base class uses a hyperscan
 	database in streaming mode for matching files.
 	"""
 
@@ -153,9 +154,9 @@ class _HyperscanR1StreamBaseMatcher(HyperscanR1BaseMatcher):
 		return hyperscan.Database(mode=hyperscan.HS_MODE_STREAM)
 
 
-class HyperscanR1StreamClosureMatcher(_HyperscanR1StreamBaseMatcher):
+class HyperscanPsR1StreamClosureBackend(_HyperscanPsR1StreamBaseBackend):
 	"""
-	The :class:`HyperscanR1StreamClosureMatcher` class uses a hyperscan database
+	The :class:`HyperscanPsR1StreamClosureBackend` class uses a hyperscan database
 	in streaming mode for matching files, and uses a closure to capture state.
 	"""
 
@@ -182,10 +183,10 @@ class HyperscanR1StreamClosureMatcher(_HyperscanR1StreamBaseMatcher):
 
 
 # WARNING: This segfaults.
-class HyperscanR1StreamStateMatcher(_HyperscanR1StreamBaseMatcher):
+class HyperscanPsR1StreamStateBackend(_HyperscanPsR1StreamBaseBackend):
 	"""
-	The :class:`HyperscanR1StreamStateMatcher` class uses a hyperscan database in
-	streaming mode for matching files, and stores state in variables.
+	The :class:`HyperscanPsR1StreamStateBackend` class uses a hyperscan database
+	in streaming mode for matching files, and stores state in variables.
 	"""
 
 	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
