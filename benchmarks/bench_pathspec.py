@@ -100,11 +100,11 @@ def bench_hs_v1(
 def bench_sm_filtered(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
-	cpython_gi_lines_filt: list[str],
+	cpython_gi_lines_all: list[str],
 ):
 	spec = PathSpec.from_lines(
 		'gitwildmatch',
-		cpython_gi_lines_filt,
+		cpython_gi_lines_all,
 		backend='simple',
 		_test_backend_cls=partial(SimplePsBackend, no_reverse=True)
 	)
@@ -115,11 +115,11 @@ def bench_sm_filtered(
 def bench_sm_filtered_reversed(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
-	cpython_gi_lines_filt: list[str],
+	cpython_gi_lines_all: list[str],
 ):
 	spec = PathSpec.from_lines(
 		'gitwildmatch',
-		cpython_gi_lines_filt,
+		cpython_gi_lines_all,
 		backend='simple',
 	)
 	benchmark(run_match, spec, cpython_files)
@@ -159,11 +159,11 @@ def bench_sm_unfiltered_reversed(
 def bench_sm_v1(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
-	cpython_gi_lines_filt: list[str],
+	cpython_gi_lines_all: list[str],
 ):
 	spec = PathSpec.from_lines(
 		'gitwildmatch',
-		cpython_gi_lines_filt,
+		cpython_gi_lines_all,
 		backend='simple',
 	)
 	benchmark(run_match, spec, cpython_files)

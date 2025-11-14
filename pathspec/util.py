@@ -7,7 +7,6 @@ import os.path
 import pathlib
 import posixpath
 import stat
-import sys
 import warnings
 from collections.abc import (
 	Callable,
@@ -30,10 +29,7 @@ from typing import (
 from .pattern import (
 	Pattern)
 
-if sys.version_info >= (3, 9):
-	StrPath = Union[str, PathLike[str]]
-else:
-	StrPath = Union[str, PathLike]
+StrPath = Union[str, PathLike[str]]
 
 TStrPath = TypeVar("TStrPath", bound=StrPath)
 """
@@ -47,9 +43,9 @@ NORMALIZE_PATH_SEPS = [
 ]
 """
 *NORMALIZE_PATH_SEPS* (:class:`list` of :class:`str`) contains the path
-separators that need to be normalized to the POSIX separator for the
-current operating system. The separators are determined by examining
-:data:`os.sep` and :data:`os.altsep`.
+separators that need to be normalized to the POSIX separator for the current
+operating system. The separators are determined by examining :data:`os.sep` and
+:data:`os.altsep`.
 """
 
 _registered_patterns = {}
@@ -61,10 +57,9 @@ registered pattern factory (:class:`~collections.abc.Callable`).
 
 def append_dir_sep(path: pathlib.Path) -> str:
 	"""
-	Appends the path separator to the path if the path is a directory.
-	This can be used to aid in distinguishing between directories and
-	files on the file-system by relying on the presence of a trailing path
-	separator.
+	Appends the path separator to the path if the path is a directory. This can be
+	used to aid in distinguishing between directories and files on the file-system
+	by relying on the presence of a trailing path separator.
 
 	*path* (:class:`pathlib.Path`) is the path to use.
 
@@ -89,8 +84,8 @@ def check_match_file(
 	(:class:`tuple`) which contains the pattern index (:class:`int`) and actual
 	pattern (:class:`~pathspec.pattern.Pattern`).
 
-	*file* (:class:`str`) is the normalized file path to be matched
-	against *patterns*.
+	*file* (:class:`str`) is the normalized file path to be matched against
+	*patterns*.
 
 	*is_reversed* (:class:`bool` or :data:`None`) is whether the order of the
 	patterns has been reversed. Default is :data:`None` for :data:`False`.
@@ -127,18 +122,18 @@ def detailed_match_files(
 	all_matches: Optional[bool] = None,
 ) -> dict[str, 'MatchDetail']:
 	"""
-	Matches the files to the patterns, and returns which patterns matched
-	the files.
+	Matches the files to the patterns, and returns which patterns matched the
+	files.
 
 	*patterns* (:class:`~collections.abc.Iterable` of :class:`~pathspec.pattern.Pattern`)
 	contains the patterns to use.
 
-	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
-	the normalized file paths to be matched against *patterns*.
+	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains the
+	normalized file paths to be matched against *patterns*.
 
-	*all_matches* (:class:`bool` or :data:`None`) is whether to return all
-	matches patterns (:data:`True`), or only the last matched pattern
-	(:data:`False`). Default is :data:`None` for :data:`False`.
+	*all_matches* (:class:`bool` or :data:`None`) is whether to return all matches
+	patterns (:data:`True`), or only the last matched pattern (:data:`False`).
+	Default is :data:`None` for :data:`False`.
 
 	Returns the matched files (:class:`dict`) which maps each matched file
 	(:class:`str`) to the patterns that matched in order (:class:`.MatchDetail`).
@@ -173,8 +168,7 @@ def _filter_check_patterns(
 	"""
 	Filters out null-patterns.
 
-	*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the
-	patterns.
+	*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the patterns.
 
 	Returns a :class:`list` containing each indexed pattern (:class:`tuple`) which
 	contains the pattern index (:class:`int`) and the actual pattern
@@ -436,8 +430,8 @@ def match_file(patterns: Iterable[Pattern], file: str) -> bool:
 	*patterns* (:class:`~collections.abc.Iterable` of :class:`~pathspec.pattern.Pattern`)
 	contains the patterns to use.
 
-	*file* (:class:`str`) is the normalized file path to be matched
-	against *patterns*.
+	*file* (:class:`str`) is the normalized file path to be matched against
+	*patterns*.
 
 	Returns :data:`True` if *file* matched; otherwise, :data:`False`.
 	"""
@@ -462,8 +456,8 @@ def match_files(
 	*patterns* (:class:`~collections.abc.Iterable` of :class:`~pathspec.pattern.Pattern`)
 	contains the patterns to use.
 
-	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
-	the normalized file paths to be matched against *patterns*.
+	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains the
+	normalized file paths to be matched against *patterns*.
 
 	Returns the matched files (:class:`set` of :class:`str`).
 	"""
@@ -487,17 +481,16 @@ def normalize_file(
 	separators: Optional[Collection[str]] = None,
 ) -> str:
 	"""
-	Normalizes the file path to use the POSIX path separator (i.e.,
-	``"/"``), and make the paths relative (remove leading ``"/"``).
+	Normalizes the file path to use the POSIX path separator (i.e., ``"/"``), and
+	make the paths relative (remove leading ``"/"``).
 
 	*file* (:class:`str` or :class:`os.PathLike`) is the file path.
 
 	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
-	``None``) optionally contains the path separators to normalize.
-	This does not need to include the POSIX path separator (``"/"``),
-	but including it will not affect the results. Default is ``None``
-	for ``NORMALIZE_PATH_SEPS``. To prevent normalization, pass an
-	empty container (e.g., an empty tuple ``()``).
+	``None``) optionally contains the path separators to normalize. This does not
+	need to include the POSIX path separator (``"/"``), but including it will not
+	affect the results. Default is ``None`` for ``NORMALIZE_PATH_SEPS``. To
+	prevent normalization, pass an empty container (e.g., an empty tuple ``()``).
 
 	Returns the normalized file path (:class:`str`).
 	"""
@@ -536,16 +529,16 @@ def normalize_files(
 	:class:`os.PathLike`) contains the file paths to be normalized.
 
 	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
-	:data:`None`) optionally contains the path separators to normalize.
-	See :func:`normalize_file` for more information.
+	:data:`None`) optionally contains the path separators to normalize. See
+	:func:`normalize_file` for more information.
 
-	Returns a :class:`dict` mapping each normalized file path (:class:`str`)
-	to the original file paths (:class:`list` of :class:`str` or
+	Returns a :class:`dict` mapping each normalized file path (:class:`str`) to
+	the original file paths (:class:`list` of :class:`str` or
 	:class:`os.PathLike`).
 	"""
 	warnings.warn((
-		"util.normalize_files() is deprecated. Use util.normalize_file() "
-		"with a loop for better results."
+		"util.normalize_files() is deprecated. Use util.normalize_file() with a "
+		"loop for better results."
 	), DeprecationWarning, stacklevel=2)
 
 	norm_files = {}
@@ -567,17 +560,16 @@ def register_pattern(
 	"""
 	Registers the specified pattern factory.
 
-	*name* (:class:`str`) is the name to register the pattern factory
-	under.
+	*name* (:class:`str`) is the name to register the pattern factory under.
 
-	*pattern_factory* (:class:`~collections.abc.Callable`) is used to
-	compile patterns. It must accept an uncompiled pattern (:class:`str`)
-	and return the compiled pattern (:class:`.Pattern`).
+	*pattern_factory* (:class:`~collections.abc.Callable`) is used to compile
+	patterns. It must accept an uncompiled pattern (:class:`str`) and return the
+	compiled pattern (:class:`.Pattern`).
 
-	*override* (:class:`bool` or :data:`None`) optionally is whether to
-	allow overriding an already registered pattern under the same name
-	(:data:`True`), instead of raising an :exc:`AlreadyRegisteredError`
-	(:data:`False`). Default is :data:`None` for :data:`False`.
+	*override* (:class:`bool` or :data:`None`) optionally is whether to allow
+	overriding an already registered pattern under the same name (:data:`True`),
+	instead of raising an :exc:`AlreadyRegisteredError` (:data:`False`). Default
+	is :data:`None` for :data:`False`.
 	"""
 	if not isinstance(name, str):
 		raise TypeError(f"name:{name!r} is not a string.")
@@ -593,8 +585,8 @@ def register_pattern(
 
 class AlreadyRegisteredError(Exception):
 	"""
-	The :exc:`AlreadyRegisteredError` exception is raised when a pattern
-	factory is registered under a name already in use.
+	The :exc:`AlreadyRegisteredError` exception is raised when a pattern factory
+	is registered under a name already in use.
 	"""
 
 	def __init__(
@@ -607,8 +599,8 @@ class AlreadyRegisteredError(Exception):
 
 		*name* (:class:`str`) is the name of the registered pattern.
 
-		*pattern_factory* (:class:`~collections.abc.Callable`) is the
-		registered pattern factory.
+		*pattern_factory* (:class:`~collections.abc.Callable`) is the registered
+		pattern factory.
 		"""
 		super(AlreadyRegisteredError, self).__init__(name, pattern_factory)
 
@@ -632,16 +624,15 @@ class AlreadyRegisteredError(Exception):
 	@property
 	def pattern_factory(self) -> Callable[[AnyStr], Pattern]:
 		"""
-		*pattern_factory* (:class:`~collections.abc.Callable`) is the
-		registered pattern factory.
+		*pattern_factory* (:class:`~collections.abc.Callable`) is the registered
+		pattern factory.
 		"""
 		return self.args[1]
 
 
 class RecursionError(Exception):
 	"""
-	The :exc:`RecursionError` exception is raised when recursion is
-	detected.
+	The :exc:`RecursionError` exception is raised when recursion is detected.
 	"""
 
 	def __init__(
@@ -653,14 +644,12 @@ class RecursionError(Exception):
 		"""
 		Initializes the :exc:`RecursionError` instance.
 
-		*real_path* (:class:`str`) is the real path that recursion was
-		encountered on.
+		*real_path* (:class:`str`) is the real path that recursion was encountered
+		on.
 
-		*first_path* (:class:`str`) is the first path encountered for
-		*real_path*.
+		*first_path* (:class:`str`) is the first path encountered for *real_path*.
 
-		*second_path* (:class:`str`) is the second path encountered for
-		*real_path*.
+		*second_path* (:class:`str`) is the second path encountered for *real_path*.
 		"""
 		super(RecursionError, self).__init__(real_path, first_path, second_path)
 
@@ -677,10 +666,9 @@ class RecursionError(Exception):
 		"""
 		*message* (:class:`str`) is the error message.
 		"""
-		return "Real path {real!r} was encountered at {first!r} and then {second!r}.".format(
-			real=self.real_path,
-			first=self.first_path,
-			second=self.second_path,
+		return (
+			f"Real path {self.real_path!r} was encountered at {self.first_path!r} "
+			f"and then {self.second_path!r}."
 		)
 
 	@property

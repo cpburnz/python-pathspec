@@ -10,6 +10,10 @@ Major changes:
 
 - `Issue #91`_: Dropped support of EoL Python 3.8.
 
+New features:
+
+- Added optional `hyperscan`_ backend for faster regex matching. It will automatically be used when installed. The backend can be controlled using the `backend` argument to `PathSpec()`, `PathSpec.from_lines()`, `GitIgnoreSpec()`, or `GitIgnoreSpec.from_lines()`.
+
 Bug fixes:
 
 - `Issue #98`_: UnboundLocalError in RegexPattern when initialized with pattern=None.
@@ -17,8 +21,9 @@ Bug fixes:
 Improvements:
 
 - Mark Python 3.13 and 3.14 as supported.
+- No-op patterns are now filtered out when matching files, slightly improving performance.
 
-
+.. _`hyperscan`: https://pypi.org/project/hyperscan/
 .. _`Issue #91`: https://github.com/cpburnz/python-pathspec/issues/91
 .. _`Issue #98`: https://github.com/cpburnz/python-pathspec/issues/98
 

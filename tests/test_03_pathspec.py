@@ -348,7 +348,7 @@ class PathSpecTest(unittest.TestCase):
 			# safe than sorry.
 			PathSpec.from_lines('gitwildmatch', [
 				'\\  ',
-			])
+			], backend='simple')
 
 	def test_01_match_file_1_include(self):
 		"""
@@ -486,11 +486,11 @@ class PathSpecTest(unittest.TestCase):
 		first_spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
 			'!test1/**',
-		])
+		], backend='simple')
 		second_spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
 			'!test1/**',
-		])
+		], backend='simple')
 		self.assertEqual(first_spec, second_spec)
 
 	def test_02_ne(self):
@@ -499,10 +499,10 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		first_spec = PathSpec.from_lines('gitwildmatch', [
 			'*.txt',
-		])
+		], backend='simple')
 		second_spec = PathSpec.from_lines('gitwildmatch', [
 			'!*.txt',
-		])
+		], backend='simple')
 		self.assertNotEqual(first_spec, second_spec)
 
 	def test_03_add(self):
@@ -512,11 +512,11 @@ class PathSpecTest(unittest.TestCase):
 		first_spec = PathSpec.from_lines('gitwildmatch', [
 			'test.png',
 			'test.txt',
-		])
+		], backend='simple')
 		second_spec = PathSpec.from_lines('gitwildmatch', [
 			'test.html',
 			'test.jpg',
-		])
+		], backend='simple')
 		combined_spec = first_spec + second_spec
 		files = {
 			'test.html',
@@ -543,11 +543,11 @@ class PathSpecTest(unittest.TestCase):
 		spec = PathSpec.from_lines('gitwildmatch', [
 			'test.png',
 			'test.txt',
-		])
+		], backend='simple')
 		spec += PathSpec.from_lines('gitwildmatch', [
 			'test.html',
 			'test.jpg',
-		])
+		], backend='simple')
 		files = {
 			'test.html',
 			'test.jpg',
