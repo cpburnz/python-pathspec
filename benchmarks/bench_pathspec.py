@@ -21,79 +21,6 @@ from benchmarks.match_pathspec import (
 
 
 @pytest.mark.benchmark(group="PathSpec.match_files")
-def bench_def_filtered(
-	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
-	cpython_gi_lines_filt: list[str],
-):
-	spec = PathSpec.from_lines(
-		'gitwildmatch',
-		cpython_gi_lines_filt,
-		backend='simple',
-		_test_backend_cls=partial(SimplePsBackend, no_reverse=True)
-	)
-	benchmark(run_match, spec, cpython_files)
-
-
-@pytest.mark.benchmark(group="PathSpec.match_files")
-def bench_def_filtered_reversed(
-	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
-	cpython_gi_lines_filt: list[str],
-):
-	spec = PathSpec.from_lines(
-		'gitwildmatch',
-		cpython_gi_lines_filt,
-		backend='simple',
-	)
-	benchmark(run_match, spec, cpython_files)
-
-
-@pytest.mark.benchmark(group="PathSpec.match_files")
-def bench_def_unfiltered(
-	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
-	cpython_gi_lines_all: list[str],
-):
-	spec = PathSpec.from_lines(
-		'gitwildmatch',
-		cpython_gi_lines_all,
-		backend='simple',
-		_test_backend_cls=partial(SimplePsBackend, no_filter=True, no_reverse=True)
-	)
-	benchmark(run_match, spec, cpython_files)
-
-
-@pytest.mark.benchmark(group="PathSpec.match_files")
-def bench_def_unfiltered_reversed(
-	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
-	cpython_gi_lines_all: list[str],
-):
-	spec = PathSpec.from_lines(
-		'gitwildmatch',
-		cpython_gi_lines_all,
-		backend='simple',
-		_test_backend_cls=partial(SimplePsBackend, no_filter=True)
-	)
-	benchmark(run_match, spec, cpython_files)
-
-
-@pytest.mark.benchmark(group="PathSpec.match_files")
-def bench_def_v1(
-	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
-	cpython_gi_lines_filt: list[str],
-):
-	spec = PathSpec.from_lines(
-		'gitwildmatch',
-		cpython_gi_lines_filt,
-		backend='simple',
-	)
-	benchmark(run_match, spec, cpython_files)
-
-
-@pytest.mark.benchmark(group="PathSpec.match_files")
 def bench_hs_r1_block_closure(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
@@ -167,6 +94,80 @@ def bench_hs_v1(
 		backend='hyperscan',
 	)
 	benchmark(run_match, spec, cpython_files)
+
+
+@pytest.mark.benchmark(group="PathSpec.match_files")
+def bench_sm_filtered(
+	benchmark: BenchmarkFixture,
+	cpython_files: set[str],
+	cpython_gi_lines_filt: list[str],
+):
+	spec = PathSpec.from_lines(
+		'gitwildmatch',
+		cpython_gi_lines_filt,
+		backend='simple',
+		_test_backend_cls=partial(SimplePsBackend, no_reverse=True)
+	)
+	benchmark(run_match, spec, cpython_files)
+
+
+@pytest.mark.benchmark(group="PathSpec.match_files")
+def bench_sm_filtered_reversed(
+	benchmark: BenchmarkFixture,
+	cpython_files: set[str],
+	cpython_gi_lines_filt: list[str],
+):
+	spec = PathSpec.from_lines(
+		'gitwildmatch',
+		cpython_gi_lines_filt,
+		backend='simple',
+	)
+	benchmark(run_match, spec, cpython_files)
+
+
+@pytest.mark.benchmark(group="PathSpec.match_files")
+def bench_sm_unfiltered(
+	benchmark: BenchmarkFixture,
+	cpython_files: set[str],
+	cpython_gi_lines_all: list[str],
+):
+	spec = PathSpec.from_lines(
+		'gitwildmatch',
+		cpython_gi_lines_all,
+		backend='simple',
+		_test_backend_cls=partial(SimplePsBackend, no_filter=True, no_reverse=True)
+	)
+	benchmark(run_match, spec, cpython_files)
+
+
+@pytest.mark.benchmark(group="PathSpec.match_files")
+def bench_sm_unfiltered_reversed(
+	benchmark: BenchmarkFixture,
+	cpython_files: set[str],
+	cpython_gi_lines_all: list[str],
+):
+	spec = PathSpec.from_lines(
+		'gitwildmatch',
+		cpython_gi_lines_all,
+		backend='simple',
+		_test_backend_cls=partial(SimplePsBackend, no_filter=True)
+	)
+	benchmark(run_match, spec, cpython_files)
+
+
+@pytest.mark.benchmark(group="PathSpec.match_files")
+def bench_sm_v1(
+	benchmark: BenchmarkFixture,
+	cpython_files: set[str],
+	cpython_gi_lines_filt: list[str],
+):
+	spec = PathSpec.from_lines(
+		'gitwildmatch',
+		cpython_gi_lines_filt,
+		backend='simple',
+	)
+	benchmark(run_match, spec, cpython_files)
+
 
 
 def run_match(spec: PathSpec, files: set[str]):

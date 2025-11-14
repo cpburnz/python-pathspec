@@ -25,6 +25,8 @@ from ...patterns.gitwildmatch import (
 	GitWildMatchPattern,
 	_BYTES_ENCODING,
 	_DIR_MARK)
+from ..._typing import (
+	override)  # Added in 3.12.
 
 from ._base import (
 	HyperscanExprDat)
@@ -62,6 +64,7 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		super().__init__(patterns)
 		self._out = (None, None, 0)
 
+	@override
 	@staticmethod
 	def _init_db(
 		db: hyperscan.Database,
@@ -142,6 +145,7 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		)
 		return expr_data
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		"""
 		Check the file against the patterns.
@@ -158,6 +162,7 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
 		return self._out[:2]
 
+	@override
 	def __on_match(
 		self,
 		expr_id: int,

@@ -75,14 +75,14 @@ _venv_cpy_base:
 	{{cpy_bin}} -m venv --clear dev/venv-cpy
 
 _venv_cpy_install:
-	{{cpy_run}} pip install --upgrade build hyperscan pip pytest-benchmark setuptools sphinx tomli tox twine typing-extensions wheel
+	{{cpy_run}} pip install --upgrade build hyperscan pip pytest pytest-benchmark setuptools sphinx tomli tox twine typing-extensions wheel
 	{{cpy_run}} pip install -e .
 
 _venv_pypy_base:
 	{{pypy_bin}} -m venv --clear dev/venv-pypy
 
 _venv_pypy_install:
-	{{pypy_run}} pip install --upgrade hyperscan pip pytest-benchmark setuptools wheel
+	{{pypy_run}} pip install --upgrade hyperscan pip pytest pytest-benchmark setuptools wheel
 	{{pypy_run}} pip install -e .
 
 

@@ -9,8 +9,12 @@ from typing import (
 	AnyStr,
 	Optional)  # Replaced by `X | None` in 3.10.
 
-from .. import util
-from ..pattern import RegexPattern
+from .. import (
+	util)
+from ..pattern import (
+	RegexPattern)
+from .._typing import (
+	override)  # Added in 3.12.
 
 _BYTES_ENCODING = 'latin1'
 """
@@ -41,6 +45,7 @@ class GitWildMatchPattern(RegexPattern):
 	# Keep the dict-less class hierarchy.
 	__slots__ = ()
 
+	@override
 	@classmethod
 	def pattern_to_regex(
 		cls,
@@ -410,6 +415,7 @@ class GitIgnorePattern(GitWildMatchPattern):
 			"('gitwildmatch') instead."
 		), DeprecationWarning, stacklevel=3)
 
+	@override
 	@classmethod
 	def pattern_to_regex(cls, *args, **kw):
 		"""

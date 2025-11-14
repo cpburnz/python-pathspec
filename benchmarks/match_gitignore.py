@@ -6,11 +6,13 @@ from __future__ import annotations
 
 import itertools
 from collections.abc import (
-	Iterable)
+	Sequence)
 from typing import (
 	Any,
 	Optional,  # Replaced by `X | None` in 3.10.
 	Union)  # Replaced by `X | Y` in 3.10.
+from typing_extensions import (
+	override)  # Added in 3.12.
 
 try:
 	import hyperscan
@@ -50,8 +52,9 @@ class _HyperscanGiR1BlockBaseBackend(_HyperscanGiR1BaseBackend):
 	database in block mode for matching files.
 	"""
 
+	@override
 	@staticmethod
-	def _new_db() -> hyperscan.Database:
+	def _make_db() -> hyperscan.Database:
 		return hyperscan.Database(mode=hyperscan.HS_MODE_BLOCK)
 
 
@@ -61,6 +64,7 @@ class HyperscanGiR1BlockClosureBackend(_HyperscanGiR1BlockBaseBackend):
 	in block mode for matching files, and uses a closure to capture state.
 	"""
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include: Optional[bool] = None
 		out_index: Optional[int] = None
@@ -103,10 +107,11 @@ class HyperscanGiR1BlockStateBackend(_HyperscanGiR1BlockBaseBackend):
 	block mode for matching files, and stores state in variables.
 	"""
 
-	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
+	def __init__(self, patterns: Sequence[RegexPattern]) -> None:
 		super().__init__(patterns)
 		self.__out: tuple[Optional[bool], Optional[int], Optional[int]] = (None, None, 0)
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		self.__out = (None, None, 0)
 		self._db.scan(
@@ -114,6 +119,7 @@ class HyperscanGiR1BlockStateBackend(_HyperscanGiR1BlockBaseBackend):
 		)
 		return self.__out[:2]
 
+	@override
 	def __on_match(
 		self,
 		expr_id: int,
@@ -153,8 +159,9 @@ class _HyperscanGiR1StreamBaseBackend(_HyperscanGiR1BaseBackend):
 
 	_reverse_patterns = True
 
+	@override
 	@staticmethod
-	def _new_db() -> hyperscan.Database:
+	def _make_db() -> hyperscan.Database:
 		return hyperscan.Database(mode=hyperscan.HS_MODE_STREAM)
 
 
@@ -164,6 +171,7 @@ class HyperscanGiR1StreamClosureBackend(_HyperscanGiR1StreamBaseBackend):
 	in streaming mode for matching files, and uses a closure to capture state.
 	"""
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include: Optional[bool] = None
 		out_index: Optional[int] = None
@@ -217,10 +225,11 @@ class HyperscanGiR1StreamStateBackend(_HyperscanGiR1StreamBaseBackend):
 	in streaming mode for matching files, and stores state in variables.
 	"""
 
-	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
+	def __init__(self, patterns: Sequence[RegexPattern]) -> None:
 		super().__init__(patterns)
 		self.__out: tuple[Optional[bool], Optional[int], Optional[int]] = (None, None, 0)
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		self.__out = (None, None, 0)
 		with self._db.stream(match_event_handler=self.__on_match, context=file) as stream:
@@ -228,6 +237,7 @@ class HyperscanGiR1StreamStateBackend(_HyperscanGiR1StreamBaseBackend):
 
 		return self.__out[:2]
 
+	@override
 	def __on_match(
 		self,
 		expr_id: int,
@@ -273,6 +283,7 @@ class _HyperscanGiR2BaseBackend(HyperscanPsBackend):
 	block mode for matching files.
 	"""
 
+	@override
 	@staticmethod
 	def _init_db(
 		db: hyperscan.Database,
@@ -344,8 +355,9 @@ class _HyperscanGiR2BaseBackend(HyperscanPsBackend):
 		)
 		return expr_data
 
+	@override
 	@staticmethod
-	def _new_db() -> hyperscan.Database:
+	def _make_db() -> hyperscan.Database:
 		raise NotImplementedError()
 
 
@@ -355,8 +367,9 @@ class _HyperscanGiR2BlockBaseBackend(_HyperscanGiR2BaseBackend):
 	database in block mode for matching files.
 	"""
 
+	@override
 	@staticmethod
-	def _new_db() -> hyperscan.Database:
+	def _make_db() -> hyperscan.Database:
 		return hyperscan.Database(mode=hyperscan.HS_MODE_BLOCK)
 
 
@@ -366,6 +379,7 @@ class HyperscanGiR2BlockClosureBackend(_HyperscanGiR2BlockBaseBackend):
 	in block mode for matching files, and uses a closure to capture state.
 	"""
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include: Optional[bool] = None
 		out_index: Optional[int] = None
@@ -400,15 +414,17 @@ class HyperscanGiR2BlockStateBackend(_HyperscanGiR2BlockBaseBackend):
 	block mode for matching files, and stores state in variables.
 	"""
 
-	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
+	def __init__(self, patterns: Sequence[RegexPattern]) -> None:
 		super().__init__(patterns)
 		self.__out: tuple[Optional[bool], Optional[int], Optional[int]] = (None, None, 0)
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		self.__out = (None, None, 0)
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
 		return self.__out[:2]
 
+	@override
 	def __on_match(
 		self,
 		expr_id: int,
@@ -439,8 +455,9 @@ class _HyperscanGiR2StreamBaseBackend(_HyperscanGiR2BaseBackend):
 
 	_reverse_patterns = True
 
+	@override
 	@staticmethod
-	def _new_db() -> hyperscan.Database:
+	def _make_db() -> hyperscan.Database:
 		return hyperscan.Database(mode=hyperscan.HS_MODE_STREAM)
 
 
@@ -450,6 +467,7 @@ class HyperscanGiR2StreamClosureBackend(_HyperscanGiR2StreamBaseBackend):
 	in streaming mode for matching files, and uses a closure to capture state.
 	"""
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include: Optional[bool] = None
 		out_index: Optional[int] = None

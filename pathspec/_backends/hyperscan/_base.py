@@ -7,15 +7,23 @@ API. Its contents and structure are likely to change.
 """
 from __future__ import annotations
 
-from typing import (
-	NamedTuple)
+from dataclasses import (
+	dataclass)
 
 
-class HyperscanExprDat(NamedTuple):
+@dataclass(frozen=True)
+class HyperscanExprDat(object):
 	"""
 	The :class:`HyperscanExprDat` class is used to store data related to an
 	expression.
 	"""
+
+	# The slots argument is not supported until Python 3.10.
+	__slots__ = [
+		'include',
+		'index',
+		'is_dir_pattern',
+	]
 
 	include: bool
 	"""

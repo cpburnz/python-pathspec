@@ -14,6 +14,8 @@ from ...pattern import (
 	RegexPattern)
 from ...patterns.gitwildmatch import (
 	_DIR_MARK)
+from ..._typing import (
+	override)  # Added in 3.12.
 
 from .pathspec import (
 	SimplePsBackend)
@@ -49,6 +51,7 @@ class SimpleGiBackend(SimplePsBackend):
 		"""
 		super().__init__(patterns, no_filter=no_filter, no_reverse=no_reverse)
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		"""
 		Check the file against the patterns.

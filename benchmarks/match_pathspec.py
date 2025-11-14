@@ -6,10 +6,12 @@ from __future__ import annotations
 
 import itertools
 from collections.abc import (
-	Iterable)
+	Sequence)
 from typing import (
 	Any,
 	Optional)  # Replaced by `X | None` in 3.10.
+from typing_extensions import (
+	override)  # Added in 3.12.
 
 try:
 	import hyperscan
@@ -32,6 +34,7 @@ class HyperscanPsR1BaseBackend(HyperscanPsBackend):
 	block mode for matching files.
 	"""
 
+	@override
 	@staticmethod
 	def _init_db(
 		db: hyperscan.Database,
@@ -75,8 +78,9 @@ class HyperscanPsR1BaseBackend(HyperscanPsBackend):
 		)
 		return expr_data
 
+	@override
 	@staticmethod
-	def _new_db() -> hyperscan.Database:
+	def _make_db() -> hyperscan.Database:
 		raise NotImplementedError()
 
 
@@ -86,8 +90,9 @@ class _HyperscanPsR1BlockBaseBackend(HyperscanPsR1BaseBackend):
 	database in block mode for matching files.
 	"""
 
+	@override
 	@staticmethod
-	def _new_db() -> hyperscan.Database:
+	def _make_db() -> hyperscan.Database:
 		return hyperscan.Database(mode=hyperscan.HS_MODE_BLOCK)
 
 
@@ -97,6 +102,7 @@ class HyperscanPsR1BlockClosureBackend(_HyperscanPsR1BlockBaseBackend):
 	in block mode for matching files, and uses a closure to capture state.
 	"""
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include = False
 		out_index: Optional[int] = None
@@ -120,15 +126,17 @@ class HyperscanPsR1BlockStateBackend(_HyperscanPsR1BlockBaseBackend):
 	block mode for matching files, and stores state in variables.
 	"""
 
-	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
+	def __init__(self, patterns: Sequence[RegexPattern]) -> None:
 		super().__init__(patterns)
 		self.__out: tuple[Optional[bool], Optional[int]] = (None, None)
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		self.__out = (None, None)
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
 		return self.__out
 
+	@override
 	def __on_match(
 		self,
 		expr_id: int,
@@ -149,8 +157,9 @@ class _HyperscanPsR1StreamBaseBackend(HyperscanPsR1BaseBackend):
 	database in streaming mode for matching files.
 	"""
 
+	@override
 	@staticmethod
-	def _new_db() -> hyperscan.Database:
+	def _make_db() -> hyperscan.Database:
 		return hyperscan.Database(mode=hyperscan.HS_MODE_STREAM)
 
 
@@ -160,6 +169,7 @@ class HyperscanPsR1StreamClosureBackend(_HyperscanPsR1StreamBaseBackend):
 	in streaming mode for matching files, and uses a closure to capture state.
 	"""
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include = False
 		out_index: Optional[int] = None
@@ -189,10 +199,11 @@ class HyperscanPsR1StreamStateBackend(_HyperscanPsR1StreamBaseBackend):
 	in streaming mode for matching files, and stores state in variables.
 	"""
 
-	def __init__(self, patterns: Iterable[RegexPattern]) -> None:
+	def __init__(self, patterns: Sequence[RegexPattern]) -> None:
 		super().__init__(patterns)
 		self.__out: tuple[Optional[bool], Optional[int]] = (None, None)
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		self.__out = (None, None)
 
@@ -201,6 +212,7 @@ class HyperscanPsR1StreamStateBackend(_HyperscanPsR1StreamBaseBackend):
 
 		return self.__out
 
+	@override
 	def __on_match(
 		self,
 		expr_id: int,

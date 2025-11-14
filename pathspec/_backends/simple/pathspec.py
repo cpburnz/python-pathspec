@@ -12,6 +12,8 @@ from typing import (
 
 from ...pattern import (
 	Pattern)
+from ..._typing import (
+	override)  # Added in 3.12.
 from ...util import (
 	check_match_file)
 
@@ -60,6 +62,7 @@ class SimplePsBackend(Backend):
 		patterns.
 		"""
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		"""
 		Check the file against the patterns.

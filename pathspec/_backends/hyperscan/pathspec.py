@@ -21,6 +21,8 @@ except ModuleNotFoundError:
 
 from ...pattern import (
 	RegexPattern)
+from ..._typing import (
+	override)  # Added in 3.12.
 
 from ..base import (
 	Backend)
@@ -141,6 +143,7 @@ class HyperscanPsBackend(Backend):
 		)
 		return expr_data
 
+	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		"""
 		Check the file against the patterns.

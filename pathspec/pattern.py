@@ -2,17 +2,21 @@
 This module provides the base definition for patterns.
 """
 
-import dataclasses
 import re
 import warnings
 from collections.abc import (
 	Iterable,
 	Iterator)
+from dataclasses import (
+	dataclass)
 from typing import (
 	Any,
 	AnyStr,
 	Optional,  # Replaced by `X | None` in 3.10.
 	Union)  # Replaced by `X | Y` in 3.10.
+
+from ._typing import (
+	override)  # Added in 3.12.
 
 
 class Pattern(object):
@@ -160,6 +164,7 @@ class RegexPattern(Pattern):
 		else:
 			return NotImplemented
 
+	@override
 	def match_file(self, file: str) -> Optional['RegexMatchResult']:
 		"""
 		Matches this pattern against the specified file.
@@ -195,7 +200,7 @@ class RegexPattern(Pattern):
 		return pattern, True
 
 
-@dataclasses.dataclass()
+@dataclass()
 class RegexMatchResult(object):
 	"""
 	The :class:`RegexMatchResult` data class is used to return information about

@@ -32,6 +32,8 @@ from .pattern import (
 	Pattern)
 from .patterns.gitwildmatch import (
 	GitWildMatchPattern)
+from ._typing import (
+	override)  # Added in 3.12.
 from .util import (
 	_is_iterable)
 
@@ -86,6 +88,7 @@ class GitIgnoreSpec(PathSpec):
 	) -> Self:
 		...
 
+	@override
 	@classmethod
 	def from_lines(
 		cls: type[Self],
@@ -126,6 +129,7 @@ class GitIgnoreSpec(PathSpec):
 		self = super().from_lines(pattern_factory, lines, backend=backend, _test_backend_cls=_test_backend_cls)
 		return cast(Self, self)
 
+	@override
 	@staticmethod
 	def _make_backend(
 		name: BackendNamesHint,

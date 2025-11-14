@@ -38,6 +38,10 @@ all = [
 hyperscan = [
 	"hyperscan >=0.7",
 ]
+tests = [
+	"pytest >=9",
+	"typing_extensions >=4.15",
+]
 
 [project.urls]
 "Source Code" = "https://github.com/cpburnz/python-pathspec"
