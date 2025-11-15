@@ -49,7 +49,9 @@ def debug_includes(spec: PathSpec, files: set[str], includes: set[str]) -> str:
 	"""
 	results = []
 	for result in spec.check_files(files):
-		assert (ospath(result.file) in includes) == bool(result.include), (result, includes)
+		assert (result.file in includes) == bool(result.include), {
+			'result': result, 'includes': includes,
+		}
 		results.append(result)
 
 	return debug_results(spec, results)

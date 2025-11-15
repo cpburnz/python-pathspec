@@ -676,14 +676,14 @@ class PathSpecTest(unittest.TestCase):
 			'!b.txt',
 		]):
 			with sub_test() as spec:
-				files = {
+				files = set(map(ospath, [
 					'X/a.txt',
 					'X/b.txt',
 					'X/Z/c.txt',
 					'Y/a.txt',
 					'Y/b.txt',
 					'Y/Z/c.txt',
-				}
+				]))
 
 				self.make_dirs([
 					'X',
@@ -713,14 +713,14 @@ class PathSpecTest(unittest.TestCase):
 			'!b.txt',
 		]):
 			with sub_test() as spec:
-				files = {
+				files = set(map(ospath, [
 					'X/a.txt',
 					'X/b.txt',
 					'X/Z/c.txt',
 					'Y/a.txt',
 					'Y/b.txt',
 					'Y/Z/c.txt',
-				}
+				]))
 
 				self.make_dirs([
 					'X',

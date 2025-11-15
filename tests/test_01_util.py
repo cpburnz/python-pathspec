@@ -5,7 +5,6 @@ This script tests utility functions.
 import errno
 import os
 import os.path
-import pathlib
 import shutil
 import tempfile
 import unittest
@@ -13,6 +12,9 @@ from collections.abc import (
 	Iterable)
 from functools import (
 	partial)
+from pathlib import (
+	Path,
+	PurePath)
 from typing import (
 	ClassVar,
 	Optional)  # Replaced by `X | None` in 3.10.
@@ -151,7 +153,7 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		Called before each test.
 		"""
-		self.temp_dir = pathlib.Path(tempfile.mkdtemp())
+		self.temp_dir = Path(tempfile.mkdtemp())
 
 	def tearDown(self) -> None:
 		"""
@@ -701,8 +703,8 @@ class NormalizeFileTest(unittest.TestCase):
 
 	def test_01_purepath(self):
 		"""
-		Tests normalizing a :class:`pathlib.PurePath` as argument.
+		Tests normalizing a :class:`PurePath` as argument.
 		"""
-		first_spec = normalize_file(pathlib.PurePath('a.txt'))
+		first_spec = normalize_file(PurePath('a.txt'))
 		second_spec = normalize_file('a.txt')
 		self.assertEqual(first_spec, second_spec)
