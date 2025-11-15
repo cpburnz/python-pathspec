@@ -55,4 +55,4 @@ __credits__ = [
 	"kurtmckee <https://github.com/kurtmckee>",
 ]
 __license__ = "MPL 2.0"
-__version__ = "0.12.2.dev1"
+__version__ = "0.13.0.dev1"

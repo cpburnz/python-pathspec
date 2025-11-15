@@ -13,7 +13,6 @@ classifiers = [
 	"Operating System :: OS Independent",
 	"Programming Language :: Python",
 	"Programming Language :: Python :: 3",
-	"Programming Language :: Python :: 3.8",
 	"Programming Language :: Python :: 3.9",
 	"Programming Language :: Python :: 3.10",
 	"Programming Language :: Python :: 3.11",
@@ -30,7 +29,19 @@ dynamic = ["version"]
 license = {text = "MPL 2.0"}
 name = "pathspec"
 readme = "README-dist.rst"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+all = [
+	"pathspec[hyperscan]",
+]
+hyperscan = [
+	"hyperscan >=0.7",
+]
+tests = [
+	"pytest >=9",
+	"typing_extensions >=4.15",
+]
 
 [project.urls]
 "Source Code" = "https://github.com/cpburnz/python-pathspec"
@@ -44,6 +55,7 @@ include = [
 	"*.ini",
 	"*.py",
 	"*.rst",
+	"*.toml",
 	"LICENSE",
 	"doc/",
 	"tests/",

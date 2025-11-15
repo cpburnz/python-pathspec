@@ -5,7 +5,7 @@ This script tests :class:`.GitWildMatchPattern`.
 import re
 import unittest
 
-import pathspec.patterns.gitwildmatch
+import pathspec
 from pathspec.patterns.gitwildmatch import (
 	GitWildMatchPattern,
 	GitWildMatchPatternError,
@@ -13,7 +13,6 @@ from pathspec.patterns.gitwildmatch import (
 	_DIR_MARK)
 from pathspec.util import (
 	lookup_pattern)
-
 
 RE_DIR = f"(?P<{_DIR_MARK}>/)"
 """

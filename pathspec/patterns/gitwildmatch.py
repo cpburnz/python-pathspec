@@ -7,11 +7,14 @@ import re
 import warnings
 from typing import (
 	AnyStr,
-	Optional,  # Replaced by `X | None` in 3.10.
-	Tuple)  # Replaced by `tuple` in 3.9.
+	Optional)  # Replaced by `X | None` in 3.10.
 
-from .. import util
-from ..pattern import RegexPattern
+from .. import (
+	util)
+from ..pattern import (
+	RegexPattern)
+from .._typing import (
+	override)  # Added in 3.12.
 
 _BYTES_ENCODING = 'latin1'
 """
@@ -42,11 +45,12 @@ class GitWildMatchPattern(RegexPattern):
 	# Keep the dict-less class hierarchy.
 	__slots__ = ()
 
+	@override
 	@classmethod
 	def pattern_to_regex(
 		cls,
 		pattern: AnyStr,
-	) -> Tuple[Optional[AnyStr], Optional[bool]]:
+	) -> tuple[Optional[AnyStr], Optional[bool]]:
 		"""
 		Convert the pattern into a regular expression.
 
@@ -411,6 +415,7 @@ class GitIgnorePattern(GitWildMatchPattern):
 			"('gitwildmatch') instead."
 		), DeprecationWarning, stacklevel=3)
 
+	@override
 	@classmethod
 	def pattern_to_regex(cls, *args, **kw):
 		"""

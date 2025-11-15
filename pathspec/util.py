@@ -7,11 +7,13 @@ import os.path
 import pathlib
 import posixpath
 import stat
-import sys
 import warnings
 from collections.abc import (
-	Collection as CollectionType,
-	Iterable as IterableType)
+	Callable,
+	Collection,
+	Iterable,
+	Iterator,
+	Sequence)
 from dataclasses import (
 	dataclass)
 from os import (
@@ -19,27 +21,15 @@ from os import (
 from typing import (
 	Any,
 	AnyStr,
-	Callable,  # Replaced by `collections.abc.Callable` in 3.9.
-	Collection,  # Replaced by `collections.abc.Collection` in 3.9.
-	Dict,  # Replaced by `dict` in 3.9.
 	Generic,
-	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
-	Iterator,  # Replaced by `collections.abc.Iterator` in 3.9.
-	List,  # Replaced by `list` in 3.9.
 	Optional,  # Replaced by `X | None` in 3.10.
-	Sequence,  # Replaced by `collections.abc.Sequence` in 3.9.
-	Set,  # Replaced by `set` in 3.9.
-	Tuple,  # Replaced by `tuple` in 3.9.
 	TypeVar,
 	Union)  # Replaced by `X | Y` in 3.10.
 
 from .pattern import (
 	Pattern)
 
-if sys.version_info >= (3, 9):
-	StrPath = Union[str, PathLike[str]]
-else:
-	StrPath = Union[str, PathLike]
+StrPath = Union[str, PathLike[str]]
 
 TStrPath = TypeVar("TStrPath", bound=StrPath)
 """
@@ -53,9 +43,9 @@ NORMALIZE_PATH_SEPS = [
 ]
 """
 *NORMALIZE_PATH_SEPS* (:class:`list` of :class:`str`) contains the path
-separators that need to be normalized to the POSIX separator for the
-current operating system. The separators are determined by examining
-:data:`os.sep` and :data:`os.altsep`.
+separators that need to be normalized to the POSIX separator for the current
+operating system. The separators are determined by examining :data:`os.sep` and
+:data:`os.altsep`.
 """
 
 _registered_patterns = {}
@@ -67,10 +57,9 @@ registered pattern factory (:class:`~collections.abc.Callable`).
 
 def append_dir_sep(path: pathlib.Path) -> str:
 	"""
-	Appends the path separator to the path if the path is a directory.
-	This can be used to aid in distinguishing between directories and
-	files on the file-system by relying on the presence of a trailing path
-	separator.
+	Appends the path separator to the path if the path is a directory. This can be
+	used to aid in distinguishing between directories and files on the file-system
+	by relying on the presence of a trailing path separator.
 
 	*path* (:class:`pathlib.Path`) is the path to use.
 
@@ -84,9 +73,10 @@ def append_dir_sep(path: pathlib.Path) -> str:
 
 
 def check_match_file(
-	patterns: Iterable[Tuple[int, Pattern]],
+	patterns: Iterable[tuple[int, Pattern]],
 	file: str,
-) -> Tuple[Optional[bool], Optional[int]]:
+	is_reversed: Optional[bool] = None,
+) -> tuple[Optional[bool], Optional[int]]:
 	"""
 	Check the file against the patterns.
 
@@ -94,46 +84,61 @@ def check_match_file(
 	(:class:`tuple`) which contains the pattern index (:class:`int`) and actual
 	pattern (:class:`~pathspec.pattern.Pattern`).
 
-	*file* (:class:`str`) is the normalized file path to be matched
-	against *patterns*.
+	*file* (:class:`str`) is the normalized file path to be matched against
+	*patterns*.
+
+	*is_reversed* (:class:`bool` or :data:`None`) is whether the order of the
+	patterns has been reversed. Default is :data:`None` for :data:`False`.
+	Reversing the order of the patterns is an optimization.
 
 	Returns a :class:`tuple` containing whether to include *file* (:class:`bool`
 	or :data:`None`), and the index of the last matched pattern (:class:`int` or
 	:data:`None`).
 	"""
-	out_include: Optional[bool] = None
-	out_index: Optional[int] = None
-	for index, pattern in patterns:
-		if pattern.include is not None and pattern.match_file(file) is not None:
-			out_include = pattern.include
-			out_index = index
+	if is_reversed:
+		# Check patterns in reverse order. The first pattern that matches takes
+		# precedence.
+		for index, pattern in patterns:
+			if pattern.include is not None and pattern.match_file(file) is not None:
+				return pattern.include, index
 
-	return out_include, out_index
+		return None, None
+
+	else:
+		# Check all patterns. The last pattern that matches takes precedence.
+		out_include: Optional[bool] = None
+		out_index: Optional[int] = None
+		for index, pattern in patterns:
+			if pattern.include is not None and pattern.match_file(file) is not None:
+				out_include = pattern.include
+				out_index = index
+
+		return out_include, out_index
 
 
 def detailed_match_files(
 	patterns: Iterable[Pattern],
 	files: Iterable[str],
 	all_matches: Optional[bool] = None,
-) -> Dict[str, 'MatchDetail']:
+) -> dict[str, 'MatchDetail']:
 	"""
-	Matches the files to the patterns, and returns which patterns matched
-	the files.
+	Matches the files to the patterns, and returns which patterns matched the
+	files.
 
 	*patterns* (:class:`~collections.abc.Iterable` of :class:`~pathspec.pattern.Pattern`)
 	contains the patterns to use.
 
-	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
-	the normalized file paths to be matched against *patterns*.
+	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains the
+	normalized file paths to be matched against *patterns*.
 
-	*all_matches* (:class:`bool` or :data:`None`) is whether to return all
-	matches patterns (:data:`True`), or only the last matched pattern
-	(:data:`False`). Default is :data:`None` for :data:`False`.
+	*all_matches* (:class:`bool` or :data:`None`) is whether to return all matches
+	patterns (:data:`True`), or only the last matched pattern (:data:`False`).
+	Default is :data:`None` for :data:`False`.
 
 	Returns the matched files (:class:`dict`) which maps each matched file
 	(:class:`str`) to the patterns that matched in order (:class:`.MatchDetail`).
 	"""
-	all_files = files if isinstance(files, CollectionType) else list(files)
+	all_files = files if isinstance(files, Collection) else list(files)
 	return_files = {}
 	for pattern in patterns:
 		if pattern.include is not None:
@@ -159,12 +164,11 @@ def detailed_match_files(
 
 def _filter_check_patterns(
 	patterns: Iterable[Pattern],
-) -> List[Tuple[int, Pattern]]:
+) -> list[tuple[int, Pattern]]:
 	"""
 	Filters out null-patterns.
 
-	*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the
-	patterns.
+	*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the patterns.
 
 	Returns a :class:`list` containing each indexed pattern (:class:`tuple`) which
 	contains the pattern index (:class:`int`) and the actual pattern
@@ -183,9 +187,9 @@ def _is_iterable(value: Any) -> bool:
 
 	*value* is the value to check,
 
-	Returns whether *value* is a iterable (:class:`bool`).
+	Returns whether *value* is an iterable (:class:`bool`).
 	"""
-	return isinstance(value, IterableType) and not isinstance(value, (str, bytes))
+	return isinstance(value, Iterable) and not isinstance(value, (str, bytes))
 
 
 def iter_tree_entries(
@@ -196,23 +200,21 @@ def iter_tree_entries(
 	"""
 	Walks the specified directory for all files and directories.
 
-	*root* (:class:`str` or :class:`os.PathLike`) is the root directory to
-	search.
+	*root* (:class:`str` or :class:`os.PathLike`) is the root directory to search.
 
-	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
-	optionally is the error handler for file-system exceptions. It will be
-	called with the exception (:exc:`OSError`). Reraise the exception to
-	abort the walk. Default is :data:`None` to ignore file-system
-	exceptions.
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`) optionally is
+	the error handler for file-system exceptions. It will be called with the
+	exception (:exc:`OSError`). Reraise the exception to abort the walk. Default
+	is :data:`None` to ignore file-system exceptions.
 
-	*follow_links* (:class:`bool` or :data:`None`) optionally is whether
-	to walk symbolic links that resolve to directories. Default is
-	:data:`None` for :data:`True`.
+	*follow_links* (:class:`bool` or :data:`None`) optionally is whether to walk
+	symbolic links that resolve to directories. Default is :data:`None` for
+	:data:`True`.
 
 	Raises :exc:`RecursionError` if recursion is detected.
 
-	Returns an :class:`~collections.abc.Iterator` yielding each file or
-	directory entry (:class:`.TreeEntry`) relative to *root*.
+	Returns an :class:`~collections.abc.Iterator` yielding each file or directory
+	entry (:class:`.TreeEntry`) relative to *root*.
 	"""
 	if on_error is not None and not callable(on_error):
 		raise TypeError(f"on_error:{on_error!r} is not callable.")
@@ -226,7 +228,7 @@ def iter_tree_entries(
 def _iter_tree_entries_next(
 	root_full: str,
 	dir_rel: str,
-	memo: Dict[str, str],
+	memo: dict[str, str],
 	on_error: Callable[[OSError], None],
 	follow_links: bool,
 ) -> Iterator['TreeEntry']:
@@ -238,24 +240,22 @@ def _iter_tree_entries_next(
 	*dir_rel* (:class:`str`) the path to the directory to scan relative to
 	*root_full*.
 
-	*memo* (:class:`dict`) keeps track of ancestor directories
-	encountered. Maps each ancestor real path (:class:`str`) to relative
-	path (:class:`str`).
+	*memo* (:class:`dict`) keeps track of ancestor directories encountered. Maps
+	each ancestor real path (:class:`str`) to relative path (:class:`str`).
 
-	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
-	optionally is the error handler for file-system exceptions.
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`) optionally is
+	the error handler for file-system exceptions.
 
-	*follow_links* (:class:`bool`) is whether to walk symbolic links that
-	resolve to directories.
+	*follow_links* (:class:`bool`) is whether to walk symbolic links that resolve
+	to directories.
 
 	Yields each entry (:class:`.TreeEntry`).
 	"""
 	dir_full = os.path.join(root_full, dir_rel)
 	dir_real = os.path.realpath(dir_full)
 
-	# Remember each encountered ancestor directory and its canonical
-	# (real) path. If a canonical path is encountered more than once,
-	# recursion has occurred.
+	# Remember each encountered ancestor directory and its canonical (real) path.
+	# If a canonical path is encountered more than once, recursion has occurred.
 	if dir_real not in memo:
 		memo[dir_real] = dir_rel
 	else:
@@ -286,8 +286,8 @@ def _iter_tree_entries_next(
 				node_stat = node_lstat
 
 			if node_ent.is_dir(follow_symlinks=follow_links):
-				# Child node is a directory, recurse into it and yield its
-				# descendant files.
+				# Child node is a directory, recurse into it and yield its descendant
+				# files.
 				yield TreeEntry(node_ent.name, node_rel, node_lstat, node_stat)
 
 				yield from _iter_tree_entries_next(root_full, node_rel, memo, on_error, follow_links)
@@ -296,11 +296,11 @@ def _iter_tree_entries_next(
 				# Child node is either a file or an unfollowed link, yield it.
 				yield TreeEntry(node_ent.name, node_rel, node_lstat, node_stat)
 
-	# NOTE: Make sure to remove the canonical (real) path of the directory
-	# from the ancestors memo once we are done with it. This allows the
-	# same directory to appear multiple times. If this is not done, the
-	# second occurrence of the directory will be incorrectly interpreted
-	# as a recursion. See <https://github.com/cpburnz/python-path-specification/pull/7>.
+	# NOTE: Make sure to remove the canonical (real) path of the directory from
+	# the ancestors memo once we are done with it. This allows the same directory
+	# to appear multiple times. If this is not done, the second occurrence of the
+	# directory will be incorrectly interpreted as a recursion. See
+	# <https://github.com/cpburnz/python-path-specification/pull/7>.
 	del memo[dir_real]
 
 
@@ -312,27 +312,92 @@ def iter_tree_files(
 	"""
 	Walks the specified directory for all files.
 
-	*root* (:class:`str` or :class:`os.PathLike`) is the root directory to
-	search for files.
+	*root* (:class:`str` or :class:`os.PathLike`) is the root directory to search
+	for files.
 
-	*on_error* (:class:`~collections.abc.Callable` or :data:`None`)
-	optionally is the error handler for file-system exceptions. It will be
-	called with the exception (:exc:`OSError`). Reraise the exception to
-	abort the walk. Default is :data:`None` to ignore file-system
-	exceptions.
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`) optionally is
+	the error handler for file-system exceptions. It will be called with the
+	exception (:exc:`OSError`). Reraise the exception to abort the walk. Default
+	is :data:`None` to ignore file-system exceptions.
 
-	*follow_links* (:class:`bool` or :data:`None`) optionally is whether
-	to walk symbolic links that resolve to directories. Default is
-	:data:`None` for :data:`True`.
+	*follow_links* (:class:`bool` or :data:`None`) optionally is whether to walk
+	symbolic links that resolve to directories. Default is :data:`None` for
+	:data:`True`.
 
 	Raises :exc:`RecursionError` if recursion is detected.
 
-	Returns an :class:`~collections.abc.Iterator` yielding the path to
-	each file (:class:`str`) relative to *root*.
+	Returns an :class:`~collections.abc.Iterator` yielding the path to each file
+	(:class:`str`) relative to *root*.
 	"""
-	for entry in iter_tree_entries(root, on_error=on_error, follow_links=follow_links):
-		if not entry.is_dir(follow_links):
-			yield entry.path
+	if on_error is not None and not callable(on_error):
+		raise TypeError(f"on_error:{on_error!r} is not callable.")
+
+	if follow_links is None:
+		follow_links = True
+
+	yield from _iter_tree_files_next(os.path.abspath(root), '', {}, on_error, follow_links)
+
+
+def _iter_tree_files_next(
+	root_full: str,
+	dir_rel: str,
+	memo: dict[str, str],
+	on_error: Callable[[OSError], None],
+	follow_links: bool,
+) -> Iterator[str]:
+	"""
+	Scan the directory for all descendant files.
+
+	*root_full* (:class:`str`) the absolute path to the root directory.
+
+	*dir_rel* (:class:`str`) the path to the directory to scan relative to
+	*root_full*.
+
+	*memo* (:class:`dict`) keeps track of ancestor directories encountered. Maps
+	each ancestor real path (:class:`str`) to relative path (:class:`str`).
+
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`) optionally is
+	the error handler for file-system exceptions.
+
+	*follow_links* (:class:`bool`) is whether to walk symbolic links that resolve
+	to directories.
+
+	Yields each file path (:class:`str`).
+	"""
+	dir_full = os.path.join(root_full, dir_rel)
+	dir_real = os.path.realpath(dir_full)
+
+	# Remember each encountered ancestor directory and its canonical (real) path.
+	# If a canonical path is encountered more than once, recursion has occurred.
+	if dir_real not in memo:
+		memo[dir_real] = dir_rel
+	else:
+		raise RecursionError(real_path=dir_real, first_path=memo[dir_real], second_path=dir_rel)
+
+	with os.scandir(dir_full) as scan_iter:
+		node_ent: os.DirEntry
+		for node_ent in scan_iter:
+			node_rel = os.path.join(dir_rel, node_ent.name)
+
+			if node_ent.is_dir(follow_symlinks=follow_links):
+				# Child node is a directory, recurse into it and yield its descendant
+				# files.
+				yield from _iter_tree_files_next(root_full, node_rel, memo, on_error, follow_links)
+
+			elif node_ent.is_file():
+				# Child node is a file, yield it.
+				yield node_rel
+
+			elif not follow_links and node_ent.is_symlink():
+				# Child node is an unfollowed link, yield it.
+				yield node_rel
+
+	# NOTE: Make sure to remove the canonical (real) path of the directory from
+	# the ancestors memo once we are done with it. This allows the same directory
+	# to appear multiple times. If this is not done, the second occurrence of the
+	# directory will be incorrectly interpreted as a recursion. See
+	# <https://github.com/cpburnz/python-path-specification/pull/7>.
+	del memo[dir_real]
 
 
 def iter_tree(root, on_error=None, follow_links=None):
@@ -365,8 +430,8 @@ def match_file(patterns: Iterable[Pattern], file: str) -> bool:
 	*patterns* (:class:`~collections.abc.Iterable` of :class:`~pathspec.pattern.Pattern`)
 	contains the patterns to use.
 
-	*file* (:class:`str`) is the normalized file path to be matched
-	against *patterns*.
+	*file* (:class:`str`) is the normalized file path to be matched against
+	*patterns*.
 
 	Returns :data:`True` if *file* matched; otherwise, :data:`False`.
 	"""
@@ -381,7 +446,7 @@ def match_file(patterns: Iterable[Pattern], file: str) -> bool:
 def match_files(
 	patterns: Iterable[Pattern],
 	files: Iterable[str],
-) -> Set[str]:
+) -> set[str]:
 	"""
 	DEPRECATED: This is an old function no longer used. Use the
 	:func:`~pathspec.util.match_file` function with a loop for better results.
@@ -391,8 +456,8 @@ def match_files(
 	*patterns* (:class:`~collections.abc.Iterable` of :class:`~pathspec.pattern.Pattern`)
 	contains the patterns to use.
 
-	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains
-	the normalized file paths to be matched against *patterns*.
+	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains the
+	normalized file paths to be matched against *patterns*.
 
 	Returns the matched files (:class:`set` of :class:`str`).
 	"""
@@ -416,17 +481,16 @@ def normalize_file(
 	separators: Optional[Collection[str]] = None,
 ) -> str:
 	"""
-	Normalizes the file path to use the POSIX path separator (i.e.,
-	``"/"``), and make the paths relative (remove leading ``"/"``).
+	Normalizes the file path to use the POSIX path separator (i.e., ``"/"``), and
+	make the paths relative (remove leading ``"/"``).
 
 	*file* (:class:`str` or :class:`os.PathLike`) is the file path.
 
 	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
-	``None``) optionally contains the path separators to normalize.
-	This does not need to include the POSIX path separator (``"/"``),
-	but including it will not affect the results. Default is ``None``
-	for ``NORMALIZE_PATH_SEPS``. To prevent normalization, pass an
-	empty container (e.g., an empty tuple ``()``).
+	``None``) optionally contains the path separators to normalize. This does not
+	need to include the POSIX path separator (``"/"``), but including it will not
+	affect the results. Default is ``None`` for ``NORMALIZE_PATH_SEPS``. To
+	prevent normalization, pass an empty container (e.g., an empty tuple ``()``).
 
 	Returns the normalized file path (:class:`str`).
 	"""
@@ -454,7 +518,7 @@ def normalize_file(
 def normalize_files(
 	files: Iterable[StrPath],
 	separators: Optional[Collection[str]] = None,
-) -> Dict[str, List[StrPath]]:
+) -> dict[str, list[StrPath]]:
 	"""
 	DEPRECATED: This function is no longer used. Use the :func:`.normalize_file`
 	function with a loop for better results.
@@ -465,16 +529,16 @@ def normalize_files(
 	:class:`os.PathLike`) contains the file paths to be normalized.
 
 	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
-	:data:`None`) optionally contains the path separators to normalize.
-	See :func:`normalize_file` for more information.
+	:data:`None`) optionally contains the path separators to normalize. See
+	:func:`normalize_file` for more information.
 
-	Returns a :class:`dict` mapping each normalized file path (:class:`str`)
-	to the original file paths (:class:`list` of :class:`str` or
+	Returns a :class:`dict` mapping each normalized file path (:class:`str`) to
+	the original file paths (:class:`list` of :class:`str` or
 	:class:`os.PathLike`).
 	"""
 	warnings.warn((
-		"util.normalize_files() is deprecated. Use util.normalize_file() "
-		"with a loop for better results."
+		"util.normalize_files() is deprecated. Use util.normalize_file() with a "
+		"loop for better results."
 	), DeprecationWarning, stacklevel=2)
 
 	norm_files = {}
@@ -496,17 +560,16 @@ def register_pattern(
 	"""
 	Registers the specified pattern factory.
 
-	*name* (:class:`str`) is the name to register the pattern factory
-	under.
+	*name* (:class:`str`) is the name to register the pattern factory under.
 
-	*pattern_factory* (:class:`~collections.abc.Callable`) is used to
-	compile patterns. It must accept an uncompiled pattern (:class:`str`)
-	and return the compiled pattern (:class:`.Pattern`).
+	*pattern_factory* (:class:`~collections.abc.Callable`) is used to compile
+	patterns. It must accept an uncompiled pattern (:class:`str`) and return the
+	compiled pattern (:class:`.Pattern`).
 
-	*override* (:class:`bool` or :data:`None`) optionally is whether to
-	allow overriding an already registered pattern under the same name
-	(:data:`True`), instead of raising an :exc:`AlreadyRegisteredError`
-	(:data:`False`). Default is :data:`None` for :data:`False`.
+	*override* (:class:`bool` or :data:`None`) optionally is whether to allow
+	overriding an already registered pattern under the same name (:data:`True`),
+	instead of raising an :exc:`AlreadyRegisteredError` (:data:`False`). Default
+	is :data:`None` for :data:`False`.
 	"""
 	if not isinstance(name, str):
 		raise TypeError(f"name:{name!r} is not a string.")
@@ -522,8 +585,8 @@ def register_pattern(
 
 class AlreadyRegisteredError(Exception):
 	"""
-	The :exc:`AlreadyRegisteredError` exception is raised when a pattern
-	factory is registered under a name already in use.
+	The :exc:`AlreadyRegisteredError` exception is raised when a pattern factory
+	is registered under a name already in use.
 	"""
 
 	def __init__(
@@ -536,8 +599,8 @@ class AlreadyRegisteredError(Exception):
 
 		*name* (:class:`str`) is the name of the registered pattern.
 
-		*pattern_factory* (:class:`~collections.abc.Callable`) is the
-		registered pattern factory.
+		*pattern_factory* (:class:`~collections.abc.Callable`) is the registered
+		pattern factory.
 		"""
 		super(AlreadyRegisteredError, self).__init__(name, pattern_factory)
 
@@ -561,16 +624,15 @@ class AlreadyRegisteredError(Exception):
 	@property
 	def pattern_factory(self) -> Callable[[AnyStr], Pattern]:
 		"""
-		*pattern_factory* (:class:`~collections.abc.Callable`) is the
-		registered pattern factory.
+		*pattern_factory* (:class:`~collections.abc.Callable`) is the registered
+		pattern factory.
 		"""
 		return self.args[1]
 
 
 class RecursionError(Exception):
 	"""
-	The :exc:`RecursionError` exception is raised when recursion is
-	detected.
+	The :exc:`RecursionError` exception is raised when recursion is detected.
 	"""
 
 	def __init__(
@@ -582,14 +644,12 @@ class RecursionError(Exception):
 		"""
 		Initializes the :exc:`RecursionError` instance.
 
-		*real_path* (:class:`str`) is the real path that recursion was
-		encountered on.
+		*real_path* (:class:`str`) is the real path that recursion was encountered
+		on.
 
-		*first_path* (:class:`str`) is the first path encountered for
-		*real_path*.
+		*first_path* (:class:`str`) is the first path encountered for *real_path*.
 
-		*second_path* (:class:`str`) is the second path encountered for
-		*real_path*.
+		*second_path* (:class:`str`) is the second path encountered for *real_path*.
 		"""
 		super(RecursionError, self).__init__(real_path, first_path, second_path)
 
@@ -606,10 +666,9 @@ class RecursionError(Exception):
 		"""
 		*message* (:class:`str`) is the error message.
 		"""
-		return "Real path {real!r} was encountered at {first!r} and then {second!r}.".format(
-			real=self.real_path,
-			first=self.first_path,
-			second=self.second_path,
+		return (
+			f"Real path {self.real_path!r} was encountered at {self.first_path!r} "
+			f"and then {self.second_path!r}."
 		)
 
 	@property

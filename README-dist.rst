@@ -170,12 +170,19 @@ Change History
 ==============
 
 
-0.12.2 (TBD)
+0.13.0 (TBD)
 -------------------
+
+Major changes:
+
+- `Issue #91`_: Dropped support of EOL Python 3.8.
 
 Improvements:
 
-- Support Python 3.13, 3.14.
+- Mark Python 3.13 and 3.14 as supported.
+
+
+.. _`Issue #91`: https://github.com/cpburnz/python-pathspec/issues/91
 
 
 0.12.1 (2023-12-10)

@@ -10,11 +10,6 @@ These are notes to myself for things to review before decommissioning EoL versio
 
 ### Python
 
-**Python 3.8:**
-
-- EoL as of 2024-10-07.
-- Cannot remove support until Hatchling stops supporting Python 3.8.
-
 **Python 3.9:**
 
 - Becomes EoL in 2025-10.
@@ -37,6 +32,10 @@ These are notes to myself for things to review before decommissioning EoL versio
 
 - Becomes EoL in 2029-10.
 
+**Python 3.14**
+
+- Becomes EoL in 2030-10.
+
 References:
 
 - [Status of Python Versions](https://devguide.python.org/versions/)
@@ -45,10 +44,6 @@ References:
 ### Linux
 
 Review the following Linux distributions.
-
-**CentOS:**
-
-- TODO
 
 **Debian:**
 
@@ -125,25 +120,25 @@ Review the following PyPI packages.
 
 [ansible-lint](https://pypi.org/project/ansible-lint/)
 
-- v25.6.1 (latest as of 2025-06-26) requires Python 3.10+.
+- v25.9.2 (latest as of 2025-10-20) requires Python 3.10+.
 - [ansible-lint on Wheelodex](https://www.wheelodex.org/projects/ansible-lint/).
 
 [black](https://pypi.org/project/black/)
 
-- v25.1.0 (latest as of 2025-06-26) requires Python 3.9+.
+- v25.9.0 (latest as of 2025-10-20) requires Python 3.9+.
 - [black on Wheelodex](https://www.wheelodex.org/projects/black/).
 
 [dvc](https://pypi.org/project/dvc/)
 
-- v3.60.1 (latest as of 2025-06-26) requires Python 3.9+.
+- v3.63.0 (latest as of 2025-10-20) requires Python 3.9+.
 - [dvc on Wheelodex](https://www.wheelodex.org/projects/dvc/).
 
 [hatchling](https://pypi.org/project/hatchling/)
 
-- v1.27.0 (latest as of 2025-06-26) requires Python 3.8+.
+- v1.27.0 (latest as of 2025-10-20) requires Python 3.8+, but next release will require Python 3.9+.
 - [hatchling on Wheelodex](https://www.wheelodex.org/projects/hatchling/).
 
 [yamllint](https://pypi.org/project/yamllint/)
 
-- v1.37.1 (latest as of 2025-06-26) requires Python 3.9+.
+- v1.37.1 (latest as of 2025-10-20) requires Python 3.9+.
 - [yamllint on Wheelodex](https://www.wheelodex.org/projects/yamllint/).

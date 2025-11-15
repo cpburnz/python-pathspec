@@ -1,25 +1,58 @@
 """
 This module provides utility functions shared by tests.
 """
+from __future__ import annotations
 
 import itertools
 import os
 import os.path
 import pathlib
-
+from collections.abc import (
+	Iterable)
 from typing import (
-	Iterable,  # Replaced by `collections.abc.Iterable` in 3.9.
-	List,  # Replaced by `set` in 3.9.
-	Set,  # Replaced by `set` in 3.9.
-	Tuple,  # Replaced by `tuple` in 3.9.
+	Optional,  # Replaced by `X | None` in 3.10.
 	cast)
+from unittest import (
+	SkipTest)
 
 from pathspec import (
 	PathSpec,
 	RegexPattern)
+from pathspec._backends.base import (
+	BackendNamesHint)
+from pathspec._backends.hyperscan.base import (
+	hyperscan_error)
 from pathspec.util import (
 	CheckResult,
-	TStrPath)
+	TStrPath,
+	TreeEntry)
+
+BACKEND_PARAMS: list[tuple[str, BackendNamesHint]] = [
+	('hyperscan', 'hyperscan'),
+]
+"""
+The backend parameters.
+"""
+
+
+def debug_includes(spec: PathSpec, files: set[str], includes: set[str]) -> str:
+	"""
+	Format the match files message.
+
+	*spec* (:class:`~pathspec.PathSpec`) is the path-spec.
+
+	*files* (:class:`set` of :class:`str`) contains the source files.
+
+	*includes* (:class:`set` of :class:`str`) contains the matched files.
+
+	Returns the message (:class:`str`).
+	"""
+	results = []
+	for result in spec.check_files(files):
+		assert (result.file in includes) == bool(result.include), (result, includes)
+		results.append(result)
+
+	return debug_results(spec, results)
 
 
 def debug_results(spec: PathSpec, results: Iterable[CheckResult[str]]) -> str:
@@ -33,7 +66,7 @@ def debug_results(spec: PathSpec, results: Iterable[CheckResult[str]]) -> str:
 
 	Returns the message (:class:`str`).
 	"""
-	patterns = cast(List[RegexPattern], spec.patterns)
+	patterns = cast(list[RegexPattern], spec.patterns)
 
 	pattern_table = []
 	for index, pattern in enumerate(patterns, 1):
@@ -72,7 +105,7 @@ def debug_results(spec: PathSpec, results: Iterable[CheckResult[str]]) -> str:
 	])
 
 
-def get_includes(results: Iterable[CheckResult[TStrPath]]) -> Set[TStrPath]:
+def get_includes(results: Iterable[CheckResult[TStrPath]]) -> set[TStrPath]:
 	"""
 	Get the included files from the check results.
 
@@ -82,6 +115,17 @@ def get_includes(results: Iterable[CheckResult[TStrPath]]) -> Set[TStrPath]:
 	Returns the included files (:class:`set` of :class:`str`).
 	"""
 	return {__res.file for __res in results if __res.include}
+
+
+def get_paths_from_entries(entries: Iterable[TreeEntry]) -> set[str]:
+	"""
+	Get the entry paths.
+
+	*entries* (:class:`Iterable` of :class:`TreeEntry`) yields the entries.
+
+	Returns the paths (:class:`set` of :class:`str`).
+	"""
+	return {__ent.path for __ent in entries}
 
 
 def make_dirs(temp_dir: pathlib.Path, dirs: Iterable[str]) -> None:
@@ -110,7 +154,7 @@ def make_files(temp_dir: pathlib.Path, files: Iterable[str]) -> None:
 		mkfile(temp_dir / ospath(file))
 
 
-def make_links(temp_dir: pathlib.Path, links: Iterable[Tuple[str, str]]) -> None:
+def make_links(temp_dir: pathlib.Path, links: Iterable[tuple[str, str]]) -> None:
 	"""
 	Create the specified links.
 
@@ -146,3 +190,15 @@ def ospath(path: str) -> str:
 	Returns the native path (:class:`str`).
 	"""
 	return os.path.join(*path.split('/'))
+
+
+def require_backend(name: Optional[BackendNamesHint]) -> None:
+	"""
+	Skip the test if the backend library is not installed.
+
+	*name* (:class:`str` or :data:`None`) is the backend name.
+
+	Raises :class:`SkipTest` if the backend library is not installed.
+	"""
+	if name == 'hyperscan' and hyperscan_error is not None:
+		raise SkipTest(str(hyperscan_error))

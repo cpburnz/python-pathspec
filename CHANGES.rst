@@ -3,12 +3,29 @@ Change History
 ==============
 
 
-0.12.2 (TBD)
+0.13.0 (TBD)
 -------------------
+
+Major changes:
+
+- `Issue #91`_: Dropped support of EoL Python 3.8.
+
+New features:
+
+- Added optional `hyperscan`_ backend for faster regex matching. It will automatically be used when installed. The backend can be controlled using the `backend` argument to `PathSpec()`, `PathSpec.from_lines()`, `GitIgnoreSpec()`, or `GitIgnoreSpec.from_lines()`.
+
+Bug fixes:
+
+- `Issue #98`_: UnboundLocalError in RegexPattern when initialized with pattern=None.
 
 Improvements:
 
-- Support Python 3.13, 3.14.
+- Mark Python 3.13 and 3.14 as supported.
+- No-op patterns are now filtered out when matching files, slightly improving performance.
+
+.. _`hyperscan`: https://pypi.org/project/hyperscan/
+.. _`Issue #91`: https://github.com/cpburnz/python-pathspec/issues/91
+.. _`Issue #98`: https://github.com/cpburnz/python-pathspec/issues/98
 
 
 0.12.1 (2023-12-10)
@@ -27,8 +44,7 @@ Bug fixes:
 
 Major changes:
 
-- Dropped support of EOL Python 3.7. See `Pull #82`_.
-
+- Dropped support of EoL Python 3.7. See `Pull #82`_.
 
 API changes:
 
@@ -182,7 +198,7 @@ Improvements:
 
 Major changes:
 
-- Dropped support of EOL Python 2.7, 3.5, 3.6. See `Issue #47`_.
+- Dropped support of EoL Python 2.7, 3.5, 3.6. See `Issue #47`_.
 - The *gitwildmatch* pattern `dir/*` is now handled the same as `dir/`. This means `dir/*` will now match all descendants rather than only direct children. See `Issue #19`_.
 - Added `pathspec.GitIgnoreSpec` class (see new features).
 - Changed build system to `pyproject.toml`_ and build backend to `setuptools.build_meta`_ which may have unforeseen consequences.
