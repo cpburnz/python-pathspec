@@ -51,7 +51,7 @@ class PathSpec(object):
 		patterns: Union[Sequence[Pattern], Iterable[Pattern]],
 		*,
 		backend: Union[BackendNamesHint, str, None] = None,
-		_test_backend_cls: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
+		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
 	) -> None:
 		"""
 		Initializes the :class:`PathSpec` instance.
@@ -72,8 +72,8 @@ class PathSpec(object):
 			backend = 'best'
 
 		backend = cast(BackendNamesHint, backend)
-		if _test_backend_cls is not None:
-			use_backend = _test_backend_cls(patterns)
+		if _test_backend_factory is not None:
+			use_backend = _test_backend_factory(patterns)
 		else:
 			use_backend = self._make_backend(backend, patterns)
 
@@ -220,7 +220,7 @@ class PathSpec(object):
 		lines: Iterable[AnyStr],
 		*,
 		backend: Union[BackendNamesHint, str, None] = None,
-		_test_backend_cls: Optional[Callable[[], Backend]] = None,
+		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
 	) -> Self:
 		"""
 		Compiles the pattern lines.
@@ -252,7 +252,7 @@ class PathSpec(object):
 			raise TypeError(f"lines:{lines!r} is not an iterable.")
 
 		patterns = [pattern_factory(line) for line in lines if line]
-		return cls(patterns, backend=backend, _test_backend_cls=_test_backend_cls)
+		return cls(patterns, backend=backend, _test_backend_factory=_test_backend_factory)
 
 	@staticmethod
 	def _make_backend(

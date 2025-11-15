@@ -72,7 +72,7 @@ class GitIgnoreSpec(PathSpec):
 		lines: Iterable[AnyStr],
 		*,
 		backend: Union[BackendNamesHint, str, None] = None,
-		_test_backend_cls: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
+		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
 	) -> Self:
 		...
 
@@ -84,7 +84,7 @@ class GitIgnoreSpec(PathSpec):
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern], None] = None,
 		*,
 		backend: Union[BackendNamesHint, str, None] = None,
-		_test_backend_cls: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
+		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
 	) -> Self:
 		...
 
@@ -96,7 +96,7 @@ class GitIgnoreSpec(PathSpec):
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern], None] = None,
 		*,
 		backend: Union[BackendNamesHint, str, None] = None,
-		_test_backend_cls: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
+		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
 	) -> Self:
 		"""
 		Compiles the pattern lines.
@@ -126,7 +126,7 @@ class GitIgnoreSpec(PathSpec):
 			# Support reversed order of arguments from PathSpec.
 			pattern_factory, lines = lines, pattern_factory
 
-		self = super().from_lines(pattern_factory, lines, backend=backend, _test_backend_cls=_test_backend_cls)
+		self = super().from_lines(pattern_factory, lines, backend=backend, _test_backend_factory=_test_backend_factory)
 		return cast(Self, self)
 
 	@override

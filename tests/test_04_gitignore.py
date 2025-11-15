@@ -57,7 +57,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 				spec = GitIgnoreSpec.from_lines(
 					lines,
 					backend='simple',
-					_test_backend_cls=partial(SimpleGiBackend, no_filter=True, no_reverse=True),
+					_test_backend_factory=partial(SimpleGiBackend, no_filter=True, no_reverse=True),
 				)
 				yield spec
 

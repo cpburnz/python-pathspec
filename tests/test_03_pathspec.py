@@ -93,7 +93,7 @@ class PathSpecTest(unittest.TestCase):
 					pattern_factory,
 					lines,
 					backend='simple',
-					_test_backend_cls=partial(SimplePsBackend, no_filter=True, no_reverse=True)
+					_test_backend_factory=partial(SimplePsBackend, no_filter=True, no_reverse=True)
 				)
 				yield spec
 

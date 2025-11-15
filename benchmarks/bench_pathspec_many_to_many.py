@@ -1,5 +1,6 @@
 """
-This module defines benchmarks for :class:`.PathSpec`.
+This module benchmarks :class:`.PathSpec` using many patterns against many
+files.
 """
 
 from functools import (
@@ -19,8 +20,10 @@ from benchmarks.match_pathspec import (
 	HyperscanPsR1StreamClosureBackend,
 	HyperscanPsR1StreamStateBackend)
 
+GROUP = "PathSpec.match_files(): 180 lines, 6.5k files"
 
-@pytest.mark.benchmark(group="PathSpec.match_files")
+
+@pytest.mark.benchmark(group=GROUP)
 def bench_hs_r1_block_closure(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
@@ -30,12 +33,12 @@ def bench_hs_r1_block_closure(
 		'gitwildmatch',
 		cpython_gi_lines_all,
 		backend='hyperscan',
-		_test_backend_cls=HyperscanPsR1BlockClosureBackend,
+		_test_backend_factory=HyperscanPsR1BlockClosureBackend,
 	)
 	benchmark(run_match, spec, cpython_files)
 
 
-@pytest.mark.benchmark(group="PathSpec.match_files")
+@pytest.mark.benchmark(group=GROUP)
 def bench_hs_r1_block_state(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
@@ -45,13 +48,12 @@ def bench_hs_r1_block_state(
 		'gitwildmatch',
 		cpython_gi_lines_all,
 		backend='hyperscan',
-		_test_backend_cls=HyperscanPsR1BlockStateBackend,
+		_test_backend_factory=HyperscanPsR1BlockStateBackend,
 	)
 	benchmark(run_match, spec, cpython_files)
 
 
-# TODO BUG: This now fails after restructuring.
-@pytest.mark.benchmark(group="PathSpec.match_files")
+@pytest.mark.benchmark(group=GROUP)
 def bench_hs_r1_stream_closure(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
@@ -61,13 +63,13 @@ def bench_hs_r1_stream_closure(
 		'gitwildmatch',
 		cpython_gi_lines_all,
 		backend='hyperscan',
-		_test_backend_cls=HyperscanPsR1StreamClosureBackend,
+		_test_backend_factory=HyperscanPsR1StreamClosureBackend,
 	)
 	benchmark(run_match, spec, cpython_files)
 
 
 # WARNING: This segfaults.
-# @pytest.mark.benchmark(group="PathSpec.match_files")
+# @pytest.mark.benchmark(group=GROUP)
 # def bench_hs_r1_stream_state(
 # 	benchmark: BenchmarkFixture,
 # 	cpython_files: set[str],
@@ -77,12 +79,12 @@ def bench_hs_r1_stream_closure(
 #			'gitwildmatch',
 #			cpython_gi_lines_all,
 #			backend='hyperscan',
-#			_test_backend_cls=HyperscanPsR1StreamStateBackend,
+#			_test_backend_factory=HyperscanPsR1StreamStateBackend,
 #		)
 # 	benchmark(run_match, spec, cpython_files)
 
 
-@pytest.mark.benchmark(group="PathSpec.match_files")
+@pytest.mark.benchmark(group=GROUP)
 def bench_hs_v1(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
@@ -96,7 +98,7 @@ def bench_hs_v1(
 	benchmark(run_match, spec, cpython_files)
 
 
-@pytest.mark.benchmark(group="PathSpec.match_files")
+@pytest.mark.benchmark(group=GROUP)
 def bench_sm_filtered(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
@@ -106,12 +108,12 @@ def bench_sm_filtered(
 		'gitwildmatch',
 		cpython_gi_lines_all,
 		backend='simple',
-		_test_backend_cls=partial(SimplePsBackend, no_reverse=True)
+		_test_backend_factory=partial(SimplePsBackend, no_reverse=True)
 	)
 	benchmark(run_match, spec, cpython_files)
 
 
-@pytest.mark.benchmark(group="PathSpec.match_files")
+@pytest.mark.benchmark(group=GROUP)
 def bench_sm_filtered_reversed(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
@@ -125,7 +127,7 @@ def bench_sm_filtered_reversed(
 	benchmark(run_match, spec, cpython_files)
 
 
-@pytest.mark.benchmark(group="PathSpec.match_files")
+@pytest.mark.benchmark(group=GROUP)
 def bench_sm_unfiltered(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
@@ -135,12 +137,12 @@ def bench_sm_unfiltered(
 		'gitwildmatch',
 		cpython_gi_lines_all,
 		backend='simple',
-		_test_backend_cls=partial(SimplePsBackend, no_filter=True, no_reverse=True)
+		_test_backend_factory=partial(SimplePsBackend, no_filter=True, no_reverse=True)
 	)
 	benchmark(run_match, spec, cpython_files)
 
 
-@pytest.mark.benchmark(group="PathSpec.match_files")
+@pytest.mark.benchmark(group=GROUP)
 def bench_sm_unfiltered_reversed(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
@@ -150,12 +152,12 @@ def bench_sm_unfiltered_reversed(
 		'gitwildmatch',
 		cpython_gi_lines_all,
 		backend='simple',
-		_test_backend_cls=partial(SimplePsBackend, no_filter=True)
+		_test_backend_factory=partial(SimplePsBackend, no_filter=True)
 	)
 	benchmark(run_match, spec, cpython_files)
 
 
-@pytest.mark.benchmark(group="PathSpec.match_files")
+@pytest.mark.benchmark(group=GROUP)
 def bench_sm_v1(
 	benchmark: BenchmarkFixture,
 	cpython_files: set[str],
@@ -167,7 +169,6 @@ def bench_sm_v1(
 		backend='simple',
 	)
 	benchmark(run_match, spec, cpython_files)
-
 
 
 def run_match(spec: PathSpec, files: set[str]):

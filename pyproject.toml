@@ -55,6 +55,7 @@ include = [
 	"*.ini",
 	"*.py",
 	"*.rst",
+	"*.toml",
 	"LICENSE",
 	"doc/",
 	"tests/",
