@@ -10,21 +10,26 @@ on:
 
 jobs:
   test:
-    name: Test / ${{ matrix.python }} (${{ matrix.bundle }}) / ${{ matrix.os }}
+    name: Test / ${{ matrix.python }} (${{ matrix.backend }}) / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
         python: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "pypy-3.9", "pypy-3.10", "pypy-3.11"]
-        bundle: [base, hyperscan]
+        backend: [base, hyperscan]
         exclude:
+          # Hyperscan does not have wheels for PyPy.
           - python: "pypy-3.9"
-            bundle: hyperscan
+            backend: hyperscan
           - python: "pypy-3.10"
-            bundle: hyperscan
+            backend: hyperscan
           - python: "pypy-3.11"
-            bundle: hyperscan
+            backend: hyperscan
+          # Hyperscan wheel is missing for 3.9 on Windows.
+          - os: windows
+            python: "3.9"
+            backend: hyperscan
 
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +44,7 @@ jobs:
         run: python -m pip install tox
 
       - name: Run tests
-        run: python -m tox -e ci-${{ matrix.bundle }} -- --verbose
+        run: python -m tox -e ci-${{ matrix.backend }} -- --verbose
 
   docs:
     # Test documentation builds.
