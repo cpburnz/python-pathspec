@@ -19,14 +19,22 @@ jobs:
         python: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "pypy-3.9", "pypy-3.10", "pypy-3.11"]
         backend: [base, hyperscan]
         exclude:
+          # Hyperscan does hot have wheels for Python 3.9 on Windows.
+          - os: windows
+            python: "3.9"
+            backend: hyperscan
           # Hyperscan does not have wheels for PyPy 3.9 and 3.11.
           - python: "pypy-3.9"
             backend: hyperscan
           - python: "pypy-3.11"
             backend: hyperscan
-          # Hyperscan does hot have wheels for Python 3.9 on Windows.
+          # Hyperscan does hot have wheels for PyPy 3.10 on Mac.
+          - os: macos
+            python: "pypy-3.10"
+            backend: hyperscan
+          # Hyperscan does hot have wheels for PyPy 3.10 on Windows.
           - os: windows
-            python: "3.9"
+            python: "pypy-3.10"
             backend: hyperscan
 
     steps:
