@@ -13,10 +13,17 @@ from typing import (
 	Any,
 	AnyStr,
 	Optional,  # Replaced by `X | None` in 3.10.
+	TypeVar,
 	Union)  # Replaced by `X | Y` in 3.10.
 
 from ._typing import (
 	override)  # Added in 3.12.
+
+RegexPatternSelf = TypeVar("RegexPatternSelf", bound="RegexPattern")
+"""
+:class:`RegexPattern` self type hint to support Python v<3.11 using PEP 673
+recommendation.
+"""
 
 
 class Pattern(object):
@@ -152,6 +159,16 @@ class RegexPattern(Pattern):
 		*regex* (:class:`re.Pattern` or :data:`None`) is the compiled regular
 		expression for the pattern.
 		"""
+
+	def __copy__(self: RegexPatternSelf) -> RegexPatternSelf:
+		"""
+		Performa a shallow copy of the pattern.
+
+		Returns the copy (:class:`RegexPattern`).
+		"""
+		other = self.__class__(self.regex, self.include)
+		other.pattern = self.pattern
+		return other
 
 	def __eq__(self, other: 'RegexPattern') -> bool:
 		"""

@@ -24,6 +24,10 @@ from .hyperscan.gitignore import (
 	HyperscanGiBackend)
 from .hyperscan.pathspec import (
 	HyperscanPsBackend)
+from .re2.base import (
+	re2_error)
+from .re2.pathspec import (
+	Re2PsBackend)
 from .simple.gitignore import (
 	SimpleGiBackend)
 from .simple.pathspec import (
@@ -36,6 +40,8 @@ The best available backend.
 
 if hyperscan_error is None:
 	_BEST_BACKEND = 'hyperscan'
+elif re2_error is None:
+	_BEST_BACKEND = 're2'
 else:
 	_BEST_BACKEND = 'simple'
 
@@ -86,6 +92,8 @@ def make_pathspec_backend(
 
 	if name == 'hyperscan':
 		return HyperscanPsBackend(cast(Sequence[RegexPattern], patterns))
+	elif name == 're2':
+		return Re2PsBackend(cast(Sequence[RegexPattern], patterns))
 	elif name == 'simple':
 		return SimplePsBackend(patterns)
 	else:

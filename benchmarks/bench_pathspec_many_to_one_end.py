@@ -12,6 +12,8 @@ from pytest_benchmark.fixture import (
 
 from pathspec import (
 	PathSpec)
+from pathspec._backends.re2.pathspec import (
+	Re2PsBackend)
 from pathspec._backends.simple.pathspec import (
 	SimplePsBackend)
 from benchmarks.match_pathspec import (
@@ -21,6 +23,8 @@ from benchmarks.match_pathspec import (
 
 GROUP = "PathSpec.match_file(): 180 lines, one file (end)"
 
+
+# Hyperscan backend.
 
 @pytest.mark.benchmark(group=GROUP)
 def bench_hs_r1_block_closure(
@@ -81,6 +85,70 @@ def bench_hs_v1(
 	benchmark(run_match, spec, cpython_file_match_end)
 
 
+# Re2 backend.
+
+@pytest.mark.benchmark(group=GROUP)
+def bench_re2_filtered(
+	benchmark: BenchmarkFixture,
+	cpython_file_match_end: str,
+	cpython_gi_lines_all: list[str],
+):
+	spec = PathSpec.from_lines(
+		'gitwildmatch',
+		cpython_gi_lines_all,
+		backend='re2',
+		_test_backend_factory=partial(Re2PsBackend, no_reverse=True)
+	)
+	benchmark(run_match, spec, cpython_file_match_end)
+
+
+@pytest.mark.benchmark(group=GROUP)
+def bench_re2_filtered_reversed(
+	benchmark: BenchmarkFixture,
+	cpython_file_match_end: str,
+	cpython_gi_lines_all: list[str],
+):
+	spec = PathSpec.from_lines(
+		'gitwildmatch',
+		cpython_gi_lines_all,
+		backend='re2',
+		_test_backend_factory=Re2PsBackend,
+	)
+	benchmark(run_match, spec, cpython_file_match_end)
+
+
+@pytest.mark.benchmark(group=GROUP)
+def bench_re2_unfiltered(
+	benchmark: BenchmarkFixture,
+	cpython_file_match_end: str,
+	cpython_gi_lines_all: list[str],
+):
+	spec = PathSpec.from_lines(
+		'gitwildmatch',
+		cpython_gi_lines_all,
+		backend='re2',
+		_test_backend_factory=partial(Re2PsBackend, no_filter=True, no_reverse=True)
+	)
+	benchmark(run_match, spec, cpython_file_match_end)
+
+
+@pytest.mark.benchmark(group=GROUP)
+def bench_re2_unfiltered_reversed(
+	benchmark: BenchmarkFixture,
+	cpython_file_match_end: str,
+	cpython_gi_lines_all: list[str],
+):
+	spec = PathSpec.from_lines(
+		'gitwildmatch',
+		cpython_gi_lines_all,
+		backend='re2',
+		_test_backend_factory=partial(Re2PsBackend, no_filter=True)
+	)
+	benchmark(run_match, spec, cpython_file_match_end)
+
+
+# Simple backend.
+
 @pytest.mark.benchmark(group=GROUP)
 def bench_sm_filtered(
 	benchmark: BenchmarkFixture,
@@ -106,6 +174,7 @@ def bench_sm_filtered_reversed(
 		'gitwildmatch',
 		cpython_gi_lines_all,
 		backend='simple',
+		_test_backend_factory=SimplePsBackend,
 	)
 	benchmark(run_match, spec, cpython_file_match_end)
 

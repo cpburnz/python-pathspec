@@ -8,16 +8,11 @@ contents and structure are likely to change.
 from collections.abc import (
 	Iterable)
 from typing import (
-	Optional,  # Replaced by `X | None` in 3.10.
-	TypeVar,
-	Union,  # Replaced by `X | Y` in 3.10.
-	overload)
+	TypeVar)
 
 from ..pattern import (
 	Pattern)
 
-T = TypeVar("T")
-U = TypeVar("U")
 TPattern = TypeVar("TPattern", bound=Pattern)
 
 
@@ -48,29 +43,3 @@ def enumerate_patterns(
 		out_patterns.reverse()
 
 	return out_patterns
-
-
-@overload
-def first(iterable: Iterable[T], default: T) -> T:
-	...
-
-
-@overload
-def first(iterable: Iterable[T], default: None) -> Optional[T]:
-	...
-
-
-def first(iterable: Iterable[T], default: Optional[T]) -> Optional[T]:
-	"""
-	Get the first value of the iterable.
-
-	*iterable* (:class:`.Iterable`) is the iterable.
-
-	*default* is the default value to return if the iterable is empty.
-
-	Returns the first value of the iterable or the default value.
-	"""
-	for val in iterable:
-		return val
-
-	return default

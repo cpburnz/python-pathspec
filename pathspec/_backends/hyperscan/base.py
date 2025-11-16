@@ -1,6 +1,6 @@
 """
 This module provides the base implementation for the :module:`hyperscan`
-library.
+backend.
 
 WARNING: The *pathspec._backends.hyperscan* package is not part of the public
 API. Its contents and structure are likely to change.

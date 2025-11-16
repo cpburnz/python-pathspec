@@ -75,7 +75,7 @@ _venv_cpy_base:
 	{{cpy_bin}} -m venv --clear dev/venv-cpy
 
 _venv_cpy_install:
-	{{cpy_run}} pip install --upgrade build hyperscan pip pytest pytest-benchmark setuptools sphinx tomli tox twine typing-extensions wheel
+	{{cpy_run}} pip install --upgrade build google-re2 google-re2-stubs hyperscan pip pytest pytest-benchmark setuptools sphinx tomli tox twine typing-extensions wheel
 	{{cpy_run}} pip install -e .
 
 _venv_pypy_base:

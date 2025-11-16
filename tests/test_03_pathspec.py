@@ -24,6 +24,8 @@ from unittest import (
 
 from pathspec import (
 	PathSpec)
+from pathspec._backends.base import (
+	BackendNamesHint)
 from pathspec._backends.simple.pathspec import (
 	SimplePsBackend)
 from pathspec.patterns.gitwildmatch import (
@@ -32,7 +34,6 @@ from pathspec.util import (
 	iter_tree_entries)
 
 from .util import (
-	BACKEND_PARAMS,
 	CheckResult,
 	debug_includes,
 	debug_results,
@@ -42,6 +43,14 @@ from .util import (
 	make_files,
 	ospath,
 	require_backend)
+
+BACKENDS: list[tuple[str, BackendNamesHint]] = [
+	('hyperscan', 'hyperscan'),
+	('re2', 're2'),
+]
+"""
+The backend parameters.
+"""
 
 
 class PathSpecTest(unittest.TestCase):
@@ -107,7 +116,7 @@ class PathSpecTest(unittest.TestCase):
 
 		yield _minopt_sub_test
 
-		for label, backend in BACKEND_PARAMS:
+		for label, backend in BACKENDS:
 			try:
 				require_backend(backend)
 			except SkipTest:

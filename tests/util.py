@@ -22,17 +22,12 @@ from pathspec._backends.base import (
 	BackendNamesHint)
 from pathspec._backends.hyperscan.base import (
 	hyperscan_error)
+from pathspec._backends.re2.base import (
+	re2_error)
 from pathspec.util import (
 	CheckResult,
 	TStrPath,
 	TreeEntry)
-
-BACKEND_PARAMS: list[tuple[str, BackendNamesHint]] = [
-	('hyperscan', 'hyperscan'),
-]
-"""
-The backend parameters.
-"""
 
 
 def debug_includes(spec: PathSpec, files: set[str], includes: set[str]) -> str:
@@ -204,3 +199,5 @@ def require_backend(name: Optional[BackendNamesHint]) -> None:
 	"""
 	if name == 'hyperscan' and hyperscan_error is not None:
 		raise SkipTest(str(hyperscan_error))
+	elif name == 're2' and re2_error is not None:
+		raise SkipTest(str(re2_error))

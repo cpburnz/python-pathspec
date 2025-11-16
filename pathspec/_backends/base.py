@@ -10,7 +10,7 @@ from typing import (
 	Literal,
 	Optional)
 
-BackendNamesHint = Literal['best', 'hyperscan', 'simple']
+BackendNamesHint = Literal['best', 'hyperscan', 're2', 'simple']
 
 
 class Backend(object):

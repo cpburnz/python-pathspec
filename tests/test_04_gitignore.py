@@ -17,16 +17,24 @@ from typing import (
 from unittest import (
 	SkipTest)
 
+from pathspec._backends.base import (
+	BackendNamesHint)
 from pathspec._backends.simple.gitignore import (
 	SimpleGiBackend)
 from pathspec.gitignore import (
 	GitIgnoreSpec)
 
 from .util import (
-	BACKEND_PARAMS,
 	debug_results,
 	get_includes,
 	require_backend)
+
+BACKENDS: list[tuple[str, BackendNamesHint]] = [
+	('hyperscan', 'hyperscan'),
+]
+"""
+The backend parameters.
+"""
 
 
 class GitIgnoreSpecTest(unittest.TestCase):
@@ -70,7 +78,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 
 		yield _minopt_sub_test
 
-		for label, backend in BACKEND_PARAMS:
+		for label, backend in BACKENDS:
 			try:
 				require_backend(backend)
 			except SkipTest:

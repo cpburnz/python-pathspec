@@ -35,6 +35,9 @@ requires-python = ">=3.9"
 all = [
 	"pathspec[hyperscan]",
 ]
+google-re2 = [
+	"google-re2 >=1.1",
+]
 hyperscan = [
 	"hyperscan >=0.7",
 ]
