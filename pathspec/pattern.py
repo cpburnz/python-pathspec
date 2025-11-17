@@ -193,7 +193,7 @@ class RegexPattern(Pattern):
 		otherwise, :data:`None`.
 		"""
 		if self.include is not None:
-			match = self.regex.match(file)
+			match = self.regex.search(file)
 			if match is not None:
 				return RegexMatchResult(match)
 
