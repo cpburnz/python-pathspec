@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from dataclasses import (
 	dataclass)
+from typing import (
+	Union)  # Replaced by `X | Y` in 3.10.
 
 
 @dataclass(frozen=True)
@@ -40,4 +42,20 @@ class HyperscanExprDat(object):
 	"""
 	*is_dir_pattern* (:class:`bool`) is whether the pattern is a directory
 	pattern for gitignore.
+	"""
+
+
+@dataclass(frozen=True)
+class HyperscanExprDebug(HyperscanExprDat):
+	"""
+	The :class:`HyperscanExprDebug` class stores additional debug information
+	related to an expression.
+	"""
+
+	# The slots argument is not supported until Python 3.10.
+	__slots__ = ['regex']
+
+	regex: Union[str, bytes]
+	"""
+	*regex* (:class:`str` or :class:`bytes`) is the regular expression.
 	"""

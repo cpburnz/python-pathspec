@@ -29,7 +29,8 @@ from ..._typing import (
 	override)  # Added in 3.12.
 
 from ._base import (
-	HyperscanExprDat)
+	HyperscanExprDat,
+	HyperscanExprDebug)
 from .pathspec import (
 	HyperscanPsBackend)
 
@@ -38,7 +39,7 @@ _DIR_MARK_CG = f'(?P<{_DIR_MARK}>/)'
 This regular expression matches the directory marker.
 """
 
-_DIR_MARK_OPT = f'(?:{_DIR_MARK_CG}.*)?$'
+_DIR_MARK_OPT = f'(?:{_DIR_MARK_CG}|$)'
 """
 This regular expression matches the optional directory marker and sub-path.
 """
@@ -54,26 +55,35 @@ class HyperscanGiBackend(HyperscanPsBackend):
 	# Change type hint.
 	_out: tuple[Optional[bool], Optional[int], int]
 
-	def __init__(self, patterns: Sequence[RegexPattern]) -> None:
+	def __init__(
+		self,
+		patterns: Sequence[RegexPattern],
+		*,
+		_debug_exprs: Optional[bool] = None,
+	) -> None:
 		"""
 		Initialize the :class:`HyperscanMatcher` instance.
 
 		*patterns* (:class:`Sequence` of :class:`.Pattern`) contains the compiled
 		patterns.
 		"""
-		super().__init__(patterns)
+		super().__init__(patterns, _debug_exprs=_debug_exprs)
 		self._out = (None, None, 0)
 
 	@override
 	@staticmethod
 	def _init_db(
 		db: hyperscan.Database,
+		debug: bool,
 		patterns: list[tuple[int, RegexPattern]],
 	) -> list[HyperscanExprDat]:
 		"""
 		Create the Hyperscan database from the given patterns.
 
 		*db* (:class:`hyperscan.Hyperscan`) is the Hyperscan database.
+
+		*debug* (:class:`bool`) is whether to include additional debugging
+		information for the expressions.
 
 		*patterns* (:class:`~collections.abc.Sequence` of :class:`.RegexPattern`)
 		contains the patterns.
@@ -110,7 +120,7 @@ class HyperscanGiBackend(HyperscanPsBackend):
 						# Regex has optional directory marker. Split regex into directory
 						# and file variants.
 						base_regex = regex_str[:-len(_DIR_MARK_OPT)]
-						use_regexes.append((f'{base_regex}/.*$', True))
+						use_regexes.append((f'{base_regex}/', True))
 						use_regexes.append((f'{base_regex}$', False))
 					else:
 						# Remove capture group.
@@ -128,11 +138,20 @@ class HyperscanGiBackend(HyperscanPsBackend):
 					assert isinstance(regex, str), regex
 					regex_bytes = regex.encode('utf8')
 
-				expr_data.append(HyperscanExprDat(
-					include=pattern.include,
-					index=pattern_index,
-					is_dir_pattern=is_dir_pattern,
-				))
+				if debug:
+					expr_data.append(HyperscanExprDebug(
+						include=pattern.include,
+						index=pattern_index,
+						is_dir_pattern=is_dir_pattern,
+						regex=regex,
+					))
+				else:
+					expr_data.append(HyperscanExprDat(
+						include=pattern.include,
+						index=pattern_index,
+						is_dir_pattern=is_dir_pattern,
+					))
+
 				exprs.append(regex_bytes)
 				ids.append(next(id_counter))
 

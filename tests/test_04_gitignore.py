@@ -19,6 +19,8 @@ from unittest import (
 
 from pathspec._backends.base import (
 	BackendNamesHint)
+from pathspec._backends.hyperscan.gitignore import (
+	HyperscanGiBackend)
 from pathspec._backends.simple.gitignore import (
 	SimpleGiBackend)
 from pathspec.gitignore import (
@@ -89,7 +91,16 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			@contextmanager
 			def _optimize_sub_test(label=label, backend=backend):
 				with self.subTest(label):
-					yield GitIgnoreSpec.from_lines(lines, backend=backend)
+					if backend == 'hyperscan':
+						backend_factory = partial(HyperscanGiBackend, _debug_exprs=True)
+					else:
+						backend_factory = None
+
+					yield GitIgnoreSpec.from_lines(
+						lines,
+						backend=backend,
+						_test_backend_factory=backend_factory,
+					)
 
 			yield _optimize_sub_test
 

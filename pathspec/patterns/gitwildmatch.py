@@ -195,7 +195,7 @@ class GitWildMatchPattern(RegexPattern):
 						if i == 0:
 							# A normalized pattern beginning with double-asterisks ('**') will
 							# match any leading path segments.
-							output.append('/?')
+							output.append('(?:^|/)')
 
 						elif i < end:
 							# A pattern with inner double-asterisks ('**') will match multiple
@@ -204,7 +204,7 @@ class GitWildMatchPattern(RegexPattern):
 							need_slash = True
 
 						else:
-							assert i == end
+							assert i == end, (i, end)
 							# A normalized pattern ending with double-asterisks ('**') will
 							# match any trailing path segments.
 							if is_dir_pattern:

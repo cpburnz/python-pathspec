@@ -26,6 +26,8 @@ from pathspec import (
 	PathSpec)
 from pathspec._backends.base import (
 	BackendNamesHint)
+from pathspec._backends.hyperscan.pathspec import (
+	HyperscanPsBackend)
 from pathspec._backends.simple.pathspec import (
 	SimplePsBackend)
 from pathspec.patterns.gitwildmatch import (
@@ -128,7 +130,17 @@ class PathSpecTest(unittest.TestCase):
 			def _optimize_sub_test(label=label, backend=backend):
 				self.clear_temp_dir()
 				with self.subTest(label):
-					yield PathSpec.from_lines(pattern_factory, lines, backend=backend)
+					if backend == 'hyperscan':
+						backend_factory = partial(HyperscanPsBackend, _debug_exprs=True)
+					else:
+						backend_factory = None
+
+					yield PathSpec.from_lines(
+						pattern_factory,
+						lines,
+						backend=backend,
+						_test_backend_factory=backend_factory,
+					)
 
 			yield _optimize_sub_test
 

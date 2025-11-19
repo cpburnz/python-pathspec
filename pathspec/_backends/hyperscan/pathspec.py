@@ -32,7 +32,8 @@ from .._utils import (
 from .base import (
 	hyperscan_error)
 from ._base import (
-	HyperscanExprDat)
+	HyperscanExprDat,
+	HyperscanExprDebug)
 
 
 class HyperscanPsBackend(Backend):
@@ -50,6 +51,8 @@ class HyperscanPsBackend(Backend):
 	def __init__(
 		self,
 		patterns: Sequence[RegexPattern],
+		*,
+		_debug_exprs: Optional[bool] = None,
 	) -> None:
 		"""
 		Initialize the :class:`HyperscanPsBackend` instance.
@@ -74,7 +77,15 @@ class HyperscanPsBackend(Backend):
 		*_db* (:class:`hyperscan.Database`) is the Hyperscan database.
 		"""
 
-		self._expr_data: list[HyperscanExprDat] = self._init_db(self._db, use_patterns)
+		self._debug_exprs = bool(_debug_exprs)
+		"""
+		*_debug_exprs* (:class:`bool`) is whether to include additional debugging
+		information for the expressions.
+		"""
+
+		self._expr_data: list[HyperscanExprDat] = self._init_db(
+			db=self._db, debug=self._debug_exprs, patterns=use_patterns,
+		)
 		"""
 		*_expr_data* (:class:`list`) maps expression index (:class:`int`) to
 		expression data (:class:`:class:`HyperscanExprDat`).
@@ -94,12 +105,16 @@ class HyperscanPsBackend(Backend):
 	@staticmethod
 	def _init_db(
 		db: hyperscan.Database,
+		debug: bool,
 		patterns: list[tuple[int, RegexPattern]],
 	) -> list[HyperscanExprDat]:
 		"""
 		Initialize the Hyperscan database from the given patterns.
 
 		*db* (:class:`hyperscan.Hyperscan`) is the Hyperscan database.
+
+		*debug* (:class:`bool`) is whether to include additional debugging
+		information for the expressions.
 
 		*patterns* (:class:`~collections.abc.Sequence` of :class:`.RegexPattern`)
 		contains the patterns.
@@ -126,11 +141,20 @@ class HyperscanPsBackend(Backend):
 				assert isinstance(regex, str), regex
 				regex_bytes = regex.encode('utf8')
 
-			expr_data.append(HyperscanExprDat(
-				include=pattern.include,
-				index=pattern_index,
-				is_dir_pattern=False,
-			))
+			if debug:
+				expr_data.append(HyperscanExprDebug(
+					include=pattern.include,
+					index=pattern_index,
+					is_dir_pattern=False,
+					regex=regex,
+				))
+			else:
+				expr_data.append(HyperscanExprDat(
+					include=pattern.include,
+					index=pattern_index,
+					is_dir_pattern=False,
+				))
+
 			exprs.append(regex_bytes)
 			ids.append(next(id_counter))
 

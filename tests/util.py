@@ -22,6 +22,10 @@ from pathspec._backends.base import (
 	BackendNamesHint)
 from pathspec._backends.hyperscan.base import (
 	hyperscan_error)
+from pathspec._backends.hyperscan._base import (
+	HyperscanExprDebug)
+from pathspec._backends.hyperscan.pathspec import (
+	HyperscanPsBackend)
 from pathspec._backends.re2.base import (
 	re2_error)
 from pathspec.util import (
@@ -66,8 +70,20 @@ def debug_results(spec: PathSpec, results: Iterable[CheckResult[str]]) -> str:
 	patterns = cast(list[RegexPattern], spec.patterns)
 
 	pattern_table = []
-	for index, pattern in enumerate(patterns, 1):
-		pattern_table.append((f"{index}:{pattern.pattern}", repr(pattern.regex.pattern)))
+	if isinstance(spec._backend, HyperscanPsBackend) and spec._backend._debug_exprs:
+		for expr_id, expr_dat in enumerate(spec._backend._expr_data, 1):
+			assert isinstance(expr_dat, HyperscanExprDebug), expr_dat
+			pattern = patterns[expr_dat.index]
+			dir_col = 'd' if expr_dat.is_dir_pattern else '.'
+			pattern_table.append((
+				f"{expr_dat.index+1}({expr_id}):{pattern.pattern}",
+				f"{dir_col} {expr_dat.regex!r}",
+			))
+	else:
+		for index, pattern in enumerate(patterns, 1):
+			pattern_table.append((
+				f"{index}:{pattern.pattern}", repr(pattern.regex.pattern),
+			))
 
 	result_table = []
 	for result in results:

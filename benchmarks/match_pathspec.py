@@ -38,6 +38,7 @@ class HyperscanPsR1BaseBackend(HyperscanPsBackend):
 	@staticmethod
 	def _init_db(
 		db: hyperscan.Database,
+		debug: bool,
 		patterns: list[tuple[int, RegexPattern]],
 	) -> list[HyperscanExprDat]:
 		# NOTICE: This is the current implementation.
