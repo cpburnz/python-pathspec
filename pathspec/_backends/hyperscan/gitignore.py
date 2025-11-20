@@ -6,7 +6,6 @@ API. Its contents and structure are likely to change.
 """
 from __future__ import annotations
 
-import itertools
 from collections.abc import (
 	Sequence)
 from typing import (
@@ -29,6 +28,7 @@ from ..._typing import (
 	override)  # Added in 3.12.
 
 from ._base import (
+	HS_FLAGS,
 	HyperscanExprDat,
 	HyperscanExprDebug)
 from .pathspec import (
@@ -53,7 +53,7 @@ class HyperscanGiBackend(HyperscanPsBackend):
 	"""
 
 	# Change type hint.
-	_out: tuple[Optional[bool], Optional[int], int]
+	_out: tuple[Optional[bool], int, int]
 
 	def __init__(
 		self,
@@ -68,7 +68,17 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		patterns.
 		"""
 		super().__init__(patterns, _debug_exprs=_debug_exprs)
-		self._out = (None, None, 0)
+
+		self._out = (None, -1, 0)
+		"""
+		*_out* (:class:`tuple`) stores the current match:
+
+		-	*0* (:class:`bool` or :data:`None`) is the match include.
+
+		-	*1* (:class:`int`) is the match index.
+
+		-	*2* (:class:`int`) is the match priority.
+		"""
 
 	@override
 	@staticmethod
@@ -94,8 +104,6 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		# Prepare patterns.
 		expr_data: list[HyperscanExprDat] = []
 		exprs: list[bytes] = []
-		id_counter = itertools.count(0)
-		ids: list[int] = []
 		for pattern_index, pattern in patterns:
 			if pattern.include is None:
 				continue
@@ -153,14 +161,13 @@ class HyperscanGiBackend(HyperscanPsBackend):
 					))
 
 				exprs.append(regex_bytes)
-				ids.append(next(id_counter))
 
 		# Compile patterns.
 		db.compile(
 			expressions=exprs,
-			ids=ids,
+			ids=list(range(len(exprs))),
 			elements=len(exprs),
-			flags=hyperscan.HS_FLAG_UTF8,
+			flags=HS_FLAGS,
 		)
 		return expr_data
 
@@ -177,9 +184,14 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		"""
 		# NOTICE: According to benchmarking, a method callback is 13% faster than
 		# using a closure here.
-		self._out = (None, None, 0)
+		self._out = (None, -1, 0)
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
-		return self._out[:2]
+
+		out_include, out_index = self._out[:2]
+		if out_index == -1:
+			out_index = None
+
+		return out_include, out_index
 
 	@override
 	def __on_match(
@@ -206,6 +218,14 @@ class HyperscanGiBackend(HyperscanPsBackend):
 			# Pattern matched by a file pattern.
 			priority = 2
 
+		# WARNING: Hyperscan does not guarantee matches will be produced in order!
 		include = expr_dat.include
-		if (include and is_dir_pattern) or priority >= self._out[2]:
+		index = expr_dat.index
+		prev_index = self._out[1]
+		prev_priority = self._out[2]
+		if (
+			(include and is_dir_pattern and index > prev_index)
+			or (priority == prev_priority and index > prev_index)
+			or priority > prev_priority
+		):
 			self._out = (include, expr_dat.index, priority)

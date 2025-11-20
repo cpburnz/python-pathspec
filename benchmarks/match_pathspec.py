@@ -4,7 +4,6 @@ included in the released library.
 """
 from __future__ import annotations
 
-import itertools
 from collections.abc import (
 	Sequence)
 from typing import (
@@ -18,9 +17,8 @@ try:
 except ModuleNotFoundError:
 	hyperscan = None
 
-# TODO: Look into re2 <https://pypi.org/project/google-re2>.
-
 from pathspec._backends.hyperscan._base import (
+	HS_FLAGS,
 	HyperscanExprDat)
 from pathspec._backends.hyperscan.pathspec import (
 	HyperscanPsBackend)
@@ -46,8 +44,6 @@ class HyperscanPsR1BaseBackend(HyperscanPsBackend):
 		# Prepare patterns.
 		expr_data: list[HyperscanExprDat] = []
 		exprs: list[bytes] = []
-		id_counter = itertools.count(0)
-		ids: list[int] = []
 		for pattern_index, pattern in patterns:
 			if pattern.include is None:
 				continue
@@ -68,14 +64,13 @@ class HyperscanPsR1BaseBackend(HyperscanPsBackend):
 				is_dir_pattern=False,
 			))
 			exprs.append(regex_bytes)
-			ids.append(next(id_counter))
 
 		# Compile patterns.
 		db.compile(
 			expressions=exprs,
-			ids=ids,
+			ids=list(range(len(exprs))),
 			elements=len(exprs),
-			flags=hyperscan.HS_FLAG_UTF8,
+			flags=HS_FLAGS,
 		)
 		return expr_data
 
@@ -103,6 +98,9 @@ class HyperscanPsR1BlockClosureBackend(_HyperscanPsR1BlockBaseBackend):
 	in block mode for matching files, and uses a closure to capture state.
 	"""
 
+	# Prevent accidental usage.
+	_out: tuple[()]
+
 	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include = False
@@ -111,11 +109,13 @@ class HyperscanPsR1BlockClosureBackend(_HyperscanPsR1BlockBaseBackend):
 		def on_match(
 			expr_id: int, _from: int, _to: int, _flags: int, _context: Any,
 		) -> Optional[bool]:
+			# WARNING: Hyperscan does not guarantee matches will be produced in order!
 			nonlocal out_include, out_index
 			expr_dat = self._expr_data[expr_id]
-			if (include := expr_dat.include) is not None:
-				out_include = include
-				out_index = expr_dat.index
+			index = expr_dat.index
+			if index > out_index:
+				out_include = expr_dat.include
+				out_index = index
 
 		self._db.scan(file.encode('utf8'), match_event_handler=on_match)
 		return out_include, out_index
@@ -129,13 +129,18 @@ class HyperscanPsR1BlockStateBackend(_HyperscanPsR1BlockBaseBackend):
 
 	def __init__(self, patterns: Sequence[RegexPattern]) -> None:
 		super().__init__(patterns)
-		self.__out: tuple[Optional[bool], Optional[int]] = (None, None)
+		self._out = (None, -1)
 
 	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
-		self.__out = (None, None)
+		self._out = (None, -1)
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
-		return self.__out
+
+		out_include, out_index = self._out
+		if out_index == -1:
+			out_index = None
+
+		return out_include, out_index
 
 	@override
 	def __on_match(
@@ -146,10 +151,12 @@ class HyperscanPsR1BlockStateBackend(_HyperscanPsR1BlockBaseBackend):
 		_flags: int,
 		_context: Any,
 	) -> Optional[bool]:
+		# WARNING: Hyperscan does not guarantee matches will be produced in order!
 		expr_dat = self._expr_data[expr_id]
-		include = expr_dat.include
-		if include:
-			self.__out = (include, expr_dat.index)
+		index = expr_dat.index
+		prev_index = self._out[1]
+		if index > prev_index:
+			self._out = (expr_dat.include, index)
 
 
 class _HyperscanPsR1StreamBaseBackend(HyperscanPsR1BaseBackend):
@@ -173,22 +180,24 @@ class HyperscanPsR1StreamClosureBackend(_HyperscanPsR1StreamBaseBackend):
 	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include = False
-		out_index: Optional[int] = None
+		out_index: Optional[int] = -1
 
 		def on_match(
 			expr_id: int, _from: int, _to: int, _flags: int, _context: Any,
 		) -> Optional[bool]:
+			# WARNING: Hyperscan does not guarantee matches will be produced in order!
 			nonlocal out_include, out_index
 			expr_dat = self._expr_data[expr_id]
-			if (include := expr_dat.include) is not None:
-				out_include = include
-				out_index = expr_dat.index
-				return True
-
-			return None
+			index = expr_dat.index
+			if index > out_index:
+				out_include = expr_dat.include
+				out_index = index
 
 		with self._db.stream(match_event_handler=on_match) as stream:
 			stream.scan(file.encode('utf8'))
+
+		if out_index == -1:
+			out_index = None
 
 		return out_include, out_index
 
@@ -202,16 +211,20 @@ class HyperscanPsR1StreamStateBackend(_HyperscanPsR1StreamBaseBackend):
 
 	def __init__(self, patterns: Sequence[RegexPattern]) -> None:
 		super().__init__(patterns)
-		self.__out: tuple[Optional[bool], Optional[int]] = (None, None)
+		self._out = (None, -1)
 
 	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
-		self.__out = (None, None)
+		self._out = (None, -1)
 
 		with self._db.stream(match_event_handler=self.__on_match) as stream:
 			stream.scan(file.encode('utf8'))
 
-		return self.__out
+		out_include, out_index = self._out
+		if out_index == -1:
+			out_index = None
+
+		return out_include, out_index
 
 	@override
 	def __on_match(
@@ -222,9 +235,9 @@ class HyperscanPsR1StreamStateBackend(_HyperscanPsR1StreamBaseBackend):
 		_flags: int,
 		_context: Any,
 	) -> Optional[bool]:
+		# WARNING: Hyperscan does not guarantee matches will be produced in order!
 		expr_dat = self._expr_data[expr_id]
-		if (include := expr_dat.include) is not None:
-			self.__out = (include, expr_dat.index)
-			return True
-		else:
-			return None
+		index = expr_dat.index
+		prev_index = self._out[1]
+		if index > prev_index:
+			self._out = (expr_dat.include, index)

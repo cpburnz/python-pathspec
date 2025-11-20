@@ -527,12 +527,12 @@ class GitIgnoreSpecTest(unittest.TestCase):
 		]):
 			with sub_test() as spec:
 				files = {
-					'test1/b.bin',
-					'test1/a.txt',
-					'test1/c/c.txt',
-					'test2/a.txt',
-					'test2/b.bin',
-					'test2/c/c.txt',
+					'test1/a.txt',    # 4:/test1/**
+					'test1/b.bin',    # 4:/test1/**
+					'test1/c/c.txt',  # 4:/test1/**
+					'test2/a.txt',    # -
+					'test2/b.bin',    # 1:*
+					'test2/c/c.txt',  # -
 				}
 
 				results = list(spec.check_files(files))
@@ -540,8 +540,8 @@ class GitIgnoreSpecTest(unittest.TestCase):
 				debug = debug_results(spec, results)
 
 				self.assertEqual(ignores, {
-					'test1/b.bin',
 					'test1/a.txt',
+					'test1/b.bin',
 					'test1/c/c.txt',
 					'test2/b.bin',
 				}, debug)

@@ -12,6 +12,23 @@ from dataclasses import (
 from typing import (
 	Union)  # Replaced by `X | Y` in 3.10.
 
+try:
+	import hyperscan
+except ModuleNotFoundError:
+	hyperscan = None
+	HS_FLAGS = 0
+else:
+	HS_FLAGS = hyperscan.HS_FLAG_SINGLEMATCH | hyperscan.HS_FLAG_UTF8
+
+HS_FLAGS: int
+"""
+The hyperscan flags to use:
+
+-	HS_FLAG_SINGLEMATCH is needed to ensure the partial patterns only match once.
+
+-	HS_FLAG_UTF8 is required to support unicode paths.
+"""
+
 
 @dataclass(frozen=True)
 class HyperscanExprDat(object):

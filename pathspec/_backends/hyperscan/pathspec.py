@@ -6,7 +6,6 @@ API. Its contents and structure are likely to change.
 """
 from __future__ import annotations
 
-import itertools
 from collections.abc import (
 	Sequence)
 from typing import (
@@ -32,6 +31,7 @@ from .._utils import (
 from .base import (
 	hyperscan_error)
 from ._base import (
+	HS_FLAGS,
 	HyperscanExprDat,
 	HyperscanExprDebug)
 
@@ -91,9 +91,13 @@ class HyperscanPsBackend(Backend):
 		expression data (:class:`:class:`HyperscanExprDat`).
 		"""
 
-		self._out: tuple[Optional[bool], Optional[int]] = (None, None)
+		self._out: tuple[Optional[bool], int] = (None, -1)
 		"""
-		*_out* (:class:`tuple`) stores the current match.
+		*_out* (:class:`tuple`) stores the current match:
+
+		-	*0* (:class:`bool` or :data:`None`) is the match include.
+
+		-	*1* (:class:`int`) is the match index.
 		"""
 
 		self._patterns: dict[int, RegexPattern] = dict(use_patterns)
@@ -125,8 +129,6 @@ class HyperscanPsBackend(Backend):
 		# Prepare patterns.
 		expr_data: list[HyperscanExprDat] = []
 		exprs: list[bytes] = []
-		id_counter = itertools.count(0)
-		ids: list[int] = []
 		for pattern_index, pattern in patterns:
 			if pattern.include is None:
 				continue
@@ -156,14 +158,13 @@ class HyperscanPsBackend(Backend):
 				))
 
 			exprs.append(regex_bytes)
-			ids.append(next(id_counter))
 
 		# Compile patterns.
 		db.compile(
 			expressions=exprs,
-			ids=ids,
+			ids=list(range(len(exprs))),
 			elements=len(exprs),
-			flags=hyperscan.HS_FLAG_UTF8,
+			flags=HS_FLAGS,
 		)
 		return expr_data
 
@@ -180,9 +181,14 @@ class HyperscanPsBackend(Backend):
 		"""
 		# NOTICE: According to benchmarking, a method callback is 20% faster than
 		# using a closure here.
-		self._out = (None, None)
+		self._out = (None, -1)
 		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
-		return self._out
+
+		out_include, out_index = self._out
+		if out_index == -1:
+			out_index = None
+
+		return out_include, out_index
 
 	@staticmethod
 	def _make_db() -> hyperscan.Database:
@@ -207,7 +213,11 @@ class HyperscanPsBackend(Backend):
 		*expr_id* (:class:`int`) is the expression id (index) of the matched
 		pattern.
 		"""
-		expr_dat = self._expr_data[expr_id]
-
 		# Store match.
-		self._out = (expr_dat.include, expr_dat.index)
+		# - WARNING: Hyperscan does not guarantee matches will be produced in order!
+		#   Later expressions have higher priority.
+		expr_dat = self._expr_data[expr_id]
+		index = expr_dat.index
+		prev_index = self._out[1]
+		if index > prev_index:
+			self._out = (expr_dat.include, index)
