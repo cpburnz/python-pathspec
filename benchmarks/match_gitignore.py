@@ -5,6 +5,7 @@ the released library.
 from __future__ import annotations
 
 from collections.abc import (
+	Callable,
 	Sequence)
 from typing import (
 	Any,
@@ -321,6 +322,7 @@ class _HyperscanGiR2BaseBackend(HyperscanPsBackend):
 		db: hyperscan.Database,
 		debug: bool,
 		patterns: list[tuple[int, RegexPattern]],
+		sort_expr_ids: Callable,
 	) -> list[HyperscanExprDat]:
 		# NOTICE: This is the current implementation.
 

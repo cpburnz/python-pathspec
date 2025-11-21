@@ -9,7 +9,10 @@ import os.path
 import pathlib
 from collections.abc import (
 	Iterable)
+from random import (
+	Random)
 from typing import (
+	Any,
 	Optional,  # Replaced by `X | None` in 3.10.
 	cast)
 from unittest import (
@@ -217,3 +220,22 @@ def require_backend(name: Optional[BackendNamesHint]) -> None:
 		raise SkipTest(str(hyperscan_error))
 	elif name == 're2' and re2_error is not None:
 		raise SkipTest(str(re2_error))
+
+
+def reverse_inplace(val: list[Any]) -> None:
+	"""
+	Reverse the list inplace.
+
+	*val* (:class:`list`) is the list to sort.
+	"""
+	val.reverse()
+
+
+def shuffle_inplace(val: list[Any]) -> None:
+	"""
+	Shuffle the list inplace. The order will consistently be in the same random
+	order between test runs.
+
+	*val* (:class:`list`) is the list to sort.
+	"""
+	Random(0).shuffle(val)

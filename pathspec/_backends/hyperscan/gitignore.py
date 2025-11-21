@@ -7,6 +7,7 @@ API. Its contents and structure are likely to change.
 from __future__ import annotations
 
 from collections.abc import (
+	Callable,
 	Sequence)
 from typing import (
 	Any,
@@ -60,6 +61,7 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		patterns: Sequence[RegexPattern],
 		*,
 		_debug_exprs: Optional[bool] = None,
+		_test_sort: Optional[Callable[[list], None]] = None,
 	) -> None:
 		"""
 		Initialize the :class:`HyperscanMatcher` instance.
@@ -67,7 +69,7 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		*patterns* (:class:`Sequence` of :class:`.Pattern`) contains the compiled
 		patterns.
 		"""
-		super().__init__(patterns, _debug_exprs=_debug_exprs)
+		super().__init__(patterns, _debug_exprs=_debug_exprs, _test_sort=_test_sort)
 
 		self._out = (None, -1, 0)
 		"""
@@ -86,6 +88,7 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		db: hyperscan.Database,
 		debug: bool,
 		patterns: list[tuple[int, RegexPattern]],
+		sort_exprs: Optional[Callable[[list], None]],
 	) -> list[HyperscanExprDat]:
 		"""
 		Create the Hyperscan database from the given patterns.
@@ -97,6 +100,10 @@ class HyperscanGiBackend(HyperscanPsBackend):
 
 		*patterns* (:class:`~collections.abc.Sequence` of :class:`.RegexPattern`)
 		contains the patterns.
+
+		*sort_exprs* (:class:`callable` or :data:`None`) is a function used to sort
+		the compiled expressions. This is used during testing to ensure the order of
+		expressions is not accidentally relied on.
 
 		Returns a :class:`list` indexed by expression id (:class:`int`) to its data
 		(:class:`HyperscanExprDat`).
@@ -162,10 +169,16 @@ class HyperscanGiBackend(HyperscanPsBackend):
 
 				exprs.append(regex_bytes)
 
+		# Sort expressions.
+		ids = list(range(len(exprs)))
+		if sort_exprs is not None:
+			sort_exprs(ids)
+			exprs = [exprs[__id] for __id in ids]
+
 		# Compile patterns.
 		db.compile(
 			expressions=exprs,
-			ids=list(range(len(exprs))),
+			ids=ids,
 			elements=len(exprs),
 			flags=HS_FLAGS,
 		)

@@ -9,7 +9,8 @@ import unittest
 from collections.abc import (
 	Callable,
 	Iterable,
-	Iterator)
+	Iterator,
+	Sequence)
 from contextlib import (
 	AbstractContextManager,
 	contextmanager)
@@ -18,18 +19,22 @@ from functools import (
 from pathlib import (
 	Path)
 from typing import (
-	AnyStr)
+	AnyStr,
+	Optional)  # Replaced by `X | None` in 3.10.
 from unittest import (
 	SkipTest)
 
 from pathspec import (
 	PathSpec)
 from pathspec._backends.base import (
+	Backend,
 	BackendNamesHint)
 from pathspec._backends.hyperscan.pathspec import (
 	HyperscanPsBackend)
 from pathspec._backends.simple.pathspec import (
 	SimplePsBackend)
+from pathspec.pattern import (
+	Pattern)
 from pathspec.patterns.gitwildmatch import (
 	GitWildMatchPatternError)
 from pathspec.util import (
@@ -44,11 +49,13 @@ from .util import (
 	make_dirs,
 	make_files,
 	ospath,
-	require_backend)
+	require_backend,
+	reverse_inplace,
+	shuffle_inplace)
 
-BACKENDS: list[tuple[str, BackendNamesHint]] = [
-	('hyperscan', 'hyperscan'),
-	('re2', 're2'),
+BACKENDS: list[BackendNamesHint] = [
+	'hyperscan',
+	're2',
 ]
 """
 The backend parameters.
@@ -85,40 +92,62 @@ class PathSpecTest(unittest.TestCase):
 		lines: Iterable[AnyStr],
 	) -> Iterator[Callable[[], AbstractContextManager[PathSpec]]]:
 		"""
-		Parameterize `PathSpec.from_lines()` for each optimization and begin a
-		subtest.
+		Parameterize `PathSpec.from_lines()` for each backend and configuration to
+		begin a subtest.
 
 		*pattern_factory* (:class:`str`) is the pattern factory.
 
 		*lines* (:class:`Iterable` of :class:`str`) yields the lines.
 
-		Returns an :class:`Iterator` yielding each context for the :class:`PathSpec`.
+		Returns an :class:`Iterator` yielding each subtest context for the
+		:class:`PathSpec`.
 		"""
 		lines = list(lines)
 
-		@contextmanager
-		def _unopt_sub_test():
-			self.clear_temp_dir()
-			with self.subTest("simple (unopt)"):
-				spec = PathSpec.from_lines(
-					pattern_factory,
-					lines,
-					backend='simple',
-					_test_backend_factory=partial(SimplePsBackend, no_filter=True, no_reverse=True)
-				)
-				yield spec
+		configs: list[tuple[
+			str, BackendNamesHint, Optional[Callable[[Sequence[Pattern]], Backend]]
+		]] = []
 
-		yield _unopt_sub_test
+		# Simple backend, no optimizations.
+		configs.append((
+			"simple (unopt)",
+			'simple',
+			partial(SimplePsBackend, no_filter=True, no_reverse=True),
+		))
 
-		@contextmanager
-		def _minopt_sub_test():
-			self.clear_temp_dir()
-			with self.subTest("simple (minopt)"):
-				yield PathSpec.from_lines(pattern_factory, lines, backend='simple')
+		# Simple backend, minimal optimizations.
+		configs.append((
+			"simple (minopt)",
+			'simple',
+			None,
+		))
 
-		yield _minopt_sub_test
+		# Add additional backends.
+		for backend in BACKENDS:
+			if backend == 'hyperscan':
+				configs.append((
+					f"hyperscan (forward)",
+					backend,
+					partial(HyperscanPsBackend, _debug_exprs=True),
+				))
+				configs.append((
+					f"hyperscan (reverse)",
+					backend,
+					partial(HyperscanPsBackend, _debug_exprs=True, _test_sort=reverse_inplace)
+				))
+				configs.append((
+					f"hyperscan (shuffle)",
+					backend,
+					partial(HyperscanPsBackend, _debug_exprs=True, _test_sort=shuffle_inplace)
+				))
+			else:
+				configs.append((
+					backend,
+					backend,
+					None,
+				))
 
-		for label, backend in BACKENDS:
+		for label, backend, backend_factory in configs:
 			try:
 				require_backend(backend)
 			except SkipTest:
@@ -127,14 +156,13 @@ class PathSpecTest(unittest.TestCase):
 				continue
 
 			@contextmanager
-			def _optimize_sub_test(label=label, backend=backend):
+			def _sub_test(
+				backend=backend,
+				backend_factory=backend_factory,
+				label=label,
+			):
 				self.clear_temp_dir()
 				with self.subTest(label):
-					if backend == 'hyperscan':
-						backend_factory = partial(HyperscanPsBackend, _debug_exprs=True)
-					else:
-						backend_factory = None
-
 					yield PathSpec.from_lines(
 						pattern_factory,
 						lines,
@@ -142,7 +170,7 @@ class PathSpecTest(unittest.TestCase):
 						_test_backend_factory=backend_factory,
 					)
 
-			yield _optimize_sub_test
+			yield _sub_test
 
 	def setUp(self) -> None:
 		"""

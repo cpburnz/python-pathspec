@@ -7,10 +7,10 @@ API. Its contents and structure are likely to change.
 from __future__ import annotations
 
 from collections.abc import (
+	Callable,
 	Sequence)
 from typing import (
 	Any,
-	ClassVar,
 	Optional)  # Replaced by `X | None` in 3.10.
 
 try:
@@ -43,16 +43,12 @@ class HyperscanPsBackend(Backend):
 	files. The Hyperscan database uses block mode for matching files.
 	"""
 
-	_reverse_patterns: ClassVar[bool] = False
-	"""
-	*_reverse_patterns* (:class:`bool`) is whether the patterns are reversed.
-	"""
-
 	def __init__(
 		self,
 		patterns: Sequence[RegexPattern],
 		*,
 		_debug_exprs: Optional[bool] = None,
+		_test_sort: Optional[Callable[[list], None]] = None,
 	) -> None:
 		"""
 		Initialize the :class:`HyperscanPsBackend` instance.
@@ -69,7 +65,7 @@ class HyperscanPsBackend(Backend):
 			raise TypeError(f"{patterns[0]=!r} must be a RegexPattern.")
 
 		use_patterns = enumerate_patterns(
-			patterns, filter=True, reverse=self._reverse_patterns,
+			patterns, filter=True, reverse=False,
 		)
 
 		self._db = self._make_db()
@@ -84,7 +80,10 @@ class HyperscanPsBackend(Backend):
 		"""
 
 		self._expr_data: list[HyperscanExprDat] = self._init_db(
-			db=self._db, debug=self._debug_exprs, patterns=use_patterns,
+			db=self._db,
+			debug=self._debug_exprs,
+			patterns=use_patterns,
+			sort_exprs=_test_sort,
 		)
 		"""
 		*_expr_data* (:class:`list`) maps expression index (:class:`int`) to
@@ -111,6 +110,7 @@ class HyperscanPsBackend(Backend):
 		db: hyperscan.Database,
 		debug: bool,
 		patterns: list[tuple[int, RegexPattern]],
+		sort_exprs: Optional[Callable[[list], None]],
 	) -> list[HyperscanExprDat]:
 		"""
 		Initialize the Hyperscan database from the given patterns.
@@ -122,6 +122,10 @@ class HyperscanPsBackend(Backend):
 
 		*patterns* (:class:`~collections.abc.Sequence` of :class:`.RegexPattern`)
 		contains the patterns.
+
+		*sort_exprs* (:class:`callable` or :data:`None`) is a function used to sort
+		the compiled expressions. This is used during testing to ensure the order of
+		expressions is not accidentally relied on.
 
 		Returns a :class:`list` indexed by expression id (:class:`int`) to its data
 		(:class:`HyperscanExprDat`).
@@ -159,10 +163,16 @@ class HyperscanPsBackend(Backend):
 
 			exprs.append(regex_bytes)
 
+		# Sort expressions.
+		ids = list(range(len(exprs)))
+		if sort_exprs is not None:
+			sort_exprs(ids)
+			exprs = [exprs[__id] for __id in ids]
+
 		# Compile patterns.
 		db.compile(
 			expressions=exprs,
-			ids=list(range(len(exprs))),
+			ids=ids,
 			elements=len(exprs),
 			flags=HS_FLAGS,
 		)

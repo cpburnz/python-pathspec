@@ -6,18 +6,21 @@ import unittest
 from collections.abc import (
 	Callable,
 	Iterable,
-	Iterator)
+	Iterator,
+	Sequence)
 from contextlib import (
 	AbstractContextManager,
 	contextmanager)
 from functools import (
 	partial)
 from typing import (
-	AnyStr)
+	AnyStr,
+	Optional)  # Replaced by `X | None` in 3.10.
 from unittest import (
 	SkipTest)
 
 from pathspec._backends.base import (
+	Backend,
 	BackendNamesHint)
 from pathspec._backends.hyperscan.gitignore import (
 	HyperscanGiBackend)
@@ -25,14 +28,18 @@ from pathspec._backends.simple.gitignore import (
 	SimpleGiBackend)
 from pathspec.gitignore import (
 	GitIgnoreSpec)
+from pathspec.pattern import (
+	Pattern)
 
 from .util import (
 	debug_results,
 	get_includes,
-	require_backend)
+	require_backend,
+	reverse_inplace,
+	shuffle_inplace)
 
-BACKENDS: list[tuple[str, BackendNamesHint]] = [
-	('hyperscan', 'hyperscan'),
+BACKENDS: list[BackendNamesHint] = [
+	'hyperscan',
 ]
 """
 The backend parameters.
@@ -49,8 +56,8 @@ class GitIgnoreSpecTest(unittest.TestCase):
 		lines: Iterable[AnyStr],
 	) -> Iterator[Callable[[], AbstractContextManager[GitIgnoreSpec]]]:
 		"""
-		Parameterize `PathSpec.from_lines()` for each optimization and begin a
-		subtest.
+		Parameterize `GitIgnoreSpec.from_lines()` for each backend and configuration
+		to begin a subtest.
 
 		*pattern_factory* (:class:`str`) is the pattern factory.
 
@@ -61,26 +68,50 @@ class GitIgnoreSpecTest(unittest.TestCase):
 		"""
 		lines = list(lines)
 
-		@contextmanager
-		def _unopt_sub_test():
-			with self.subTest("simple (unopt)"):
-				spec = GitIgnoreSpec.from_lines(
-					lines,
-					backend='simple',
-					_test_backend_factory=partial(SimpleGiBackend, no_filter=True, no_reverse=True),
-				)
-				yield spec
+		configs: list[tuple[
+			str, BackendNamesHint, Optional[Callable[[Sequence[Pattern]], Backend]]
+		]] = []
 
-		yield _unopt_sub_test
+		# Simple backend, no optimizations.
+		configs.append((
+			"simple (unopt)",
+			'simple',
+			partial(SimpleGiBackend, no_filter=True, no_reverse=True),
+		))
 
-		@contextmanager
-		def _minopt_sub_test():
-			with self.subTest("simple (minopt)"):
-				yield GitIgnoreSpec.from_lines(lines, backend='simple')
+		# Simple backend, minimal optimizations.
+		configs.append((
+			"simple (minopt)",
+			'simple',
+			None,
+		))
 
-		yield _minopt_sub_test
+		# Add additional backends.
+		for backend in BACKENDS:
+			if backend == 'hyperscan':
+				configs.append((
+					f"hyperscan (forward)",
+					backend,
+					partial(HyperscanGiBackend, _debug_exprs=True),
+				))
+				configs.append((
+					f"hyperscan (reverse)",
+					backend,
+					partial(HyperscanGiBackend, _debug_exprs=True, _test_sort=reverse_inplace)
+				))
+				configs.append((
+					f"hyperscan (shuffle)",
+					backend,
+					partial(HyperscanGiBackend, _debug_exprs=True, _test_sort=shuffle_inplace)
+				))
+			else:
+				configs.append((
+					backend,
+					backend,
+					None,
+				))
 
-		for label, backend in BACKENDS:
+		for label, backend, backend_factory in configs:
 			try:
 				require_backend(backend)
 			except SkipTest:
@@ -89,20 +120,19 @@ class GitIgnoreSpecTest(unittest.TestCase):
 				continue
 
 			@contextmanager
-			def _optimize_sub_test(label=label, backend=backend):
+			def _sub_test(
+				backend=backend,
+				backend_factory=backend_factory,
+				label=label,
+			):
 				with self.subTest(label):
-					if backend == 'hyperscan':
-						backend_factory = partial(HyperscanGiBackend, _debug_exprs=True)
-					else:
-						backend_factory = None
-
 					yield GitIgnoreSpec.from_lines(
 						lines,
 						backend=backend,
 						_test_backend_factory=backend_factory,
 					)
 
-			yield _optimize_sub_test
+			yield _sub_test
 
 	def test_01_reversed_args(self):
 		"""
