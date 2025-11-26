@@ -5,6 +5,7 @@ included in the released library.
 from __future__ import annotations
 
 from collections.abc import (
+	Callable,
 	Sequence)
 from typing import (
 	Any,
@@ -38,6 +39,7 @@ class HyperscanPsR1BaseBackend(HyperscanPsBackend):
 		db: hyperscan.Database,
 		debug: bool,
 		patterns: list[tuple[int, RegexPattern]],
+		sort_exprs: Optional[Callable[[list], None]],
 	) -> list[HyperscanExprDat]:
 		# NOTICE: This is the current implementation.
 
@@ -104,7 +106,7 @@ class HyperscanPsR1BlockClosureBackend(_HyperscanPsR1BlockBaseBackend):
 	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		out_include = False
-		out_index: Optional[int] = None
+		out_index: Optional[int] = -1
 
 		def on_match(
 			expr_id: int, _from: int, _to: int, _flags: int, _context: Any,
@@ -118,6 +120,10 @@ class HyperscanPsR1BlockClosureBackend(_HyperscanPsR1BlockBaseBackend):
 				out_index = index
 
 		self._db.scan(file.encode('utf8'), match_event_handler=on_match)
+
+		if out_index == -1:
+			out_index = None
+
 		return out_include, out_index
 
 

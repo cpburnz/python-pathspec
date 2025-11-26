@@ -302,7 +302,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			'!dir.yaml',
 		]):
 			with sub_test() as spec:
-				# Confirmed results with git (v2.42.0).
+				# Confirmed results with git check-ignore (v2.42.0).
 				files = {
 					'dir.yaml/file.sql',   # -
 					'dir.yaml/file.yaml',  # 1:*.yaml

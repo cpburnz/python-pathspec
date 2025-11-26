@@ -24,7 +24,8 @@ from ...pattern import (
 from ...patterns.gitwildmatch import (
 	GitWildMatchPattern,
 	_BYTES_ENCODING,
-	_DIR_MARK)
+	_DIR_MARK_CG,
+	_DIR_MARK_OPT)
 from ..._typing import (
 	override)  # Added in 3.12.
 
@@ -34,16 +35,6 @@ from ._base import (
 	HyperscanExprDebug)
 from .pathspec import (
 	HyperscanPsBackend)
-
-_DIR_MARK_CG = f'(?P<{_DIR_MARK}>/)'
-"""
-This regular expression matches the directory marker.
-"""
-
-_DIR_MARK_OPT = f'(?:{_DIR_MARK_CG}|$)'
-"""
-This regular expression matches the optional directory marker and sub-path.
-"""
 
 
 class HyperscanGiBackend(HyperscanPsBackend):

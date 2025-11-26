@@ -27,6 +27,16 @@ The regex group name for the directory marker. This is only used by
 :class:`GitIgnoreSpec`.
 """
 
+_DIR_MARK_CG = f'(?P<{_DIR_MARK}>/)'
+"""
+This regular expression matches the directory marker.
+"""
+
+_DIR_MARK_OPT = f'(?:{_DIR_MARK_CG}|$)'
+"""
+This regular expression matches the optional directory marker and sub-path.
+"""
+
 
 class GitWildMatchPatternError(ValueError):
 	"""
@@ -131,7 +141,7 @@ class GitWildMatchPattern(RegexPattern):
 				# EDGE CASE: The '**/' pattern should match everything except individual
 				# files in the root directory. This case cannot be adequately handled
 				# through normalization. Use the override.
-				override_regex = f'(?P<{_DIR_MARK}>/)'
+				override_regex = _DIR_MARK_CG
 
 			if not pattern_segs[0]:
 				# A pattern beginning with a slash ('/') will only match paths directly
@@ -181,7 +191,7 @@ class GitWildMatchPattern(RegexPattern):
 					# every file not in the root directory. Special case this pattern for
 					# efficiency.
 					if is_dir_pattern:
-						override_regex = f'(?P<{_DIR_MARK}>/)'
+						override_regex = _DIR_MARK_CG
 					else:
 						override_regex = '/'
 
@@ -195,7 +205,12 @@ class GitWildMatchPattern(RegexPattern):
 						if i == 0:
 							# A normalized pattern beginning with double-asterisks ('**') will
 							# match any leading path segments.
-							output.append('(?:^|/)')
+
+							# TODO: This appears to work with Hyperscan because it's not
+							# failing the tests. Verify this.
+							#output.append('(?:^|/)')
+
+							output.append('^(?:.+/)?')
 
 						elif i < end:
 							# A pattern with inner double-asterisks ('**') will match multiple
@@ -208,7 +223,7 @@ class GitWildMatchPattern(RegexPattern):
 							# A normalized pattern ending with double-asterisks ('**') will
 							# match any trailing path segments.
 							if is_dir_pattern:
-								output.append(f'(?P<{_DIR_MARK}>/)')
+								output.append(_DIR_MARK_CG)
 							else:
 								output.append(f'/')
 
@@ -236,7 +251,7 @@ class GitWildMatchPattern(RegexPattern):
 							# A pattern ending without a slash ('/') will match a file or a
 							# directory (with paths underneath it). E.g., "foo" matches "foo",
 							# "foo/bar", "foo/bar/baz", etc.
-							output.append(f'(?:(?P<{_DIR_MARK}>/)|$)')
+							output.append(_DIR_MARK_OPT)
 
 						need_slash = True
 
