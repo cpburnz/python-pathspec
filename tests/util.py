@@ -31,6 +31,10 @@ from pathspec._backends.hyperscan.pathspec import (
 	HyperscanPsBackend)
 from pathspec._backends.re2.base import (
 	re2_error)
+from pathspec._backends.re2._base import (
+	Re2RegexDebug)
+from pathspec._backends.re2.pathspec import (
+	Re2PsBackend)
 from pathspec.util import (
 	CheckResult,
 	TStrPath,
@@ -82,6 +86,17 @@ def debug_results(spec: PathSpec, results: Iterable[CheckResult[str]]) -> str:
 				f"{expr_dat.index+1}({expr_id}):{pattern.pattern}",
 				f"{dir_col} {expr_dat.regex!r}",
 			))
+
+	elif isinstance(spec._backend, Re2PsBackend) and spec._backend._debug_regex:
+		for regex_id, regex_dat in enumerate(spec._backend._regex_data, 1):
+			assert isinstance(regex_dat, Re2RegexDebug), regex_dat
+			pattern = patterns[regex_dat.index]
+			dir_col = 'd' if regex_dat.is_dir_pattern else '.'
+			pattern_table.append((
+				f"{regex_dat.index+1}({regex_id}):{pattern.pattern}",
+				f"{dir_col} {regex_dat.regex!r}",
+			))
+
 	else:
 		for index, pattern in enumerate(patterns, 1):
 			pattern_table.append((

@@ -322,7 +322,7 @@ class _HyperscanGiR2BaseBackend(HyperscanPsBackend):
 		db: hyperscan.Database,
 		debug: bool,
 		patterns: list[tuple[int, RegexPattern]],
-		sort_exprs: Optional[Callable[[list], None]],
+		sort_ids: Optional[Callable[[list[int]], None]],
 	) -> list[HyperscanExprDat]:
 		# NOTICE: This is the current implementation.
 

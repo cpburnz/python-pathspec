@@ -83,7 +83,7 @@ class HyperscanPsBackend(Backend):
 			db=self._db,
 			debug=self._debug_exprs,
 			patterns=use_patterns,
-			sort_exprs=_test_sort,
+			sort_ids=_test_sort,
 		)
 		"""
 		*_expr_data* (:class:`list`) maps expression index (:class:`int`) to
@@ -110,7 +110,7 @@ class HyperscanPsBackend(Backend):
 		db: hyperscan.Database,
 		debug: bool,
 		patterns: list[tuple[int, RegexPattern]],
-		sort_exprs: Optional[Callable[[list], None]],
+		sort_ids: Optional[Callable[[list[int]], None]],
 	) -> list[HyperscanExprDat]:
 		"""
 		Initialize the Hyperscan database from the given patterns.
@@ -123,9 +123,9 @@ class HyperscanPsBackend(Backend):
 		*patterns* (:class:`~collections.abc.Sequence` of :class:`.RegexPattern`)
 		contains the patterns.
 
-		*sort_exprs* (:class:`callable` or :data:`None`) is a function used to sort
-		the compiled expressions. This is used during testing to ensure the order of
-		expressions is not accidentally relied on.
+		*sort_ids* (:class:`callable` or :data:`None`) is a function used to sort
+		the compiled expression ids. This is used during testing to ensure the order
+		of expressions is not accidentally relied on.
 
 		Returns a :class:`list` indexed by expression id (:class:`int`) to its data
 		(:class:`HyperscanExprDat`).
@@ -165,8 +165,8 @@ class HyperscanPsBackend(Backend):
 
 		# Sort expressions.
 		ids = list(range(len(exprs)))
-		if sort_exprs is not None:
-			sort_exprs(ids)
+		if sort_ids is not None:
+			sort_ids(ids)
 			exprs = [exprs[__id] for __id in ids]
 
 		# Compile patterns.

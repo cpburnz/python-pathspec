@@ -32,9 +32,6 @@ readme = "README-dist.rst"
 requires-python = ">=3.9"
 
 [project.optional-dependencies]
-all = [
-	"pathspec[hyperscan]",
-]
 google-re2 = [
 	"google-re2 >=1.1",
 ]

@@ -88,7 +88,7 @@ def bench_hs_v1(
 # Re2 backend.
 
 @pytest.mark.benchmark(group=GROUP)
-def bench_re2_filtered(
+def bench_re2_v1(
 	benchmark: BenchmarkFixture,
 	cpython_file_match_none: str,
 	cpython_gi_lines_all: list[str],
@@ -97,52 +97,6 @@ def bench_re2_filtered(
 		'gitwildmatch',
 		cpython_gi_lines_all,
 		backend='re2',
-		_test_backend_factory=partial(Re2PsBackend, no_reverse=True)
-	)
-	benchmark(run_match, spec, cpython_file_match_none)
-
-
-@pytest.mark.benchmark(group=GROUP)
-def bench_re2_filtered_reversed(
-	benchmark: BenchmarkFixture,
-	cpython_file_match_none: str,
-	cpython_gi_lines_all: list[str],
-):
-	spec = PathSpec.from_lines(
-		'gitwildmatch',
-		cpython_gi_lines_all,
-		backend='re2',
-		_test_backend_factory=Re2PsBackend,
-	)
-	benchmark(run_match, spec, cpython_file_match_none)
-
-
-@pytest.mark.benchmark(group=GROUP)
-def bench_re2_unfiltered(
-	benchmark: BenchmarkFixture,
-	cpython_file_match_none: str,
-	cpython_gi_lines_all: list[str],
-):
-	spec = PathSpec.from_lines(
-		'gitwildmatch',
-		cpython_gi_lines_all,
-		backend='re2',
-		_test_backend_factory=partial(Re2PsBackend, no_filter=True, no_reverse=True)
-	)
-	benchmark(run_match, spec, cpython_file_match_none)
-
-
-@pytest.mark.benchmark(group=GROUP)
-def bench_re2_unfiltered_reversed(
-	benchmark: BenchmarkFixture,
-	cpython_file_match_none: str,
-	cpython_gi_lines_all: list[str],
-):
-	spec = PathSpec.from_lines(
-		'gitwildmatch',
-		cpython_gi_lines_all,
-		backend='re2',
-		_test_backend_factory=partial(Re2PsBackend, no_filter=True)
 	)
 	benchmark(run_match, spec, cpython_file_match_none)
 

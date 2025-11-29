@@ -205,11 +205,6 @@ class GitWildMatchPattern(RegexPattern):
 						if i == 0:
 							# A normalized pattern beginning with double-asterisks ('**') will
 							# match any leading path segments.
-
-							# TODO: This appears to work with Hyperscan because it's not
-							# failing the tests. Verify this.
-							#output.append('(?:^|/)')
-
 							output.append('^(?:.+/)?')
 
 						elif i < end:
