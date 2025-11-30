@@ -51,6 +51,13 @@ jobs:
           - os: windows
             python: "pypy-3.10"
             backend: hyperscan
+          # Re2 does hot have wheels for PyPy.
+          - python: "pypy-3.9"
+            backend: re2
+          - python: "pypy-3.10"
+            backend: re2
+          - python: "pypy-3.11"
+            backend: re2
 
     steps:
       - uses: actions/checkout@v4
