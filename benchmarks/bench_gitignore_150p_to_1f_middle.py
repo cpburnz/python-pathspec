@@ -1,6 +1,6 @@
 """
-This module benchmarks :class:`.GitIgnoreSpec` using many patterns against many
-files.
+This module benchmarks :class:`.GitIgnoreSpec` using ~150 patterns against one
+file matching in the middle of the patterns.
 """
 
 from functools import (
@@ -18,12 +18,11 @@ from benchmarks.match_gitignore import (
 	HyperscanGiR1BlockClosureBackend,
 	HyperscanGiR1BlockStateBackend,
 	HyperscanGiR1StreamClosureBackend,
-	HyperscanGiR1StreamStateBackend,
 	HyperscanGiR2BlockClosureBackend,
 	HyperscanGiR2BlockStateBackend,
 	HyperscanGiR2StreamClosureBackend)
 
-GROUP = "GitIgnore.match_files(): 180 lines, 6.5k files"
+GROUP = "GitIgnore.match_file(): 150 lines, one file (middle)"
 
 
 # Hyperscan backend.
@@ -31,7 +30,7 @@ GROUP = "GitIgnore.match_files(): 180 lines, 6.5k files"
 @pytest.mark.benchmark(group=GROUP)
 def bench_hs_r1_block_closure(
 	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
+	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = GitIgnoreSpec.from_lines(
@@ -39,13 +38,13 @@ def bench_hs_r1_block_closure(
 		backend='hyperscan',
 		_test_backend_factory=HyperscanGiR1BlockClosureBackend,
 	)
-	benchmark(run_match, spec, cpython_files)
+	benchmark(run_match, spec, cpython_file_match_middle)
 
 
 @pytest.mark.benchmark(group=GROUP)
 def bench_hs_r1_block_state(
 	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
+	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = GitIgnoreSpec.from_lines(
@@ -53,13 +52,13 @@ def bench_hs_r1_block_state(
 		backend='hyperscan',
 		_test_backend_factory=HyperscanGiR1BlockStateBackend,
 	)
-	benchmark(run_match, spec, cpython_files)
+	benchmark(run_match, spec, cpython_file_match_middle)
 
 
 @pytest.mark.benchmark(group=GROUP)
 def bench_hs_r1_stream_closure(
 	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
+	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = GitIgnoreSpec.from_lines(
@@ -67,28 +66,13 @@ def bench_hs_r1_stream_closure(
 		backend='hyperscan',
 		_test_backend_factory=HyperscanGiR1StreamClosureBackend,
 	)
-	benchmark(run_match, spec, cpython_files)
-
-
-# WARNING: This segfaults.
-# @pytest.mark.benchmark(group=GROUP)
-# def bench_hs_r1_stream_state(
-# 	benchmark: BenchmarkFixture,
-# 	cpython_files: set[str],
-# 	cpython_gi_lines_all: list[str],
-# ):
-# 	spec = GitIgnoreSpec.from_lines(
-# 		cpython_gi_lines_all,
-# 		backend='hyperscan',
-#			_test_backend_factory=GiHyperscanStreamStateBackend,
-# 	)
-# 	benchmark(run_match, spec, cpython_files)
+	benchmark(run_match, spec, cpython_file_match_middle)
 
 
 @pytest.mark.benchmark(group=GROUP)
 def bench_hs_r2_block_closure(
 	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
+	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = GitIgnoreSpec.from_lines(
@@ -96,13 +80,13 @@ def bench_hs_r2_block_closure(
 		backend='hyperscan',
 		_test_backend_factory=HyperscanGiR2BlockClosureBackend,
 	)
-	benchmark(run_match, spec, cpython_files)
+	benchmark(run_match, spec, cpython_file_match_middle)
 
 
 @pytest.mark.benchmark(group=GROUP)
 def bench_hs_r2_block_state(
 	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
+	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = GitIgnoreSpec.from_lines(
@@ -110,13 +94,13 @@ def bench_hs_r2_block_state(
 		backend='hyperscan',
 		_test_backend_factory=HyperscanGiR2BlockStateBackend,
 	)
-	benchmark(run_match, spec, cpython_files)
+	benchmark(run_match, spec, cpython_file_match_middle)
 
 
 @pytest.mark.benchmark(group=GROUP)
 def bench_hs_r2_stream_closure(
 	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
+	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = GitIgnoreSpec.from_lines(
@@ -124,20 +108,20 @@ def bench_hs_r2_stream_closure(
 		backend='hyperscan',
 		_test_backend_factory=HyperscanGiR2StreamClosureBackend,
 	)
-	benchmark(run_match, spec, cpython_files)
+	benchmark(run_match, spec, cpython_file_match_middle)
 
 
 @pytest.mark.benchmark(group=GROUP)
 def bench_hs_v1(
 	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
+	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = GitIgnoreSpec.from_lines(
 		cpython_gi_lines_all,
 		backend='hyperscan',
 	)
-	benchmark(run_match, spec, cpython_files)
+	benchmark(run_match, spec, cpython_file_match_middle)
 
 
 # Re2 backend.
@@ -145,14 +129,14 @@ def bench_hs_v1(
 @pytest.mark.benchmark(group=GROUP)
 def bench_re2_v1(
 	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
+	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = GitIgnoreSpec.from_lines(
 		cpython_gi_lines_all,
 		backend='re2',
 	)
-	benchmark(run_match, spec, cpython_files)
+	benchmark(run_match, spec, cpython_file_match_middle)
 
 
 # Simple backend.
@@ -160,7 +144,7 @@ def bench_re2_v1(
 @pytest.mark.benchmark(group=GROUP)
 def bench_sm_filtered(
 	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
+	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = GitIgnoreSpec.from_lines(
@@ -168,26 +152,26 @@ def bench_sm_filtered(
 		backend='simple',
 		_test_backend_factory=partial(SimpleGiBackend, no_reverse=True)
 	)
-	benchmark(run_match, spec, cpython_files)
+	benchmark(run_match, spec, cpython_file_match_middle)
 
 
 @pytest.mark.benchmark(group=GROUP)
 def bench_sm_filtered_reversed(
 	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
+	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = GitIgnoreSpec.from_lines(
 		cpython_gi_lines_all,
 		backend='simple',
 	)
-	benchmark(run_match, spec, cpython_files)
+	benchmark(run_match, spec, cpython_file_match_middle)
 
 
 @pytest.mark.benchmark(group=GROUP)
 def bench_sm_unfiltered(
 	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
+	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = GitIgnoreSpec.from_lines(
@@ -195,13 +179,13 @@ def bench_sm_unfiltered(
 		backend='simple',
 		_test_backend_factory=partial(SimpleGiBackend, no_filter=True, no_reverse=True)
 	)
-	benchmark(run_match, spec, cpython_files)
+	benchmark(run_match, spec, cpython_file_match_middle)
 
 
 @pytest.mark.benchmark(group=GROUP)
 def bench_sm_unfiltered_reversed(
 	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
+	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = GitIgnoreSpec.from_lines(
@@ -209,22 +193,21 @@ def bench_sm_unfiltered_reversed(
 		backend='simple',
 		_test_backend_factory=partial(SimpleGiBackend, no_filter=True)
 	)
-	benchmark(run_match, spec, cpython_files)
+	benchmark(run_match, spec, cpython_file_match_middle)
 
 
 @pytest.mark.benchmark(group=GROUP)
 def bench_sm_v1(
 	benchmark: BenchmarkFixture,
-	cpython_files: set[str],
+	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = GitIgnoreSpec.from_lines(
 		cpython_gi_lines_all,
 		backend='simple',
 	)
-	benchmark(run_match, spec, cpython_files)
+	benchmark(run_match, spec, cpython_file_match_middle)
 
 
-def run_match(spec: GitIgnoreSpec, files: set[str]):
-	for _ in spec.match_files(files):
-		pass
+def run_match(spec: GitIgnoreSpec, file: str):
+	_match = spec.match_file(file)

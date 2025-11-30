@@ -29,15 +29,6 @@ def cpython_gi_lines_all(cpython_gi_file: Path) -> list[str]:
 
 
 @pytest.fixture(scope='session')
-def cpython_gi_lines_filt(cpython_gi_lines_all: list[str]) -> list[str]:
-	return [
-		__line
-		for __line in cpython_gi_lines_all
-		if __line and not __line.startswith("#")
-	]
-
-
-@pytest.fixture(scope='session')
 def cpython_file_match_end() -> str:
 	"""
 	File matching pattern near the end of cpython ".gitignore".
@@ -67,3 +58,55 @@ def cpython_file_match_start() -> str:
 	File matching pattern near the beginning of cpython ".gitignore".
 	"""
 	return "spam.cover"
+
+
+@pytest.fixture(scope='session')
+def flit_dir() -> Path:
+	return Path("~/Downloads/flit").expanduser()
+
+
+@pytest.fixture(scope='session')
+def flit_files(flit_dir: Path) -> set[str]:
+	return set(iter_tree_files(flit_dir))
+
+
+@pytest.fixture(scope='session')
+def flit_gi_file(flit_dir: Path) -> Path:
+	return flit_dir / ".gitignore"
+
+
+@pytest.fixture(scope='session')
+def flit_gi_lines_all(flit_gi_file: Path) -> list[str]:
+	return flit_gi_file.read_text().splitlines()
+
+
+@pytest.fixture(scope='session')
+def flit_file_match_end() -> str:
+	"""
+	File matching pattern near the end of flit ".gitignore".
+	"""
+	return "green.pyc"
+
+
+@pytest.fixture(scope='session')
+def flit_file_match_middle() -> str:
+	"""
+	File matching pattern near the middle of flit ".gitignore".
+	"""
+	return "htmlcov/eggs"
+
+
+@pytest.fixture(scope='session')
+def flit_file_match_none() -> str:
+	"""
+	File not matching any pattern in flit ".gitignore".
+	"""
+	return "Unladen Swallow"
+
+
+@pytest.fixture(scope='session')
+def flit_file_match_start() -> str:
+	"""
+	File matching pattern near the beginning of flit ".gitignore".
+	"""
+	return "dist/ham"

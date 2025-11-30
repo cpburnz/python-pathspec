@@ -2,12 +2,23 @@
 # This justfile is used to manage development and distribution.
 #
 
-_default:
+_default: help
+
+# Display the available recipes.
+help:
 	@just --list
 
-# Run benchmarks.
+# Run all benchmarks.
 [group('Development')]
 bench: _bench
+
+# Run GitIgnoreSpec benchmarks.
+[group('Development')]
+bench-gitignore: _bench_gitignore
+
+# Run PathSpec benchmarks.
+[group('Development')]
+bench-pathspec: _bench_pathspec
 
 # Run tests using the CPython virtual environment.
 [group('Development')]
@@ -17,7 +28,7 @@ test: _test_primary
 [group('Development')]
 test-all: _test_all
 
-# Run tests using Tox for just documentation."
+# Run tests using Tox for just documentation.
 [group('Development')]
 test-docs: _test_docs
 
@@ -61,6 +72,12 @@ pypy_run := 'dev/venv.sh dev/venv-pypy'
 
 _bench:
 	{{cpy_run}} pytest -q -c benchmarks/pytest.ini
+
+_bench_gitignore:
+	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_gitignore_*.py
+
+_bench_pathspec:
+	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_pathspec_*.py
 
 _test_all:
 	{{cpy_run}} tox
