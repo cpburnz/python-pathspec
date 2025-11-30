@@ -29,7 +29,7 @@ The re2 options to use:
 -	`log_errors=False` disables logging to stderr.
 
 -	`never_capture=True` disables capture groups because they effectively cannot
-	utilized with :class:`re2.Set`.
+	be utilized with :class:`re2.Set`.
 """
 
 

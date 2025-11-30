@@ -53,6 +53,7 @@ __credits__ = [
 	"tomruk <https://github.com/tomruk>",
 	"oprypin <https://github.com/oprypin>",
 	"kurtmckee <https://github.com/kurtmckee>",
+	"Dobatymo <https://github.com/Dobatymo>",
 ]
 __license__ = "MPL 2.0"
 __version__ = "0.13.0.dev1"

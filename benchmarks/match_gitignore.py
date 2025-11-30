@@ -109,7 +109,7 @@ class HyperscanGiR1BlockClosureBackend(_HyperscanGiR1BlockBaseBackend):
 		if out_index == -1:
 			out_index = None
 
-		return out_include, out_index
+		return (out_include, out_index)
 
 
 class HyperscanGiR1BlockStateBackend(_HyperscanGiR1BlockBaseBackend):
@@ -136,7 +136,7 @@ class HyperscanGiR1BlockStateBackend(_HyperscanGiR1BlockBaseBackend):
 		if out_index == -1:
 			out_index = None
 
-		return out_include, out_index
+		return (out_include, out_index)
 
 	@override
 	def __on_match(
@@ -242,7 +242,7 @@ class HyperscanGiR1StreamClosureBackend(_HyperscanGiR1StreamBaseBackend):
 		if out_index == -1:
 			out_index = None
 
-		return out_include, out_index
+		return (out_include, out_index)
 
 
 # WARNING: This segfaults.
@@ -269,7 +269,7 @@ class HyperscanGiR1StreamStateBackend(_HyperscanGiR1StreamBaseBackend):
 		if out_index == -1:
 			out_index = None
 
-		return out_include, out_index
+		return (out_include, out_index)
 
 	@override
 	def __on_match(
@@ -452,7 +452,7 @@ class HyperscanGiR2BlockClosureBackend(_HyperscanGiR2BlockBaseBackend):
 		if out_index == -1:
 			out_index = None
 
-		return out_include, out_index
+		return (out_include, out_index)
 
 
 class HyperscanGiR2BlockStateBackend(_HyperscanGiR2BlockBaseBackend):
@@ -477,7 +477,7 @@ class HyperscanGiR2BlockStateBackend(_HyperscanGiR2BlockBaseBackend):
 		if out_index == -1:
 			out_index = None
 
-		return out_include, out_index
+		return (out_include, out_index)
 
 	@override
 	def __on_match(
@@ -571,4 +571,4 @@ class HyperscanGiR2StreamClosureBackend(_HyperscanGiR2StreamBaseBackend):
 		if out_index == -1:
 			out_index = None
 
-		return out_include, out_index
+		return (out_include, out_index)

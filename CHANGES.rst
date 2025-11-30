@@ -10,9 +10,17 @@ Major changes:
 
 - `Issue #91`_: Dropped support of EoL Python 3.8.
 
+- Added concept of backends to allow for faster regex matching. The backend can be controlled using the `backend` argument to `PathSpec()`, `PathSpec.from_lines()`, `GitIgnoreSpec()`, and `GitIgnoreSpec.from_lines()`.
+
+API changes:
+
+- Protected method `pathspec.pathspec.PathSpec._match_file()` (with a leading underscore) has been removed and replaced by backends. This does not affect normal usage of `PathSpec()` and `GitIgnoreSpec()`. Only custom subclasses will be affected. If this breaks your usage, `open an issue <https://github.com/cpburnz/python-pathspec/issues>`_.
+
 New features:
 
-- Added optional `hyperscan`_ backend for faster regex matching. It will automatically be used when installed. The backend can be controlled using the `backend` argument to `PathSpec()`, `PathSpec.from_lines()`, `GitIgnoreSpec()`, or `GitIgnoreSpec.from_lines()`.
+- Added optional `hyperscan`_ backend. It will automatically be used when installed. This dependency can be installed with ``pip install 'pathspec[hyperscan]'``.
+
+- Added optional "re2" backend using the `google-re2`_ library. It will automatically be used when installed. This dependency can be installed with ``pip install 'pathspec[google-re2]'``.
 
 Bug fixes:
 
@@ -23,9 +31,12 @@ Improvements:
 - Mark Python 3.13 and 3.14 as supported.
 - No-op patterns are now filtered out when matching files, slightly improving performance.
 
-.. _`hyperscan`: https://pypi.org/project/hyperscan/
+
+.. _`Issue #38`: https://github.com/cpburnz/python-pathspec/issues/38
 .. _`Issue #91`: https://github.com/cpburnz/python-pathspec/issues/91
 .. _`Issue #98`: https://github.com/cpburnz/python-pathspec/issues/98
+.. _`google-re2`: https://pypi.org/project/google-re2/
+.. _`hyperscan`: https://pypi.org/project/hyperscan/
 
 
 0.12.1 (2023-12-10)

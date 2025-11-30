@@ -26,6 +26,8 @@ from .hyperscan.pathspec import (
 	HyperscanPsBackend)
 from .re2.base import (
 	re2_error)
+from .re2.gitignore import (
+	Re2GiBackend)
 from .re2.pathspec import (
 	Re2PsBackend)
 from .simple.gitignore import (
@@ -64,7 +66,9 @@ def make_gitignore_backend(
 	if name == 'best':
 		name = _BEST_BACKEND
 
-	if name == 'hyperscan':
+	if name == 're2':
+		return Re2GiBackend(cast(Sequence[RegexPattern], patterns))
+	elif name == 'hyperscan':
 		return HyperscanGiBackend(cast(Sequence[RegexPattern], patterns))
 	elif name == 'simple':
 		return SimpleGiBackend(cast(Sequence[RegexPattern], patterns))
@@ -90,10 +94,10 @@ def make_pathspec_backend(
 	if name == 'best':
 		name = _BEST_BACKEND
 
-	if name == 'hyperscan':
-		return HyperscanPsBackend(cast(Sequence[RegexPattern], patterns))
-	elif name == 're2':
+	if name == 're2':
 		return Re2PsBackend(cast(Sequence[RegexPattern], patterns))
+	elif name == 'hyperscan':
+		return HyperscanPsBackend(cast(Sequence[RegexPattern], patterns))
 	elif name == 'simple':
 		return SimplePsBackend(patterns)
 	else:

@@ -237,7 +237,7 @@ class PathSpec(object):
 
 		*backend* (:class:`str` or :data:`None`) is the pattern (or regex) matching
 		backend to use. Default is :data:`None` for "best" to use the best available
-		backend. Priority of backends is: "hyperscan", "simple". The "simple"
+		backend. Priority of backends is: "re2", "hyperscan", "simple". The "simple"
 		backend is always available.
 
 		Returns the :class:`PathSpec` instance.

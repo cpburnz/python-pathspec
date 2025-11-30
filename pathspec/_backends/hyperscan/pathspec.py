@@ -53,8 +53,8 @@ class HyperscanPsBackend(Backend):
 		"""
 		Initialize the :class:`HyperscanPsBackend` instance.
 
-		*patterns* (:class:`Sequence` of :class:`.Pattern`) contains the compiled
-		patterns.
+		*patterns* (:class:`Sequence` of :class:`.RegexPattern`) contains the
+		compiled patterns.
 		"""
 		if hyperscan is None:
 			raise hyperscan_error
@@ -198,7 +198,7 @@ class HyperscanPsBackend(Backend):
 		if out_index == -1:
 			out_index = None
 
-		return out_include, out_index
+		return (out_include, out_index)
 
 	@staticmethod
 	def _make_db() -> hyperscan.Database:

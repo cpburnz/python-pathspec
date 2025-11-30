@@ -101,4 +101,4 @@ class SimpleGiBackend(SimplePsBackend):
 					# matches with priority 2 takes precedence.
 					break
 
-		return out_include, out_index
+		return (out_include, out_index)

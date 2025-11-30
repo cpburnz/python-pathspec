@@ -24,6 +24,8 @@ from pathspec._backends.base import (
 	BackendNamesHint)
 from pathspec._backends.hyperscan.gitignore import (
 	HyperscanGiBackend)
+from pathspec._backends.re2.gitignore import (
+	Re2GiBackend)
 from pathspec._backends.simple.gitignore import (
 	SimpleGiBackend)
 from pathspec.gitignore import (
@@ -40,6 +42,7 @@ from .util import (
 
 BACKENDS: list[BackendNamesHint] = [
 	'hyperscan',
+	're2',
 ]
 """
 The backend parameters.
@@ -103,6 +106,22 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					f"hyperscan (shuffle)",
 					backend,
 					partial(HyperscanGiBackend, _debug_exprs=True, _test_sort=shuffle_inplace)
+				))
+			elif backend == 're2':
+				configs.append((
+					f"re2 (forward)",
+					backend,
+					partial(Re2GiBackend, _debug_regex=True),
+				))
+				configs.append((
+					f"re2 (reverse)",
+					backend,
+					partial(Re2GiBackend, _debug_regex=True, _test_sort=reverse_inplace)
+				))
+				configs.append((
+					f"re2 (shuffle)",
+					backend,
+					partial(Re2GiBackend, _debug_regex=True, _test_sort=shuffle_inplace)
 				))
 			else:
 				configs.append((

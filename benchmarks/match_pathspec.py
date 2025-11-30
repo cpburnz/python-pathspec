@@ -124,7 +124,7 @@ class HyperscanPsR1BlockClosureBackend(_HyperscanPsR1BlockBaseBackend):
 		if out_index == -1:
 			out_index = None
 
-		return out_include, out_index
+		return (out_include, out_index)
 
 
 class HyperscanPsR1BlockStateBackend(_HyperscanPsR1BlockBaseBackend):
@@ -146,7 +146,7 @@ class HyperscanPsR1BlockStateBackend(_HyperscanPsR1BlockBaseBackend):
 		if out_index == -1:
 			out_index = None
 
-		return out_include, out_index
+		return (out_include, out_index)
 
 	@override
 	def __on_match(
@@ -205,7 +205,7 @@ class HyperscanPsR1StreamClosureBackend(_HyperscanPsR1StreamBaseBackend):
 		if out_index == -1:
 			out_index = None
 
-		return out_include, out_index
+		return (out_include, out_index)
 
 
 # WARNING: This segfaults.
@@ -230,7 +230,7 @@ class HyperscanPsR1StreamStateBackend(_HyperscanPsR1StreamBaseBackend):
 		if out_index == -1:
 			out_index = None
 
-		return out_include, out_index
+		return (out_include, out_index)
 
 	@override
 	def __on_match(

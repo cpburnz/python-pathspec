@@ -4,6 +4,7 @@ This module provides the :module:`re2` backend for :class:`~pathspec.pathspec.Pa
 WARNING: The *pathspec._backends.re2* package is not part of the public API. Its
 contents and structure are likely to change.
 """
+from __future__ import annotations
 
 from collections.abc import (
 	Callable,

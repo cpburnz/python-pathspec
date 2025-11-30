@@ -57,8 +57,8 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		"""
 		Initialize the :class:`HyperscanMatcher` instance.
 
-		*patterns* (:class:`Sequence` of :class:`.Pattern`) contains the compiled
-		patterns.
+		*patterns* (:class:`Sequence` of :class:`.RegexPattern`) contains the
+		compiled patterns.
 		"""
 		super().__init__(patterns, _debug_exprs=_debug_exprs, _test_sort=_test_sort)
 
@@ -113,9 +113,10 @@ class HyperscanGiBackend(HyperscanPsBackend):
 			use_regexes: list[tuple[Union[str, bytes], bool]] = []
 			if isinstance(pattern, GitWildMatchPattern):
 				# GitWildMatch uses capture groups for its directory marker but
-				# Hyperscan does not support capture groups. Check for this scenario.
+				# Hyperscan does not support capture groups. Handle this scenario.
+				regex_str: str
 				if isinstance(regex, str):
-					regex_str = regex
+					regex_str: str = regex
 				else:
 					assert isinstance(regex, bytes), regex
 					regex_str = regex.decode(_BYTES_ENCODING)
@@ -195,7 +196,7 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		if out_index == -1:
 			out_index = None
 
-		return out_include, out_index
+		return (out_include, out_index)
 
 	@override
 	def __on_match(

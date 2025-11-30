@@ -25,6 +25,8 @@ from benchmarks.match_gitignore import (
 GROUP = "GitIgnore.match_file(): 180 lines, one file (middle)"
 
 
+# Hyperscan backend.
+
 @pytest.mark.benchmark(group=GROUP)
 def bench_hs_r1_block_closure(
 	benchmark: BenchmarkFixture,
@@ -121,6 +123,23 @@ def bench_hs_v1(
 	)
 	benchmark(run_match, spec, cpython_file_match_middle)
 
+
+# Re2 backend.
+
+@pytest.mark.benchmark(group=GROUP)
+def bench_re2_v1(
+	benchmark: BenchmarkFixture,
+	cpython_file_match_middle: str,
+	cpython_gi_lines_all: list[str],
+):
+	spec = GitIgnoreSpec.from_lines(
+		cpython_gi_lines_all,
+		backend='re2',
+	)
+	benchmark(run_match, spec, cpython_file_match_middle)
+
+
+# Simple backend.
 
 @pytest.mark.benchmark(group=GROUP)
 def bench_sm_filtered(
