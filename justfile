@@ -4,13 +4,21 @@
 
 _default: help
 
-# Display the available recipes.
+# Display available recipes.
 help:
 	@just --list
 
 # Run all benchmarks.
 [group('Development')]
-bench: _bench
+bench-all: _bench_all
+
+# Run .match_file() benchmarks.
+[group('Development')]
+bench-match-file: _bench_match_file
+
+# Run .match_files() benchmarks.
+[group('Development')]
+bench-match-files: _bench_match_files
 
 # Run GitIgnoreSpec benchmarks.
 [group('Development')]
@@ -70,11 +78,17 @@ cpy_run := 'dev/venv.sh dev/venv-cpy'
 pypy_bin := 'pypy3'
 pypy_run := 'dev/venv.sh dev/venv-pypy'
 
-_bench:
+_bench_all:
 	{{cpy_run}} pytest -q -c benchmarks/pytest.ini
 
 _bench_gitignore:
 	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_gitignore_*.py
+
+_bench_match_file:
+	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_*_match_file_*.py
+
+_bench_match_files:
+	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_*_match_files_*.py
 
 _bench_pathspec:
 	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_pathspec_*.py

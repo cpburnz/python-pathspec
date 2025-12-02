@@ -1,10 +1,6 @@
 """
-This module benchmarks :class:`.PathSpec` using ~150 patterns against one file
-matching in the middle of the patterns.
+This module benchmarks `PathSpec.match_file()` using ~150 patterns.
 """
-
-from functools import (
-	partial)
 
 import pytest
 from pytest_benchmark.fixture import (
@@ -12,21 +8,28 @@ from pytest_benchmark.fixture import (
 
 from pathspec import (
 	PathSpec)
-from pathspec._backends.simple.pathspec import (
-	SimplePsBackend)
 
-from benchmarks.hyperscan_pathspec_r1 import (
-	HyperscanPsR1BlockClosureBackend,
-	HyperscanPsR1BlockStateBackend,
-	HyperscanPsR1StreamClosureBackend)
-
-GROUP = "PathSpec.match_file(): 150 lines, one file (middle)"
+GROUP = "PathSpec.match_file(): 150 lines, one file"
 
 
 # Hyperscan backend.
 
 @pytest.mark.benchmark(group=GROUP)
-def bench_hs_r1_block_closure(
+def bench_hs_v1_end(
+	benchmark: BenchmarkFixture,
+	cpython_file_match_end: str,
+	cpython_gi_lines_all: list[str],
+):
+	spec = PathSpec.from_lines(
+		'gitwildmatch',
+		cpython_gi_lines_all,
+		backend='hyperscan',
+	)
+	benchmark(run_match, spec, cpython_file_match_end)
+
+
+@pytest.mark.benchmark(group=GROUP)
+def bench_hs_v1_middle(
 	benchmark: BenchmarkFixture,
 	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
@@ -35,45 +38,28 @@ def bench_hs_r1_block_closure(
 		'gitwildmatch',
 		cpython_gi_lines_all,
 		backend='hyperscan',
-		_test_backend_factory=HyperscanPsR1BlockClosureBackend,
 	)
 	benchmark(run_match, spec, cpython_file_match_middle)
 
 
 @pytest.mark.benchmark(group=GROUP)
-def bench_hs_r1_block_state(
+def bench_hs_v1_none(
 	benchmark: BenchmarkFixture,
-	cpython_file_match_middle: str,
+	cpython_file_match_none: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = PathSpec.from_lines(
 		'gitwildmatch',
 		cpython_gi_lines_all,
 		backend='hyperscan',
-		_test_backend_factory=HyperscanPsR1BlockStateBackend,
 	)
-	benchmark(run_match, spec, cpython_file_match_middle)
+	benchmark(run_match, spec, cpython_file_match_none)
 
 
 @pytest.mark.benchmark(group=GROUP)
-def bench_hs_r1_stream_closure(
+def bench_hs_v1_start(
 	benchmark: BenchmarkFixture,
-	cpython_file_match_middle: str,
-	cpython_gi_lines_all: list[str],
-):
-	spec = PathSpec.from_lines(
-		'gitwildmatch',
-		cpython_gi_lines_all,
-		backend='hyperscan',
-		_test_backend_factory=HyperscanPsR1StreamClosureBackend,
-	)
-	benchmark(run_match, spec, cpython_file_match_middle)
-
-
-@pytest.mark.benchmark(group=GROUP)
-def bench_hs_v1(
-	benchmark: BenchmarkFixture,
-	cpython_file_match_middle: str,
+	cpython_file_match_start: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = PathSpec.from_lines(
@@ -81,13 +67,27 @@ def bench_hs_v1(
 		cpython_gi_lines_all,
 		backend='hyperscan',
 	)
-	benchmark(run_match, spec, cpython_file_match_middle)
+	benchmark(run_match, spec, cpython_file_match_start)
 
 
 # Re2 backend.
 
 @pytest.mark.benchmark(group=GROUP)
-def bench_re2_v1(
+def bench_re2_v1_end(
+	benchmark: BenchmarkFixture,
+	cpython_file_match_end: str,
+	cpython_gi_lines_all: list[str],
+):
+	spec = PathSpec.from_lines(
+		'gitwildmatch',
+		cpython_gi_lines_all,
+		backend='re2',
+	)
+	benchmark(run_match, spec, cpython_file_match_end)
+
+
+@pytest.mark.benchmark(group=GROUP)
+def bench_re2_v1_middle(
 	benchmark: BenchmarkFixture,
 	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
@@ -100,10 +100,52 @@ def bench_re2_v1(
 	benchmark(run_match, spec, cpython_file_match_middle)
 
 
+@pytest.mark.benchmark(group=GROUP)
+def bench_re2_v1_none(
+	benchmark: BenchmarkFixture,
+	cpython_file_match_none: str,
+	cpython_gi_lines_all: list[str],
+):
+	spec = PathSpec.from_lines(
+		'gitwildmatch',
+		cpython_gi_lines_all,
+		backend='re2',
+	)
+	benchmark(run_match, spec, cpython_file_match_none)
+
+
+@pytest.mark.benchmark(group=GROUP)
+def bench_re2_v1_start(
+	benchmark: BenchmarkFixture,
+	cpython_file_match_start: str,
+	cpython_gi_lines_all: list[str],
+):
+	spec = PathSpec.from_lines(
+		'gitwildmatch',
+		cpython_gi_lines_all,
+		backend='re2',
+	)
+	benchmark(run_match, spec, cpython_file_match_start)
+
+
 # Simple backend.
 
 @pytest.mark.benchmark(group=GROUP)
-def bench_sm_filtered(
+def bench_sm_v1_end(
+	benchmark: BenchmarkFixture,
+	cpython_file_match_end: str,
+	cpython_gi_lines_all: list[str],
+):
+	spec = PathSpec.from_lines(
+		'gitwildmatch',
+		cpython_gi_lines_all,
+		backend='simple',
+	)
+	benchmark(run_match, spec, cpython_file_match_end)
+
+
+@pytest.mark.benchmark(group=GROUP)
+def bench_sm_v1_middle(
 	benchmark: BenchmarkFixture,
 	cpython_file_match_middle: str,
 	cpython_gi_lines_all: list[str],
@@ -112,60 +154,28 @@ def bench_sm_filtered(
 		'gitwildmatch',
 		cpython_gi_lines_all,
 		backend='simple',
-		_test_backend_factory=partial(SimplePsBackend, no_reverse=True)
 	)
 	benchmark(run_match, spec, cpython_file_match_middle)
 
 
 @pytest.mark.benchmark(group=GROUP)
-def bench_sm_filtered_reversed(
+def bench_sm_v1_none(
 	benchmark: BenchmarkFixture,
-	cpython_file_match_middle: str,
+	cpython_file_match_none: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = PathSpec.from_lines(
 		'gitwildmatch',
 		cpython_gi_lines_all,
 		backend='simple',
-		_test_backend_factory=SimplePsBackend,
 	)
-	benchmark(run_match, spec, cpython_file_match_middle)
+	benchmark(run_match, spec, cpython_file_match_none)
 
 
 @pytest.mark.benchmark(group=GROUP)
-def bench_sm_unfiltered(
+def bench_sm_v1_start(
 	benchmark: BenchmarkFixture,
-	cpython_file_match_middle: str,
-	cpython_gi_lines_all: list[str],
-):
-	spec = PathSpec.from_lines(
-		'gitwildmatch',
-		cpython_gi_lines_all,
-		backend='simple',
-		_test_backend_factory=partial(SimplePsBackend, no_filter=True, no_reverse=True)
-	)
-	benchmark(run_match, spec, cpython_file_match_middle)
-
-
-@pytest.mark.benchmark(group=GROUP)
-def bench_sm_unfiltered_reversed(
-	benchmark: BenchmarkFixture,
-	cpython_file_match_middle: str,
-	cpython_gi_lines_all: list[str],
-):
-	spec = PathSpec.from_lines(
-		'gitwildmatch',
-		cpython_gi_lines_all,
-		backend='simple',
-		_test_backend_factory=partial(SimplePsBackend, no_filter=True)
-	)
-	benchmark(run_match, spec, cpython_file_match_middle)
-
-
-@pytest.mark.benchmark(group=GROUP)
-def bench_sm_v1(
-	benchmark: BenchmarkFixture,
-	cpython_file_match_middle: str,
+	cpython_file_match_start: str,
 	cpython_gi_lines_all: list[str],
 ):
 	spec = PathSpec.from_lines(
@@ -173,7 +183,7 @@ def bench_sm_v1(
 		cpython_gi_lines_all,
 		backend='simple',
 	)
-	benchmark(run_match, spec, cpython_file_match_middle)
+	benchmark(run_match, spec, cpython_file_match_start)
 
 
 def run_match(spec: PathSpec, file: str):

@@ -14,11 +14,13 @@ from pathspec import (
 	GitIgnoreSpec)
 from pathspec._backends.simple.gitignore import (
 	SimpleGiBackend)
-from benchmarks.match_gitignore import (
+
+from benchmarks.hyperscan_gitignore_r1 import (
 	HyperscanGiR1BlockClosureBackend,
 	HyperscanGiR1BlockStateBackend,
 	HyperscanGiR1StreamClosureBackend,
-	HyperscanGiR1StreamStateBackend,
+	HyperscanGiR1StreamStateBackend)
+from benchmarks.hyperscan_gitignore_r2 import (
 	HyperscanGiR2BlockClosureBackend,
 	HyperscanGiR2BlockStateBackend,
 	HyperscanGiR2StreamClosureBackend)

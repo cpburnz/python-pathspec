@@ -29,6 +29,21 @@ def cpython_gi_lines_all(cpython_gi_file: Path) -> list[str]:
 
 
 @pytest.fixture(scope='session')
+def cpython_gi_lines_25(cpython_gi_lines_all: list[str]) -> list[str]:
+	return cpython_gi_lines_all[::6][:25]
+
+
+@pytest.fixture(scope='session')
+def cpython_gi_lines_50(cpython_gi_lines_all: list[str]) -> list[str]:
+	return cpython_gi_lines_all[::3][:50]
+
+
+@pytest.fixture(scope='session')
+def cpython_gi_lines_100(cpython_gi_lines_all: list[str]) -> list[str]:
+	return cpython_gi_lines_all[:100]
+
+
+@pytest.fixture(scope='session')
 def cpython_file_match_end() -> str:
 	"""
 	File matching pattern near the end of cpython ".gitignore".
@@ -78,6 +93,31 @@ def flit_gi_file(flit_dir: Path) -> Path:
 @pytest.fixture(scope='session')
 def flit_gi_lines_all(flit_gi_file: Path) -> list[str]:
 	return flit_gi_file.read_text().splitlines()
+
+
+@pytest.fixture(scope='session')
+def flit_gi_lines_1() -> list[str]:
+	return [
+		"/dist/",
+	]
+
+
+@pytest.fixture(scope='session')
+def flit_gi_lines_2() -> list[str]:
+	return [
+		"/dist/",
+		"*.pyc",
+	]
+
+@pytest.fixture(scope='session')
+def flit_gi_lines_5() -> list[str]:
+	return [
+		"/dist/",
+		"__pycache__/",
+		"/htmlcov/",
+		"*.pyc",
+		".python-version",
+	]
 
 
 @pytest.fixture(scope='session')

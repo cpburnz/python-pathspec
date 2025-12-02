@@ -1,6 +1,6 @@
 """
-This module defines general pathspec matchers used in benchmarking, but not
-included in the released library.
+This module defines the hyperscan backends for `.PathSpec`, revision 1, used in
+benchmarking, but not included in the released library.
 """
 from __future__ import annotations
 

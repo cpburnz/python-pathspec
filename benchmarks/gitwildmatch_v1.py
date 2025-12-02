@@ -1,54 +1,25 @@
 """
-This module implements Git's wildmatch pattern matching which itself is derived
-from Rsync's wildmatch. Git uses wildmatch for its ".gitignore" files.
+This module implements `.GitWildMatchPattern`, version 1, used in benchmarking,
+but not included in the released library.
 """
 
 import re
-import warnings
 from typing import (
 	AnyStr,
 	Optional)  # Replaced by `X | None` in 3.10.
+from typing_extensions import (
+	override)
 
-from .. import (
-	util)
-from ..pattern import (
+from pathspec.pattern import (
 	RegexPattern)
-from .._typing import (
-	override)  # Added in 3.12.
-
-_BYTES_ENCODING = 'latin1'
-"""
-The encoding to use when parsing a byte string pattern.
-"""
-
-_DIR_MARK = 'ps_d'
-"""
-The regex group name for the directory marker. This is only used by
-:class:`GitIgnoreSpec`.
-"""
-
-_DIR_MARK_CG = f'(?P<{_DIR_MARK}>/)'
-"""
-This regular expression matches the directory marker.
-"""
-
-_DIR_MARK_OPT = f'(?:{_DIR_MARK_CG}|$)'
-"""
-This regular expression matches the optional directory marker and sub-path.
-"""
+from pathspec.patterns.gitwildmatch import (
+	_BYTES_ENCODING,
+	_DIR_MARK)
 
 
-class GitWildMatchPatternError(ValueError):
+class GitWildMatchV1Pattern(RegexPattern):
 	"""
-	The :class:`GitWildMatchPatternError` indicates an invalid git wild match
-	pattern.
-	"""
-	pass
-
-
-class GitWildMatchPattern(RegexPattern):
-	"""
-	The :class:`GitWildMatchPattern` class represents a compiled Git wildmatch
+	The :class:`GitWildMatchV1Pattern` class represents a compiled Git wildmatch
 	pattern.
 	"""
 
@@ -61,16 +32,6 @@ class GitWildMatchPattern(RegexPattern):
 		cls,
 		pattern: AnyStr,
 	) -> tuple[Optional[AnyStr], Optional[bool]]:
-		"""
-		Convert the pattern into a regular expression.
-
-		*pattern* (:class:`str` or :class:`bytes`) is the pattern to convert into a
-		regular expression.
-
-		Returns the uncompiled regular expression (:class:`str`, :class:`bytes`, or
-		:data:`None`); and whether matched files should be included (:data:`True`),
-		excluded (:data:`False`), or if it is a null-operation (:data:`None`).
-		"""
 		if isinstance(pattern, str):
 			return_type = str
 		elif isinstance(pattern, bytes):
@@ -87,9 +48,6 @@ class GitWildMatchPattern(RegexPattern):
 			pattern = pattern.lstrip()
 		else:
 			pattern = pattern.strip()
-
-		regex: Optional[str]
-		include: Optional[bool]
 
 		if pattern.startswith('#'):
 			# A pattern starting with a hash ('#') serves as a comment (neither
@@ -117,7 +75,7 @@ class GitWildMatchPattern(RegexPattern):
 
 			# Allow a regex override for edge cases that cannot be handled through
 			# normalization.
-			override_regex: Optional[str] = None
+			override_regex = None
 
 			# Split pattern into segments.
 			pattern_segs = pattern.split('/')
@@ -141,7 +99,7 @@ class GitWildMatchPattern(RegexPattern):
 				# EDGE CASE: The '**/' pattern should match everything except individual
 				# files in the root directory. This case cannot be adequately handled
 				# through normalization. Use the override.
-				override_regex = _DIR_MARK_CG
+				override_regex = f'^.+(?P<{_DIR_MARK}>/).*$'
 
 			if not pattern_segs[0]:
 				# A pattern beginning with a slash ('/') will only match paths directly
@@ -150,11 +108,11 @@ class GitWildMatchPattern(RegexPattern):
 				del pattern_segs[0]
 
 			elif len(pattern_segs) == 1 or (len(pattern_segs) == 2 and not pattern_segs[1]):
-				# A single segment pattern without a beginning slash ('/') will match
-				# any descendant path. This is equivalent to "**/{pattern}". So, prepend
+				# A single pattern without a beginning slash ('/') will match any
+				# descendant path. This is equivalent to "**/{pattern}". So, prepend
 				# with double-asterisks to make pattern relative to root.
-				# - EDGE CASE: This also holds for a single segment pattern with a
-				#   trailing slash (e.g. 'dir/').
+				# - EDGE CASE: This also holds for a single pattern with a trailing
+				#   slash (e.g. dir/).
 				if pattern_segs[0] != '**':
 					pattern_segs.insert(0, '**')
 
@@ -167,7 +125,7 @@ class GitWildMatchPattern(RegexPattern):
 			if not pattern_segs:
 				# After resolving the edge cases, we end up with no pattern at all. This
 				# must be because the pattern is invalid.
-				raise GitWildMatchPatternError(f"Invalid git pattern: {original_pattern!r}")
+				raise Exception(f"Invalid git pattern: {original_pattern!r}")
 
 			if not pattern_segs[-1] and len(pattern_segs) > 1:
 				# A pattern ending with a slash ('/') will match all descendant paths if
@@ -177,89 +135,71 @@ class GitWildMatchPattern(RegexPattern):
 				pattern_segs[-1] = '**'
 
 			if override_regex is None:
-				seg_count = len(pattern_segs)
-				if seg_count == 1 and pattern_segs[0] == '**':
-					# The pattern "**" will match every path. Special case this pattern.
-					override_regex = '.'
-
-				elif (
-					seg_count == 2
-					and pattern_segs[0] == '**'
-					and pattern_segs[1] == '*'
-				):
-					# The pattern "*" will be normalized to "**/*" and will match every
-					# path. Special case this pattern for efficiency.
-					override_regex = '.'
-
-				elif (
-					seg_count == 3
-					and pattern_segs[0] == '**'
-					and pattern_segs[1] == '*'
-					and pattern_segs[2] == '**'
-				):
-					# The pattern "*/" will be normalized to "**/*/**" which will match
-					# every file not in the root directory. Special case this pattern for
-					# efficiency.
-					if is_dir_pattern:
-						override_regex = _DIR_MARK_CG
-					else:
-						override_regex = '/'
-
-			if override_regex is None:
 				# Build regular expression from pattern.
-				output = []
+				output = ['^']
 				need_slash = False
 				end = len(pattern_segs) - 1
 				for i, seg in enumerate(pattern_segs):
 					if seg == '**':
-						if i == 0:
-							# A normalized pattern beginning with double-asterisks ('**') will
-							# match any leading path segments.
-							output.append('^(?:.+/)?')
+						if i == 0 and i == end:
+							# A pattern consisting solely of double-asterisks ('**') will
+							# match every path.
+							output.append(f'[^/]+(?:/.*)?')
 
-						elif i < end:
+						elif i == 0:
+							# A normalized pattern beginning with double-asterisks
+							# ('**') will match any leading path segments.
+							output.append('(?:.+/)?')
+							need_slash = False
+
+						elif i == end:
+							# A normalized pattern ending with double-asterisks ('**') will
+							# match any trailing path segments.
+							if is_dir_pattern:
+								output.append(f'(?P<{_DIR_MARK}>/).*')
+							else:
+								output.append(f'/.*')
+
+						else:
 							# A pattern with inner double-asterisks ('**') will match multiple
 							# (or zero) inner path segments.
 							output.append('(?:/.+)?')
 							need_slash = True
 
-						else:
-							assert i == end, (i, end)
-							# A normalized pattern ending with double-asterisks ('**') will
-							# match any trailing path segments.
-							if is_dir_pattern:
-								output.append(_DIR_MARK_CG)
-							else:
-								output.append(f'/')
-
-					else:
-						# Match path segment.
-						if i == 0:
-							# Anchor to root directory.
-							output.append('^')
-
+					elif seg == '*':
+						# Match single path segment.
 						if need_slash:
 							output.append('/')
 
-						if seg == '*':
-							# Match whole path segment.
-							output.append('[^/]+')
-
-						else:
-							# Match segment glob pattern.
-							try:
-								output.append(cls._translate_segment_glob(seg))
-							except ValueError as e:
-								raise GitWildMatchPatternError(f"Invalid git pattern: {original_pattern!r}") from e
+						output.append('[^/]+')
 
 						if i == end:
 							# A pattern ending without a slash ('/') will match a file or a
 							# directory (with paths underneath it). E.g., "foo" matches "foo",
 							# "foo/bar", "foo/bar/baz", etc.
-							output.append(_DIR_MARK_OPT)
+							output.append(f'(?:(?P<{_DIR_MARK}>/).*)?')
 
 						need_slash = True
 
+					else:
+						# Match segment glob pattern.
+						if need_slash:
+							output.append('/')
+
+						try:
+							output.append(cls._translate_segment_glob(seg))
+						except ValueError as e:
+							raise Exception(f"Invalid git pattern: {original_pattern!r}") from e
+
+						if i == end:
+							# A pattern ending without a slash ('/') will match a file or a
+							# directory (with paths underneath it). E.g., "foo" matches "foo",
+							# "foo/bar", "foo/bar/baz", etc.
+							output.append(f'(?:(?P<{_DIR_MARK}>/).*)?')
+
+						need_slash = True
+
+				output.append('$')
 				regex = ''.join(output)
 
 			else:
@@ -279,15 +219,6 @@ class GitWildMatchPattern(RegexPattern):
 
 	@staticmethod
 	def _translate_segment_glob(pattern: str) -> str:
-		"""
-		Translates the glob pattern to a regular expression. This is used in the
-		constructor to translate a path segment glob pattern to its corresponding
-		regular expression.
-
-		*pattern* (:class:`str`) is the glob pattern.
-
-		Returns the regular expression (:class:`str`).
-		"""
 		# NOTE: This is derived from `fnmatch.translate()` and is similar to the
 		# POSIX function `fnmatch()` with the `FNM_PATHNAME` flag set.
 
@@ -390,14 +321,6 @@ class GitWildMatchPattern(RegexPattern):
 
 	@staticmethod
 	def escape(s: AnyStr) -> AnyStr:
-		"""
-		Escape special characters in the given string.
-
-		*s* (:class:`str` or :class:`bytes`) a filename or a string that you want to
-		escape, usually before adding it to a ".gitignore".
-
-		Returns the escaped string (:class:`str` or :class:`bytes`).
-		"""
 		if isinstance(s, str):
 			return_type = str
 			string = s
@@ -416,42 +339,3 @@ class GitWildMatchPattern(RegexPattern):
 			return out_string.encode(_BYTES_ENCODING)
 		else:
 			return out_string
-
-util.register_pattern('gitwildmatch', GitWildMatchPattern)
-
-
-class GitIgnorePattern(GitWildMatchPattern):
-	"""
-	The :class:`GitIgnorePattern` class is deprecated by :class:`GitWildMatchPattern`.
-	This class only exists to maintain compatibility with v0.4.
-	"""
-
-	def __init__(self, *args, **kw) -> None:
-		"""
-		Warn about deprecation.
-		"""
-		self._deprecated()
-		super(GitIgnorePattern, self).__init__(*args, **kw)
-
-	@staticmethod
-	def _deprecated() -> None:
-		"""
-		Warn about deprecation.
-		"""
-		warnings.warn((
-			"GitIgnorePattern ('gitignore') is deprecated. Use GitWildMatchPattern "
-			"('gitwildmatch') instead."
-		), DeprecationWarning, stacklevel=3)
-
-	@override
-	@classmethod
-	def pattern_to_regex(cls, *args, **kw):
-		"""
-		Warn about deprecation.
-		"""
-		cls._deprecated()
-		return super(GitIgnorePattern, cls).pattern_to_regex(*args, **kw)
-
-# Register `GitIgnorePattern` as "gitignore" for backward compatibility with
-# v0.4.
-util.register_pattern('gitignore', GitIgnorePattern)

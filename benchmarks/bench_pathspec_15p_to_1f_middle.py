@@ -14,7 +14,8 @@ from pathspec import (
 	PathSpec)
 from pathspec._backends.simple.pathspec import (
 	SimplePsBackend)
-from benchmarks.match_pathspec import (
+
+from benchmarks.hyperscan_pathspec_r1 import (
 	HyperscanPsR1BlockClosureBackend,
 	HyperscanPsR1BlockStateBackend,
 	HyperscanPsR1StreamClosureBackend)
