@@ -30,7 +30,7 @@ from .pathspec import (
 	PathSpec)
 from .pattern import (
 	Pattern)
-from .patterns.gitwildmatch import (
+from .patterns.gitignore.spec import (
 	GitWildMatchPattern)
 from ._typing import (
 	override)  # Added in 3.12.

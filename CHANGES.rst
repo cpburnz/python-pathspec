@@ -16,6 +16,9 @@ API changes:
 
 - Protected method `pathspec.pathspec.PathSpec._match_file()` (with a leading underscore) has been removed and replaced by backends. This does not affect normal usage of `PathSpec()` and `GitIgnoreSpec()`. Only custom subclasses will be affected. If this breaks your usage, `open an issue <https://github.com/cpburnz/python-pathspec/issues>`_.
 
+- Removed `pathspec.patterns.gitwildmatch.GitIgnorePattern` and the "gitignore" registered pattern which have been deprecated since v0.4 (2016-07-15).
+
+
 New features:
 
 - Added optional `hyperscan`_ backend. It will automatically be used when installed. This dependency can be installed with ``pip install 'pathspec[hyperscan]'``.
