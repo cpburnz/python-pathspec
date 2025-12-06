@@ -18,9 +18,9 @@ try:
 except ModuleNotFoundError:
 	hyperscan = None
 
-from ...pattern import (
+from pathspec.pattern import (
 	RegexPattern)
-from ..._typing import (
+from pathspec._typing import (
 	override)  # Added in 3.12.
 
 from ..base import (

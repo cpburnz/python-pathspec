@@ -10,11 +10,11 @@ from collections.abc import (
 from typing import (
 	Optional)  # Replaced by `X | None` in 3.10.
 
-from ...pattern import (
+from pathspec.pattern import (
 	Pattern)
-from ..._typing import (
+from pathspec._typing import (
 	override)  # Added in 3.12.
-from ...util import (
+from pathspec.util import (
 	check_match_file)
 
 from ..base import (

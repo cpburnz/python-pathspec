@@ -10,11 +10,11 @@ from collections.abc import (
 from typing import (
 	Optional)  # Replaced by `X | None` in 3.10.
 
-from ...pattern import (
+from pathspec.pattern import (
 	RegexPattern)
 from pathspec.patterns.gitignore.spec import (
 	_DIR_MARK)
-from ..._typing import (
+from pathspec._typing import (
 	override)  # Added in 3.12.
 
 from .pathspec import (

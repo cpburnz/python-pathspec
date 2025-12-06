@@ -24,7 +24,9 @@ from .base import (
 class GitIgnoreDocPattern(_GitIgnoreBasePattern):
 	"""
 	The :class:`GitIgnoreDocPattern` class represents a compiled gitignore
-	pattern exactly as documented.
+	pattern exactly as documented. This is registered as "gitignore". The
+	deprecated registered name "gitwildmatch" is still supported, and will issue a
+	warning in a future version.
 	"""
 
 	# Keep the dict-less class hierarchy.
@@ -243,4 +245,8 @@ class GitIgnoreDocPattern(_GitIgnoreBasePattern):
 		return (out_regex, include)
 
 
-util.register_pattern('gitignore-doc', GitIgnoreDocPattern)
+util.register_pattern('gitignore', GitIgnoreDocPattern)
+
+# DEPRECATED: Register `GitIgnoreDocPattern` as "gitwildmatch" for backward
+# compatibility with v0.12. Eventually, a warning will be issued on use.
+util.register_pattern('gitwildmatch', GitIgnoreDocPattern)

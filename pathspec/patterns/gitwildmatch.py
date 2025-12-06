@@ -18,6 +18,7 @@ from .gitignore.base import (
 	GitIgnorePatternError as GitWildMatchPatternError)
 
 
+# TODO: Review dvc's usage of this class.
 class GitWildMatchPattern(GitIgnoreSpecPattern):
 	"""
 	The :class:`GitWildMatchPattern` class is deprecated and superseded by
@@ -50,8 +51,3 @@ class GitWildMatchPattern(GitIgnoreSpecPattern):
 		"""
 		cls._deprecated()
 		return super(GitWildMatchPattern, cls).pattern_to_regex(*args, **kw)
-
-
-# Register `GitWildMatchPattern` as "gitwildmatch" for backward compatibility
-# with v0.12.
-util.register_pattern('gitwildmatch', GitWildMatchPattern)

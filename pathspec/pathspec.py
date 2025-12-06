@@ -2,6 +2,7 @@
 This module provides an object-oriented interface for pattern matching of files.
 """
 
+import warnings
 from collections.abc import (
 	Callable,
 	Collection,
@@ -17,15 +18,15 @@ from typing import (
 	Union,  # Replaced by `X | Y` in 3.10.
 	cast)
 
-from . import util
-from ._backends.base import (
+from pathspec import util
+from pathspec._backends.base import (
 	Backend,
 	BackendNamesHint)
-from ._backends.agg import (
+from pathspec._backends.agg import (
 	make_pathspec_backend)
-from .pattern import (
+from pathspec.pattern import (
 	Pattern)
-from .util import (
+from pathspec.util import (
 	CheckResult,
 	StrPath,
 	TStrPath,
@@ -62,7 +63,7 @@ class PathSpec(object):
 
 		*backend* (:class:`str` or :data:`None`) is the pattern (or regex) matching
 		backend to use. Default is :data:`None` for "best" to use the best available
-		backend. Priority of backends is: "hyperscan", "simple". The "simple"
+		backend. Priority of backends is: "re2", "hyperscan", "simple". The "simple"
 		backend is always available.
 		"""
 		if not isinstance(patterns, Sequence):
@@ -404,6 +405,18 @@ class PathSpec(object):
 		entries = util.iter_tree_entries(root, on_error=on_error, follow_links=follow_links)
 		yield from self.match_entries(entries, negate=negate)
 
+	# Alias `match_tree_files()` as `match_tree()` for backward compatibility
+	# before v0.3.2. The warning was only added in v0.13.
+	def match_tree(self, *args, **kw) -> Iterator[str]:
+		"""
+		DEPRECATED: Use :meth:`PathSpec.match_tree_files` instead.
+		"""
+		warnings.warn((
+			f"{self.__class__.__qualname__}.match_tree() is deprecated. Use "
+			f"{self.__class__.__qualname__}.match_tree_files() instead."
+		), DeprecationWarning, stacklevel=2)
+		return self.match_tree_files(*args, **kw)
+
 	def match_tree_files(
 		self,
 		root: StrPath,
@@ -437,7 +450,3 @@ class PathSpec(object):
 		"""
 		files = util.iter_tree_files(root, on_error=on_error, follow_links=follow_links)
 		yield from self.match_files(files, negate=negate)
-
-	# Alias `match_tree_files()` as `match_tree()` for backward compatibility
-	# before v0.3.2.
-	match_tree = match_tree_files

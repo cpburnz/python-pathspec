@@ -19,14 +19,14 @@ try:
 except ModuleNotFoundError:
 	hyperscan = None
 
-from ...pattern import (
+from pathspec.pattern import (
 	RegexPattern)
 from pathspec.patterns.gitignore.spec import (
-	GitWildMatchPattern,
+	GitIgnoreSpecPattern,
 	_BYTES_ENCODING,
 	_DIR_MARK_CG,
 	_DIR_MARK_OPT)
-from ..._typing import (
+from pathspec._typing import (
 	override)  # Added in 3.12.
 
 from ._base import (
@@ -111,8 +111,8 @@ class HyperscanGiBackend(HyperscanPsBackend):
 			regex = pattern.regex.pattern
 
 			use_regexes: list[tuple[Union[str, bytes], bool]] = []
-			if isinstance(pattern, GitWildMatchPattern):
-				# GitWildMatch uses capture groups for its directory marker but
+			if isinstance(pattern, GitIgnoreSpecPattern):
+				# GitIgnoreSpecPattern uses capture groups for its directory marker but
 				# Hyperscan does not support capture groups. Handle this scenario.
 				regex_str: str
 				if isinstance(regex, str):

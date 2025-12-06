@@ -11,7 +11,7 @@ from collections.abc import (
 from typing import (
 	cast)
 
-from ..pattern import (
+from pathspec.pattern import (
 	Pattern,
 	RegexPattern)
 
@@ -40,10 +40,10 @@ _BEST_BACKEND: BackendNamesHint
 The best available backend.
 """
 
-if hyperscan_error is None:
-	_BEST_BACKEND = 'hyperscan'
-elif re2_error is None:
+if re2_error is None:
 	_BEST_BACKEND = 're2'
+elif hyperscan_error is None:
+	_BEST_BACKEND = 'hyperscan'
 else:
 	_BEST_BACKEND = 'simple'
 
@@ -66,10 +66,10 @@ def make_gitignore_backend(
 	if name == 'best':
 		name = _BEST_BACKEND
 
-	if name == 're2':
-		return Re2GiBackend(cast(Sequence[RegexPattern], patterns))
-	elif name == 'hyperscan':
+	if name == 'hyperscan':
 		return HyperscanGiBackend(cast(Sequence[RegexPattern], patterns))
+	elif name == 're2':
+		return Re2GiBackend(cast(Sequence[RegexPattern], patterns))
 	elif name == 'simple':
 		return SimpleGiBackend(cast(Sequence[RegexPattern], patterns))
 	else:
@@ -94,10 +94,10 @@ def make_pathspec_backend(
 	if name == 'best':
 		name = _BEST_BACKEND
 
-	if name == 're2':
-		return Re2PsBackend(cast(Sequence[RegexPattern], patterns))
-	elif name == 'hyperscan':
+	if name == 'hyperscan':
 		return HyperscanPsBackend(cast(Sequence[RegexPattern], patterns))
+	elif name == 're2':
+		return Re2PsBackend(cast(Sequence[RegexPattern], patterns))
 	elif name == 'simple':
 		return SimplePsBackend(patterns)
 	else:

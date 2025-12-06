@@ -1,8 +1,8 @@
 """
 This module implements Git's `gitignore`_ patterns, and handles edge-cases where
 Git's behavior differs from what's documented. Git allows including files from
-excluded directories which appears to contradict the documentation. This is used by
-:class:`pathspec.gitignore.GitIgnoreSpec` to fully replicate Git's handling.
+excluded directories which appears to contradict the documentation. This is used
+by :class:`pathspec.gitignore.GitIgnoreSpec` to fully replicate Git's handling.
 
 .. _`gitignore`: https://git-scm.com/docs/gitignore
 """
@@ -11,8 +11,6 @@ from typing import (
 	AnyStr,
 	Optional)  # Replaced by `X | None` in 3.10.
 
-from pathspec import (
-	util)
 from pathspec._typing import (
 	override)  # Added in 3.12.
 
@@ -272,6 +270,3 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			out_regex = regex
 
 		return (out_regex, include)
-
-
-util.register_pattern('gitignore-spec', GitIgnoreSpecPattern)

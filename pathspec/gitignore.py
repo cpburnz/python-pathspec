@@ -1,6 +1,9 @@
 """
 This module provides :class:`.GitIgnoreSpec` which replicates *.gitignore*
-behavior.
+behavior, and handles edge-cases where Git's behavior differs from what's
+documented. Git allows including files from excluded directories which appears
+to contradict the documentation. This is uses :class:`.GitIgnoreSpecPattern`
+to fully replicate Git's handling.
 """
 from __future__ import annotations
 
@@ -16,26 +19,24 @@ from typing import (
 	cast,
 	overload)
 
-try:
-	import hyperscan
-except ModuleNotFoundError:
-	hyperscan = None
-
-from ._backends.base import (
+from pathspec._backends.base import (
 	Backend,
 	BackendNamesHint)
-from ._backends.agg import (
+from pathspec._backends.agg import (
 	make_gitignore_backend)
-from .pathspec import (
+from pathspec.pathspec import (
 	PathSpec)
-from .pattern import (
+from pathspec.pattern import (
 	Pattern)
-from .patterns.gitignore.spec import (
-	GitWildMatchPattern)
-from ._typing import (
+from pathspec.patterns.gitignore.doc import (
+	GitIgnoreDocPattern)
+from pathspec.patterns.gitignore.spec import (
+	GitIgnoreSpecPattern)
+from pathspec._typing import (
 	override)  # Added in 3.12.
-from .util import (
-	_is_iterable)
+from pathspec.util import (
+	_is_iterable,
+	lookup_pattern)
 
 Self = TypeVar("Self", bound="GitIgnoreSpec")
 """
@@ -46,8 +47,9 @@ recommendation.
 
 class GitIgnoreSpec(PathSpec):
 	"""
-	The :class:`GitIgnoreSpec` class extends :class:`pathspec.pathspec.PathSpec`
-	to replicate *.gitignore* behavior.
+	The :class:`GitIgnoreSpec` class extends :class:`~pathspec.pathspec.PathSpec`
+	to replicate *gitignore* behavior. This is uses :class:`.GitIgnoreSpecPattern`
+	to fully replicate Git's handling.
 	"""
 
 	def __eq__(self, other: object) -> bool:
@@ -68,7 +70,7 @@ class GitIgnoreSpec(PathSpec):
 	@classmethod
 	def from_lines(
 		cls: type[Self],
-		pattern_factory: Union[str, Callable[[AnyStr], Pattern]],
+		pattern_factory: Union[str, Callable[[AnyStr], Pattern], None],
 		lines: Iterable[AnyStr],
 		*,
 		backend: Union[BackendNamesHint, str, None] = None,
@@ -102,15 +104,15 @@ class GitIgnoreSpec(PathSpec):
 		Compiles the pattern lines.
 
 		*lines* (:class:`~collections.abc.Iterable`) yields each uncompiled pattern
-		(:class:`str`). This simply has to yield each line so it can be a
+		(:class:`str`). This simply has to yield each line, so it can be a
 		:class:`io.TextIOBase` (e.g., from :func:`open` or :class:`io.StringIO`) or
 		the result from :meth:`str.splitlines`.
 
-		*pattern_factory* can be :data:`None`, the name of a registered pattern
-		factory (:class:`str`), or a :class:`~collections.abc.Callable` used to
-		compile patterns. The callable must accept an uncompiled pattern
-		(:class:`str`) and return the compiled pattern (:class:`pathspec.pattern.Pattern`).
-		Default is :data:`None` for :class:`.GitWildMatchPattern`.
+		*pattern_factory* does not need to be set for :class:`GitIgnoreSpec`. It can
+		be either the name of a registered pattern factory (:class:`str`), or a
+		:class:`~collections.abc.Callable` used to compile patterns. It must accept
+		an uncompiled pattern (:class:`str`) and return the compiled pattern
+		(:class:`.Pattern`). Default is :class:`None` for :class:`.GitIgnoreSpecPattern`.
 
 		*backend* (:class:`str` or :data:`None`) is the pattern (or regex) matching
 		backend to use. Default is :data:`None` for "best" to use the best available
@@ -119,12 +121,25 @@ class GitIgnoreSpec(PathSpec):
 
 		Returns the :class:`GitIgnoreSpec` instance.
 		"""
-		if pattern_factory is None:
-			pattern_factory = GitWildMatchPattern
-
-		elif (isinstance(lines, (str, bytes)) or callable(lines)) and _is_iterable(pattern_factory):
+		if (isinstance(lines, (str, bytes)) or callable(lines)) and _is_iterable(pattern_factory):
 			# Support reversed order of arguments from PathSpec.
 			pattern_factory, lines = lines, pattern_factory
+
+		if pattern_factory is None:
+			pattern_factory = GitIgnoreSpecPattern
+		elif pattern_factory in ('gitignore', 'gitwildmatch'):
+			# Force use of GitIgnoreSpecPattern over GitIgnoreDocPattern to handle
+			# edge-cases. This makes usage easier.
+			pattern_factory = GitIgnoreSpecPattern
+
+		if isinstance(pattern_factory, str):
+			pattern_factory = lookup_pattern(pattern_factory)
+
+		if isinstance(pattern_factory, GitIgnoreDocPattern):
+			raise TypeError((
+				f"{pattern_factory=!r} cannot be {GitIgnoreDocPattern} because it will "
+				f"give unexpected results."
+			))  # TypeError
 
 		self = super().from_lines(pattern_factory, lines, backend=backend, _test_backend_factory=_test_backend_factory)
 		return cast(Self, self)

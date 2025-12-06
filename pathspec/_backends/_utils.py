@@ -10,7 +10,7 @@ from collections.abc import (
 from typing import (
 	TypeVar)
 
-from ..pattern import (
+from pathspec.pattern import (
 	Pattern)
 
 TPattern = TypeVar("TPattern", bound=Pattern)
