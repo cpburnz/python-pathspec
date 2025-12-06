@@ -12,7 +12,7 @@ from typing import (
 
 from ...pattern import (
 	RegexPattern)
-from ...patterns.gitwildmatch import (
+from pathspec.patterns.gitignore.spec import (
 	_DIR_MARK)
 from ..._typing import (
 	override)  # Added in 3.12.

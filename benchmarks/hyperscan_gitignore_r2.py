@@ -29,7 +29,7 @@ from pathspec._backends.hyperscan.pathspec import (
 	HyperscanPsBackend)
 from pathspec.pattern import (
 	RegexPattern)
-from pathspec.patterns.gitwildmatch import (
+from pathspec.patterns.gitignore.spec import (
 	GitWildMatchPattern,
 	_BYTES_ENCODING)
 

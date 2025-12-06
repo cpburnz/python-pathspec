@@ -21,7 +21,7 @@ except ModuleNotFoundError:
 
 from ...pattern import (
 	RegexPattern)
-from ...patterns.gitwildmatch import (
+from pathspec.patterns.gitignore.spec import (
 	GitWildMatchPattern,
 	_BYTES_ENCODING,
 	_DIR_MARK_CG,

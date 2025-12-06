@@ -53,10 +53,6 @@ from ._meta import (
 # Load pattern implementations.
 from . import patterns
 
-# DEPRECATED: Expose the `GitIgnorePattern` class in the root module for
-# backward compatibility with v0.4.
-from .patterns.gitwildmatch import GitIgnorePattern
-
 # Declare private imports as part of the public interface. Deprecated
 # imports are deliberately excluded.
 __all__ = [

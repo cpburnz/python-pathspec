@@ -12,7 +12,7 @@ from typing_extensions import (
 
 from pathspec.pattern import (
 	RegexPattern)
-from pathspec.patterns.gitwildmatch import (
+from pathspec.patterns.gitignore.spec import (
 	_BYTES_ENCODING,
 	_DIR_MARK)
 

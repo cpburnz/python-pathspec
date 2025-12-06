@@ -64,46 +64,48 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		excluded (:data:`False`), or if it is a null-operation (:data:`None`).
 		"""
 		if isinstance(pattern, str):
+			pattern_str = pattern
 			return_type = str
 		elif isinstance(pattern, bytes):
+			pattern_str = pattern.decode(_BYTES_ENCODING)
 			return_type = bytes
-			pattern = pattern.decode(_BYTES_ENCODING)
 		else:
-			raise TypeError(f"pattern:{pattern!r} is not a unicode or byte string.")
+			raise TypeError(f"{pattern=!r} is not a unicode or byte string.")
 
-		original_pattern = pattern
+		original_pattern = pattern_str
+		del pattern
 
-		if pattern.endswith('\\ '):
+		if pattern_str.endswith('\\ '):
 			# EDGE CASE: Spaces can be escaped with backslash. If a pattern that ends
 			# with backslash followed by a space, only strip from left.
-			pattern = pattern.lstrip()
+			pattern_str = pattern_str.lstrip()
 		else:
-			pattern = pattern.strip()
+			pattern_str = pattern_str.strip()
 
 		regex: Optional[str]
 		include: Optional[bool]
 
-		if pattern.startswith('#'):
+		if pattern_str.startswith('#'):
 			# A pattern starting with a hash ('#') serves as a comment (neither
-			# includes nor excludes files). Escape the hash with a back-slash to match
+			# includes nor excludes files). Escape the hash with a backslash to match
 			# a literal hash (i.e., '\#').
 			regex = None
 			include = None
 
-		elif pattern == '/':
+		elif pattern_str == '/':
 			# EDGE CASE: According to `git check-ignore` (v2.4.1), a single '/' does
 			# not match any file.
 			regex = None
 			include = None
 
-		elif pattern:
-			if pattern.startswith('!'):
+		elif pattern_str:
+			if pattern_str.startswith('!'):
 				# A pattern starting with an exclamation mark ('!') negates the pattern
 				# (exclude instead of include). Escape the exclamation mark with a
 				# back-slash to match a literal exclamation mark (i.e., '\!').
 				include = False
 				# Remove leading exclamation mark.
-				pattern = pattern[1:]
+				pattern_str = pattern_str[1:]
 			else:
 				include = True
 
@@ -112,7 +114,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			override_regex: Optional[str] = None
 
 			# Split pattern into segments.
-			pattern_segs = pattern.split('/')
+			pattern_segs = pattern_str.split('/')
 
 			# Check whether the pattern is specifically a directory pattern before
 			# normalization.
@@ -136,24 +138,22 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 				override_regex = _DIR_MARK_CG
 
 			if not pattern_segs[0]:
-				# A pattern beginning with a slash ('/') will only match paths directly
-				# on the root directory instead of any descendant paths. So, remove
-				# empty first segment to make pattern relative to root.
+				# A pattern beginning with a slash ('/') should match relative to the
+				# root directory. Remove the empty first segment to make the pattern
+				# relative to root.
 				del pattern_segs[0]
 
 			elif len(pattern_segs) == 1 or (len(pattern_segs) == 2 and not pattern_segs[1]):
-				# A single segment pattern without a beginning slash ('/') will match
-				# any descendant path. This is equivalent to "**/{pattern}". So, prepend
-				# with double-asterisks to make pattern relative to root.
-				# - EDGE CASE: This also holds for a single segment pattern with a
-				#   trailing slash (e.g. 'dir/').
+				# A single segment pattern with or without a trailing slash ('/') will
+				# match any descendant path. This is equivalent to "**/{pattern}".
+				# Prepend double-asterisk segment to make pattern relative to root.
 				if pattern_segs[0] != '**':
 					pattern_segs.insert(0, '**')
 
 			else:
-				# EDGE CASE: A pattern without a beginning slash ('/') but contains at
-				# least one prepended directory (e.g. "dir/{pattern}") should not match
-				# "**/dir/{pattern}", according to `git check-ignore` (v2.4.1).
+				# A pattern without a beginning slash ('/') but contains at least one
+				# prepended directory (e.g., "dir/{pattern}") should match relative to
+				# the root directory. No segment modification is needed.
 				pass
 
 			if not pattern_segs:
@@ -161,10 +161,10 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 				# must be because the pattern is invalid.
 				raise GitIgnorePatternError(f"Invalid git pattern: {original_pattern!r}")
 
-			if not pattern_segs[-1] and len(pattern_segs) > 1:
+			if not pattern_segs[-1]:
 				# A pattern ending with a slash ('/') will match all descendant paths if
 				# it is a directory but not if it is a regular file. This is equivalent
-				# to "{pattern}/**". So, set last segment to a double-asterisk to
+				# to "{pattern}/**". Set empty last segment to a double-asterisk to
 				# include all descendants.
 				pattern_segs[-1] = '**'
 
@@ -222,7 +222,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 							if is_dir_pattern:
 								output.append(_DIR_MARK_CG)
 							else:
-								output.append(f'/')
+								output.append('/')
 
 					else:
 						# Match path segment.
@@ -264,10 +264,14 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			regex = None
 			include = None
 
+		# Encode regex if needed.
+		out_regex: AnyStr
 		if regex is not None and return_type is bytes:
-			regex = regex.encode(_BYTES_ENCODING)
+			out_regex = regex.encode(_BYTES_ENCODING)
+		else:
+			out_regex = regex
 
-		return (regex, include)
+		return (out_regex, include)
 
 
 util.register_pattern('gitignore-spec', GitIgnoreSpecPattern)

@@ -37,7 +37,7 @@ from pathspec._backends.simple.pathspec import (
 	SimplePsBackend)
 from pathspec.pattern import (
 	Pattern)
-from pathspec.patterns.gitwildmatch import (
+from pathspec.patterns.gitignore.spec import (
 	GitWildMatchPatternError)
 from pathspec.util import (
 	iter_tree_entries)

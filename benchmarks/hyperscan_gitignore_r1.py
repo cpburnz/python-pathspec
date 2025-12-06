@@ -19,7 +19,7 @@ except ModuleNotFoundError:
 
 from pathspec.pattern import (
 	RegexPattern)
-from pathspec.patterns.gitwildmatch import (
+from pathspec.patterns.gitignore.spec import (
 	_DIR_MARK)
 
 from benchmarks.hyperscan_pathspec_r1 import (

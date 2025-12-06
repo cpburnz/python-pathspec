@@ -19,7 +19,7 @@ from typing import (
 	ClassVar,
 	Optional)  # Replaced by `X | None` in 3.10.
 
-from pathspec.patterns.gitwildmatch import (
+from pathspec.patterns.gitignore.spec import (
 	GitWildMatchPattern)
 from pathspec.util import (
 	RecursionError,

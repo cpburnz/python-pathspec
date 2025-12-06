@@ -6,7 +6,7 @@ import re
 import unittest
 
 import pathspec
-from pathspec.patterns.gitwildmatch import (
+from pathspec.patterns.gitignore.spec import (
 	GitWildMatchPattern,
 	GitWildMatchPatternError,
 	_BYTES_ENCODING,
