@@ -47,8 +47,7 @@ from ._meta import (
 	__copyright__,
 	__credits__,
 	__license__,
-	__version__,
-)
+	__version__)
 
 # Load pattern implementations.
 from . import patterns

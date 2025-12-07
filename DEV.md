@@ -5,12 +5,9 @@ Development Notes
 TODO
 ----
 
-- Document benchmark results:
-  - re2 with 150 patterns is 2-3x faster than hyperscan, and 20-30x faster than default.
-  - hyperscan with 15 patterns is 35-55% faster than re2, and 1.8-3.8x faster than default.
-- Deprecate pattern factory for GitIgnoreSpec
-- Deprecate "gitwildmatch", replaced by "gitignore".
-- Change: "/" pattern difference.
+- Tests.
+- Benchmarks.
+- Later: Improve docs.
 
 
 Python Versions

@@ -25,22 +25,37 @@ def cpython_gi_file(cpython_dir: Path) -> Path:
 
 @pytest.fixture(scope='session')
 def cpython_gi_lines_all(cpython_gi_file: Path) -> list[str]:
-	return cpython_gi_file.read_text().splitlines()
+	return [
+		__line for __line in cpython_gi_file.read_text().splitlines()
+		if __line and not __line.startswith('#')
+	]
 
 
 @pytest.fixture(scope='session')
 def cpython_gi_lines_25(cpython_gi_lines_all: list[str]) -> list[str]:
-	return cpython_gi_lines_all[::6][:25]
+	return (
+		cpython_gi_lines_all[:10]
+		+ cpython_gi_lines_all[82:87]
+		+ cpython_gi_lines_all[-10:]
+	)
 
 
 @pytest.fixture(scope='session')
 def cpython_gi_lines_50(cpython_gi_lines_all: list[str]) -> list[str]:
-	return cpython_gi_lines_all[::3][:50]
+	return (
+		cpython_gi_lines_all[:20]
+		+ cpython_gi_lines_all[80:90]
+		+ cpython_gi_lines_all[-20:]
+	)
 
 
 @pytest.fixture(scope='session')
 def cpython_gi_lines_100(cpython_gi_lines_all: list[str]) -> list[str]:
-	return cpython_gi_lines_all[:100]
+	return (
+		cpython_gi_lines_all[:40]
+		+ cpython_gi_lines_all[80:100]
+		+ cpython_gi_lines_all[-40:]
+	)
 
 
 @pytest.fixture(scope='session')

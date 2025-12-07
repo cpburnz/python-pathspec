@@ -21,7 +21,7 @@ def bench_hs_v1_end(
 	flit_gi_lines_5: list[str],
 ):
 	spec = PathSpec.from_lines(
-		'gitwildmatch',
+		'gitignore',
 		flit_gi_lines_5,
 		backend='hyperscan',
 	)
@@ -35,7 +35,7 @@ def bench_hs_v1_none(
 	flit_gi_lines_5: list[str],
 ):
 	spec = PathSpec.from_lines(
-		'gitwildmatch',
+		'gitignore',
 		flit_gi_lines_5,
 		backend='hyperscan',
 	)
@@ -49,7 +49,7 @@ def bench_hs_v1_start(
 	flit_gi_lines_5: list[str],
 ):
 	spec = PathSpec.from_lines(
-		'gitwildmatch',
+		'gitignore',
 		flit_gi_lines_5,
 		backend='hyperscan',
 	)
@@ -65,7 +65,7 @@ def bench_re2_v1_end(
 	flit_gi_lines_5: list[str],
 ):
 	spec = PathSpec.from_lines(
-		'gitwildmatch',
+		'gitignore',
 		flit_gi_lines_5,
 		backend='re2',
 	)
@@ -79,7 +79,7 @@ def bench_re2_v1_none(
 	flit_gi_lines_5: list[str],
 ):
 	spec = PathSpec.from_lines(
-		'gitwildmatch',
+		'gitignore',
 		flit_gi_lines_5,
 		backend='re2',
 	)
@@ -93,7 +93,7 @@ def bench_re2_v1_start(
 	flit_gi_lines_5: list[str],
 ):
 	spec = PathSpec.from_lines(
-		'gitwildmatch',
+		'gitignore',
 		flit_gi_lines_5,
 		backend='re2',
 	)
@@ -109,7 +109,7 @@ def bench_sm_v1_end(
 	flit_gi_lines_5: list[str],
 ):
 	spec = PathSpec.from_lines(
-		'gitwildmatch',
+		'gitignore',
 		flit_gi_lines_5,
 		backend='simple',
 	)
@@ -123,7 +123,7 @@ def bench_sm_v1_none(
 	flit_gi_lines_5: list[str],
 ):
 	spec = PathSpec.from_lines(
-		'gitwildmatch',
+		'gitignore',
 		flit_gi_lines_5,
 		backend='simple',
 	)
@@ -137,7 +137,7 @@ def bench_sm_v1_start(
 	flit_gi_lines_5: list[str],
 ):
 	spec = PathSpec.from_lines(
-		'gitwildmatch',
+		'gitignore',
 		flit_gi_lines_5,
 		backend='simple',
 	)

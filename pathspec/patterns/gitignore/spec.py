@@ -1,8 +1,9 @@
 """
-This module implements Git's `gitignore`_ patterns, and handles edge-cases where
-Git's behavior differs from what's documented. Git allows including files from
-excluded directories which appears to contradict the documentation. This is used
-by :class:`pathspec.gitignore.GitIgnoreSpec` to fully replicate Git's handling.
+This module provides :class:`GitIgnoreSpecPattern` which implements Git's
+`gitignore`_ patterns, and handles edge-cases where Git's behavior differs from
+what's documented. Git allows including files from excluded directories which
+appears to contradict the documentation. This is used by :class:`pathspec.gitignore.GitIgnoreSpec`
+to fully replicate Git's handling.
 
 .. _`gitignore`: https://git-scm.com/docs/gitignore
 """
@@ -11,6 +12,7 @@ from typing import (
 	AnyStr,
 	Optional)  # Replaced by `X | None` in 3.10.
 
+from pathspec import util
 from pathspec._typing import (
 	override)  # Added in 3.12.
 
@@ -40,6 +42,10 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 	"""
 	The :class:`GitIgnoreSpecPattern` class represents a compiled gitignore
 	pattern with special handling for edge-cases to replicate Git's behavior.
+
+	This is registered under the deprecated name "gitwildmatch" for backward
+	compatibility with v0.12. The registered name will be removed in a future
+	version.
 	"""
 
 	# Keep the dict-less class hierarchy.
@@ -270,3 +276,11 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			out_regex = regex
 
 		return (out_regex, include)
+
+
+# DEPRECATED: Register GitIgnoreSpecPattern as "gitwildmatch" for backward
+# compatibility with v0.12.
+# - TODO: In a future version (probably v0.14), register GitWildMatchPattern
+#   instead so that a deprecation warning will be triggered when using
+#   "gitwildmatch".
+util.register_pattern('gitwildmatch', GitIgnoreSpecPattern)

@@ -1,7 +1,7 @@
 """
-This module implements Git's `gitignore`_ patterns exactly as documented. This
-differs from how Git actually behaves when including files in excluded
-directories.
+This module provides :class:`GitIgnoreBasicPattern` which implements Git's
+`gitignore`_ patterns as documented. This differs from how Git actually behaves
+when including files in excluded directories.
 
 .. _`gitignore`: https://git-scm.com/docs/gitignore
 """
@@ -21,12 +21,10 @@ from .base import (
 	_GitIgnoreBasePattern)
 
 
-class GitIgnoreDocPattern(_GitIgnoreBasePattern):
+class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 	"""
-	The :class:`GitIgnoreDocPattern` class represents a compiled gitignore
-	pattern exactly as documented. This is registered as "gitignore". The
-	deprecated registered name "gitwildmatch" is still supported, and will issue a
-	warning in a future version.
+	The :class:`GitIgnoreBasicPattern` class represents a compiled gitignore
+	pattern as documented. This is registered as "gitignore".
 	"""
 
 	# Keep the dict-less class hierarchy.
@@ -245,8 +243,5 @@ class GitIgnoreDocPattern(_GitIgnoreBasePattern):
 		return (out_regex, include)
 
 
-util.register_pattern('gitignore', GitIgnoreDocPattern)
-
-# DEPRECATED: Register `GitIgnoreDocPattern` as "gitwildmatch" for backward
-# compatibility with v0.12. Eventually, a warning will be issued on use.
-util.register_pattern('gitwildmatch', GitIgnoreDocPattern)
+# Register GitIgnoreBasicPattern as "gitignore".
+util.register_pattern('gitignore', GitIgnoreBasicPattern)

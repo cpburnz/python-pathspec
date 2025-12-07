@@ -28,8 +28,8 @@ from pathspec.pathspec import (
 	PathSpec)
 from pathspec.pattern import (
 	Pattern)
-from pathspec.patterns.gitignore.doc import (
-	GitIgnoreDocPattern)
+from pathspec.patterns.gitignore.basic import (
+	GitIgnoreBasicPattern)
 from pathspec.patterns.gitignore.spec import (
 	GitIgnoreSpecPattern)
 from pathspec._typing import (
@@ -127,18 +127,18 @@ class GitIgnoreSpec(PathSpec):
 
 		if pattern_factory is None:
 			pattern_factory = GitIgnoreSpecPattern
-		elif pattern_factory in ('gitignore', 'gitwildmatch'):
-			# Force use of GitIgnoreSpecPattern over GitIgnoreDocPattern to handle
-			# edge-cases. This makes usage easier.
+		elif pattern_factory == 'gitignore':
+			# Force use of GitIgnoreSpecPattern for "gitignore" to handle edge-cases.
+			# This makes usage easier.
 			pattern_factory = GitIgnoreSpecPattern
 
 		if isinstance(pattern_factory, str):
 			pattern_factory = lookup_pattern(pattern_factory)
 
-		if isinstance(pattern_factory, GitIgnoreDocPattern):
+		if issubclass(pattern_factory, GitIgnoreBasicPattern):
 			raise TypeError((
-				f"{pattern_factory=!r} cannot be {GitIgnoreDocPattern} because it will "
-				f"give unexpected results."
+				f"{pattern_factory=!r} cannot be {GitIgnoreBasicPattern} because it "
+				f"will give unexpected results."
 			))  # TypeError
 
 		self = super().from_lines(pattern_factory, lines, backend=backend, _test_backend_factory=_test_backend_factory)

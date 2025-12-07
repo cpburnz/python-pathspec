@@ -4,15 +4,14 @@ DEPRECATED: This module only exists for backward compatibility with v0.12.
 
 import warnings
 
-from pathspec import (
-	util)
+from pathspec import util
 from pathspec._typing import (
 	override)
 
 from .gitignore.spec import (
 	GitIgnoreSpecPattern)
 
-# DEPRECATED: Expose `GitWildMatchPatternError` in this module for backward
+# DEPRECATED: Expose GitWildMatchPatternError in this module for backward
 # compatibility with v0.12.
 from .gitignore.base import (
 	GitIgnorePatternError as GitWildMatchPatternError)
@@ -22,8 +21,8 @@ from .gitignore.base import (
 class GitWildMatchPattern(GitIgnoreSpecPattern):
 	"""
 	The :class:`GitWildMatchPattern` class is deprecated and superseded by
-	:class:`GitIgnoreSpecPattern`. This class only exists to maintain
-	compatibility with v0.12.
+	:class:`.GitIgnoreSpecPattern` and :class:`~pathspec.patterns.gitignore.basic.GitIgnoreBasicPattern`.
+	This class only exists to maintain compatibility with v0.12.
 	"""
 
 	def __init__(self, *args, **kw) -> None:
@@ -39,8 +38,8 @@ class GitWildMatchPattern(GitIgnoreSpecPattern):
 		Warn about deprecation.
 		"""
 		warnings.warn((
-			"GitWildMatchPattern ('gitwildmatch') is deprecated. Use "
-			"GitIgnoreSpecPattern ('gitignore-spec') instead."
+			"GitWildMatchPattern ('gitwildmatch') is deprecated. Use 'gitignore' for "
+			"GitIgnoreBasicPattern or GitIgnoreSpecPattern instead."
 		), DeprecationWarning, stacklevel=3)
 
 	@override
@@ -51,3 +50,9 @@ class GitWildMatchPattern(GitIgnoreSpecPattern):
 		"""
 		cls._deprecated()
 		return super(GitWildMatchPattern, cls).pattern_to_regex(*args, **kw)
+
+
+# TODO: In a future version (probably v0.14), register GitWildMatchPattern
+# instead so that a deprecation warning will be triggered when using
+# "gitwildmatch".
+#util.register_pattern('gitwildmatch', GitWildMatchPattern)
