@@ -70,11 +70,11 @@ directly as well::
 
 You can perform matching on a whole directory tree with::
 
-	>>> matches = spec.match_tree_files('path/to/directory')
+	>>> matches = set(spec.match_tree_files('path/to/directory'))
 
 Or you can perform matching on a specific set of file paths with::
 
-	>>> matches = spec.match_files(file_paths)
+	>>> matches = set(spec.match_files(file_paths))
 
 Or check to see if an individual file matches::
 
@@ -106,13 +106,14 @@ the best available backend. There are currently 3 backends.
 The "simple" backend is the default and it simply uses Python's ``re.Pattern``
 objects that are normally created.
 
-The "hyperscan" backend uses the `hyperscan`_ package. Hyperscan tends to be the
+The "hyperscan" backend uses the `hyperscan`_ library. Hyperscan tends to be the
 fastest between 1-15 patterns. At 1 pattern, it's 1.6 times faster than "simple"
 and 1.2 times faster than "re2". At 15 patterns, it's 2.9 times faster than
 "simple" and 1.1 times faster than "re2". At 100 patterns, it's 3.8 times faster
 than "simple" and 0.4 times slower than "re2".
 
-The "re2" backend uses the `google-re2`_ package. Re2 tends to be the fastest
+The "re2" backend uses the `google-re2`_ library (not to be confused with the
+*re2* library which is unrelated and abandoned). Re2 tends to be the fastest
 with more than 15 patterns. At 1 pattern, it's 1.4 times faster than "simple"
 and 0.9 times slower than "hyperscan". At 15 patterns, it's 2.6 times faster
 than "simple" and 0.9 times slower than "hyperscan". At 100 patterns, it's 10
@@ -130,13 +131,14 @@ FAQ
 1. How do I ignore files like *.gitignore*?
 +++++++++++++++++++++++++++++++++++++++++++
 
-``PathSpec`` (and ``GitIgnoreSpec`)) positively match files by default. To find
+``PathSpec`` (and ``GitIgnoreSpec``)) positively match files by default. To find
 the files to keep, and exclude files like *.gitignore*, you need to set
 ``negate=True`` to flip the results::
 
 	>>> from pathspec import GitIgnoreSpec
 	>>> spec = GitIgnoreSpec.from_lines([...])
-	>>> keep_files = spec.match_tree_files('path/to/directory', negate=True)
+	>>> keep_files = set(spec.match_tree_files('path/to/directory', negate=True))
+	>>> ignore_files = set(spec.match_tree_files('path/to/directory'))
 
 
 License

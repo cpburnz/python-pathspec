@@ -400,17 +400,6 @@ def _iter_tree_files_next(
 	del memo[dir_real]
 
 
-def iter_tree(root, on_error=None, follow_links=None):
-	"""
-	DEPRECATED: The :func:`.iter_tree` function is an alias for the
-	:func:`.iter_tree_files` function.
-	"""
-	warnings.warn((
-		"util.iter_tree() is deprecated. Use util.iter_tree_files() instead."
-	), DeprecationWarning, stacklevel=2)
-	return iter_tree_files(root, on_error=on_error, follow_links=follow_links)
-
-
 def lookup_pattern(name: str) -> Callable[[AnyStr], Pattern]:
 	"""
 	Lookups a registered pattern factory by name.

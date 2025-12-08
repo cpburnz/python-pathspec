@@ -9,22 +9,24 @@ Change History
 Major changes:
 
 - `Issue #91`_: Dropped support of EoL Python 3.8.
-
-- Added concept of backends to allow for faster regex matching. The backend can be controlled using the `backend` argument to `PathSpec()`, `PathSpec.from_lines()`, `GitIgnoreSpec()`, and `GitIgnoreSpec.from_lines()`.
+- Added concept of backends to allow for faster regular expression matching. The backend can be controlled using the `backend` argument to `PathSpec()`, `PathSpec.from_lines()`, `GitIgnoreSpec()`, and `GitIgnoreSpec.from_lines()`.
+- Renamed "gitwildmatch" pattern back to "gitignore".
 
 API changes:
 
-- TODO: Replaced gitwildmatch with gitignore, etc.
-
-- Protected method `pathspec.pathspec.PathSpec._match_file()` (with a leading underscore) has been removed and replaced by backends. This does not affect normal usage of `PathSpec()` and `GitIgnoreSpec()`. Only custom subclasses will be affected. If this breaks your usage, `open an issue <https://github.com/cpburnz/python-pathspec/issues>`_.
-
-- Removed `pathspec.patterns.gitwildmatch.GitIgnorePattern` and the "gitignore" registered pattern which have been deprecated since v0.4 (2016-07-15).
-
+- Breaking: protected method `pathspec.pathspec.PathSpec._match_file()` (with a leading underscore) has been removed and replaced by backends. This does not affect normal usage of `PathSpec()` or `GitIgnoreSpec()`. Only custom subclasses will be affected. If this breaks your usage, `open an issue <https://github.com/cpburnz/python-pathspec/issues>`_.
+- Deprecated: "gitwildmatch" is an alias for "gitignore".
+- Deprecated: `pathspec.patterns.GitWildMatchPattern` is an alias for `pathspec.patterns.gitignore.spec.GitIgnoreSpecPattern`.
+- Deprecated: `pathspec.patterns.gitwildmatch` module has been restructured under the `pathspec.patterns.gitignore` package.
+- Deprecated: `pathspec.patterns.gitwildmatch.GitWildMatchPattern` is an alias for `pathspec.patterns.gitignore.spec.GitIgnoreSpecPattern`.
+- Deprecated: `pathspec.patterns.gitwildmatch.GitWildMatchPatternError` is an alias for `pathspec.patterns.gitignore.GitIgnorePatternError`.
+- Removed: `pathspec.patterns.gitwildmatch.GitIgnorePattern` has been deprecated since v0.4 (2016-07-15).
+- Removed: `pathspec.iter_tree()` has been deprecated since v0.10 (2022-08-30).
+- Removed: `pathspec.util.iter_tree()` has been deprecated since v0.10 (2022-08-30).
 
 New features:
 
-- Added optional `hyperscan`_ backend. It will automatically be used when installed. This dependency can be installed with ``pip install 'pathspec[hyperscan]'``.
-
+- Added optional "hyperscan" backend using `hyperscan`_ library. It will automatically be used when installed. This dependency can be installed with ``pip install 'pathspec[hyperscan]'``.
 - Added optional "re2" backend using the `google-re2`_ library. It will automatically be used when installed. This dependency can be installed with ``pip install 'pathspec[google-re2]'``.
 
 Bug fixes:
@@ -35,6 +37,7 @@ Improvements:
 
 - Mark Python 3.13 and 3.14 as supported.
 - No-op patterns are now filtered out when matching files, slightly improving performance.
+- Fix performance regression in `iter_tree_files()` from v0.10.
 
 
 .. _`Issue #38`: https://github.com/cpburnz/python-pathspec/issues/38

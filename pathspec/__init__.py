@@ -23,9 +23,6 @@ The following functions are also imported:
 The following deprecated functions are also imported to maintain
 backward compatibility:
 
--	:func:`pathspec.util.iter_tree` which is an alias for
-	:func:`pathspec.util.iter_tree_files`.
-
 -	:func:`pathspec.util.match_files`
 """
 
@@ -38,7 +35,6 @@ from .pattern import (
 	RegexPattern)
 from .util import (
 	RecursionError,
-	iter_tree,
 	lookup_pattern,
 	match_files)
 
@@ -65,7 +61,6 @@ __all__ = [
 	'__credits__',
 	'__license__',
 	'__version__',
-	'iter_tree',
 	'lookup_pattern',
 	'match_files',
 ]

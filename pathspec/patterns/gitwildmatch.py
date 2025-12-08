@@ -13,7 +13,7 @@ from .gitignore.spec import (
 
 # DEPRECATED: Expose GitWildMatchPatternError in this module for backward
 # compatibility with v0.12.
-from .gitignore.base import (
+from .gitignore import (
 	GitIgnorePatternError as GitWildMatchPatternError)
 
 
