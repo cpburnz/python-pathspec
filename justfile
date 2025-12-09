@@ -82,7 +82,7 @@ _bench_all:
 	{{cpy_run}} pytest -q -c benchmarks/pytest.ini
 
 _bench_gitignore:
-	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_gitignore_*.py
+	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_gitignore_*_to_*.py
 
 _bench_match_file:
 	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_*_match_file_*.py
@@ -91,7 +91,7 @@ _bench_match_files:
 	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_*_match_files_*.py
 
 _bench_pathspec:
-	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_pathspec_*.py
+	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_pathspec_*_to_*.py
 
 _test_all:
 	{{cpy_run}} tox

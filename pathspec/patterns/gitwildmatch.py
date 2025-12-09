@@ -30,7 +30,7 @@ class GitWildMatchPattern(GitIgnoreSpecPattern):
 		Warn about deprecation.
 		"""
 		self._deprecated()
-		super(GitWildMatchPattern, self).__init__(*args, **kw)
+		super().__init__(*args, **kw)
 
 	@staticmethod
 	def _deprecated() -> None:
@@ -49,7 +49,7 @@ class GitWildMatchPattern(GitIgnoreSpecPattern):
 		Warn about deprecation.
 		"""
 		cls._deprecated()
-		return super(GitWildMatchPattern, cls).pattern_to_regex(*args, **kw)
+		return super().pattern_to_regex(*args, **kw)
 
 
 # TODO: In a future version (probably v0.14), register GitWildMatchPattern

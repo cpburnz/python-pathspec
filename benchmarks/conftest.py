@@ -32,6 +32,33 @@ def cpython_gi_lines_all(cpython_gi_file: Path) -> list[str]:
 
 
 @pytest.fixture(scope='session')
+def cpython_gi_lines_1(cpython_gi_lines_all: list[str]) -> list[str]:
+	return [
+		"*.cover",
+	]
+
+
+@pytest.fixture(scope='session')
+def cpython_gi_lines_5(cpython_gi_lines_all: list[str]) -> list[str]:
+	return [
+		"*.cover",
+		"*.iml",
+		"Modules/config.c",
+		"CLAUDE.local.md",
+		"Doc/data/python*.abi",
+	]
+
+
+@pytest.fixture(scope='session')
+def cpython_gi_lines_15(cpython_gi_lines_all: list[str]) -> list[str]:
+	return (
+		cpython_gi_lines_all[:5]
+		+ cpython_gi_lines_all[82:87]
+		+ cpython_gi_lines_all[-5:]
+	)
+
+
+@pytest.fixture(scope='session')
 def cpython_gi_lines_25(cpython_gi_lines_all: list[str]) -> list[str]:
 	return (
 		cpython_gi_lines_all[:10]

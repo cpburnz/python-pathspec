@@ -18,11 +18,11 @@ GROUP = "PathSpec.match_file(): 1 line, one file"
 def bench_hs_v1_none(
 	benchmark: BenchmarkFixture,
 	flit_file_match_none: str,
-	flit_gi_lines_5: list[str],
+	flit_gi_lines_1: list[str],
 ):
 	spec = PathSpec.from_lines(
 		'gitignore',
-		flit_gi_lines_5,
+		flit_gi_lines_1,
 		backend='hyperscan',
 	)
 	benchmark(run_match, spec, flit_file_match_none)
@@ -32,11 +32,11 @@ def bench_hs_v1_none(
 def bench_hs_v1_start(
 	benchmark: BenchmarkFixture,
 	flit_file_match_start: str,
-	flit_gi_lines_5: list[str],
+	flit_gi_lines_1: list[str],
 ):
 	spec = PathSpec.from_lines(
 		'gitignore',
-		flit_gi_lines_5,
+		flit_gi_lines_1,
 		backend='hyperscan',
 	)
 	benchmark(run_match, spec, flit_file_match_start)
@@ -48,11 +48,11 @@ def bench_hs_v1_start(
 def bench_re2_v1_none(
 	benchmark: BenchmarkFixture,
 	flit_file_match_none: str,
-	flit_gi_lines_5: list[str],
+	flit_gi_lines_1: list[str],
 ):
 	spec = PathSpec.from_lines(
 		'gitignore',
-		flit_gi_lines_5,
+		flit_gi_lines_1,
 		backend='re2',
 	)
 	benchmark(run_match, spec, flit_file_match_none)
@@ -62,11 +62,11 @@ def bench_re2_v1_none(
 def bench_re2_v1_start(
 	benchmark: BenchmarkFixture,
 	flit_file_match_start: str,
-	flit_gi_lines_5: list[str],
+	flit_gi_lines_1: list[str],
 ):
 	spec = PathSpec.from_lines(
 		'gitignore',
-		flit_gi_lines_5,
+		flit_gi_lines_1,
 		backend='re2',
 	)
 	benchmark(run_match, spec, flit_file_match_start)
@@ -78,11 +78,11 @@ def bench_re2_v1_start(
 def bench_sm_v1_none(
 	benchmark: BenchmarkFixture,
 	flit_file_match_none: str,
-	flit_gi_lines_5: list[str],
+	flit_gi_lines_1: list[str],
 ):
 	spec = PathSpec.from_lines(
 		'gitignore',
-		flit_gi_lines_5,
+		flit_gi_lines_1,
 		backend='simple',
 	)
 	benchmark(run_match, spec, flit_file_match_none)
@@ -92,11 +92,11 @@ def bench_sm_v1_none(
 def bench_sm_v1_start(
 	benchmark: BenchmarkFixture,
 	flit_file_match_start: str,
-	flit_gi_lines_5: list[str],
+	flit_gi_lines_1: list[str],
 ):
 	spec = PathSpec.from_lines(
 		'gitignore',
-		flit_gi_lines_5,
+		flit_gi_lines_1,
 		backend='simple',
 	)
 	benchmark(run_match, spec, flit_file_match_start)

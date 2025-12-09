@@ -104,20 +104,133 @@ parameter to control the backend. The default is "best" to automatically choose
 the best available backend. There are currently 3 backends.
 
 The "simple" backend is the default and it simply uses Python's ``re.Pattern``
-objects that are normally created.
+objects that are normally created. This can be the fastest when there's only 1
+or 2 patterns.
 
-The "hyperscan" backend uses the `hyperscan`_ library. Hyperscan tends to be the
-fastest between 1-15 patterns. At 1 pattern, it's 1.6 times faster than "simple"
-and 1.2 times faster than "re2". At 15 patterns, it's 2.9 times faster than
-"simple" and 1.1 times faster than "re2". At 100 patterns, it's 3.8 times faster
-than "simple" and 0.4 times slower than "re2".
+The "hyperscan" backend uses the `hyperscan`_ library. Hyperscan tends to be at
+least 2 times faster than "simple", and generally slower than "re2". This can be
+faster than "re2" under the right conditions with pattern counts of 1-25.
 
 The "re2" backend uses the `google-re2`_ library (not to be confused with the
-*re2* library which is unrelated and abandoned). Re2 tends to be the fastest
-with more than 15 patterns. At 1 pattern, it's 1.4 times faster than "simple"
-and 0.9 times slower than "hyperscan". At 15 patterns, it's 2.6 times faster
-than "simple" and 0.9 times slower than "hyperscan". At 100 patterns, it's 10
-times faster than "simple" and 2.7 times faster than "hyperscan".
+*re2* library on PyPI which is unrelated and abandoned). Google's re2 tends to
+be significantly faster than "simple", and 3 times faster than "hyperscan" at
+high pattern counts.
+
+.. list-table:: PathSpec: CPython Source Benchmark (~6.5k files)
+   :header-rows: 2
+
+   * - Patterns
+     - simple
+     - hyperscan
+     -
+     - re2
+     -
+   * -
+     - ops
+     - ops
+     - x
+     - ops
+     - x
+   * - 1
+     - 287.0
+     - 177.4
+     - 0.62
+     - 200.9
+     - 0.70
+   * - 5
+     - 107.4
+     - 158.7
+     - 1.48
+     - 197.6
+     - 1.84
+   * - 15
+     - 49.0
+     - 131.4
+     - 2.68
+     - 184.9
+     - 3.77
+   * - 25
+     - 28.3
+     - 56.2
+     - 1.99
+     - 178.8
+     - 6.33
+   * - 50
+     - 16.4
+     - 36.1
+     - 2.19
+     - 176.4
+     - 10.74
+   * - 100
+     - 8.9
+     - 53.0
+     - 5.95
+     - 173.6
+     - 19.46
+   * - 150
+     - 6.4
+     - 56.5
+     - 8.80
+     - 175.3
+     - 27.29
+
+.. list-table:: GitIgnoreSpec: CPython Source Benchmark (~6.5k files)
+   :header-rows: 2
+
+   * - Patterns
+     - simple
+     - hyperscan
+     -
+     - re2
+     -
+   * -
+     - ops
+     - ops
+     - x
+     - ops
+     - x
+   * - 1
+     - 274.2
+     - 167.9
+     - 0.61
+     - 180.6
+     - 0.66
+   * - 5
+     - 102.1
+     - 151.0
+     - 1.48
+     - 199.7
+     - 1.95
+   * - 15
+     - 47.3
+     - 128.4
+     - 2.71
+     - 194.5
+     - 4.11
+   * - 25
+     - 27.8
+     - 55.8
+     - 2.01
+     - 193.1
+     - 6.95
+   * - 50
+     - 14.4
+     - 38.7
+     - 2.69
+     - 190.4
+     - 13.23
+   * - 100
+     - 8.4
+     - 66.7
+     - 7.93
+     - 187.3
+     - 22.29
+   * - 150
+     - 6.0
+     - 60.9
+     - 10.16
+     - 171.5
+     - 28.58
 
 
 .. _`google-re2`: https://pypi.org/project/google-re2/
@@ -174,6 +287,8 @@ Installation
 *pathspec* is available for install through `PyPI`_::
 
 	pip install pathspec
+	pip install pathspec[hyperscan]
+	pip install pathspec[google-re2]
 
 *pathspec* can also be built from source. The following packages will be
 required:

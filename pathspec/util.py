@@ -591,7 +591,7 @@ class AlreadyRegisteredError(Exception):
 		*pattern_factory* (:class:`~collections.abc.Callable`) is the registered
 		pattern factory.
 		"""
-		super(AlreadyRegisteredError, self).__init__(name, pattern_factory)
+		super().__init__(name, pattern_factory)
 
 	@property
 	def message(self) -> str:
@@ -640,7 +640,7 @@ class RecursionError(Exception):
 
 		*second_path* (:class:`str`) is the second path encountered for *real_path*.
 		"""
-		super(RecursionError, self).__init__(real_path, first_path, second_path)
+		super().__init__(real_path, first_path, second_path)
 
 	@property
 	def first_path(self) -> str:
