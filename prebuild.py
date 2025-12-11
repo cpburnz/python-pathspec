@@ -72,7 +72,7 @@ def main() -> int:
 	"""
 	# Parse command-line arguments.
 	parser = argparse.ArgumentParser(description=__doc__)
-	parser.parse_args(sys.argv[1:])
+	parser.parse_args()
 
 	generate_readme_dist()
 	generate_setup_cfg()

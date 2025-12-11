@@ -88,7 +88,7 @@ _bench_match_file:
 	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_*_match_file_*.py
 
 _bench_match_files:
-	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_*_match_files_*.py
+	{{cpy_run}} pytest -q -c benchmarks/pytest.ini --benchmark-autosave benchmarks/bench_*_match_files_*.py
 
 _bench_pathspec:
 	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_pathspec_*_to_*.py

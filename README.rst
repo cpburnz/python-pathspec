@@ -116,8 +116,9 @@ The "re2" backend uses the `google-re2`_ library (not to be confused with the
 be significantly faster than "simple", and 3 times faster than "hyperscan" at
 high pattern counts.
 
-.. list-table:: PathSpec: CPython Source Benchmark (~6.5k files)
+.. list-table:: PathSpec.match_files(): 6.5k files using CPython 3.13.7 on 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
    :header-rows: 2
+   :align: right
 
    * - Patterns
      - simple
@@ -132,50 +133,51 @@ high pattern counts.
      - ops
      - x
    * - 1
-     - 287.0
-     - 177.4
-     - 0.62
-     - 200.9
-     - 0.70
+     - 289.0
+     - 166.4
+     - 0.58
+     - 197.2
+     - 0.68
    * - 5
-     - 107.4
-     - 158.7
+     - 109.4
+     - 161.7
      - 1.48
-     - 197.6
-     - 1.84
+     - 209.1
+     - 1.91
    * - 15
-     - 49.0
-     - 131.4
-     - 2.68
-     - 184.9
-     - 3.77
+     - 48.0
+     - 114.8
+     - 2.39
+     - 180.4
+     - 3.76
    * - 25
-     - 28.3
-     - 56.2
-     - 1.99
-     - 178.8
-     - 6.33
+     - 28.8
+     - 57.6
+     - 2.00
+     - 192.3
+     - 6.67
    * - 50
      - 16.4
      - 36.1
-     - 2.19
-     - 176.4
-     - 10.74
+     - 2.21
+     - 187.5
+     - 11.46
    * - 100
-     - 8.9
-     - 53.0
-     - 5.95
-     - 173.6
-     - 19.46
+     - 9.2
+     - 51.4
+     - 5.57
+     - 188.7
+     - 20.42
    * - 150
      - 6.4
-     - 56.5
-     - 8.80
-     - 175.3
-     - 27.29
+     - 57.2
+     - 9.00
+     - 184.6
+     - 29.04
 
-.. list-table:: GitIgnoreSpec: CPython Source Benchmark (~6.5k files)
+.. list-table:: GitIgnoreSpec.match_files(): 6.5k files using CPython 3.13.7 on 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
    :header-rows: 2
+   :align: right
 
    * - Patterns
      - simple
@@ -190,47 +192,47 @@ high pattern counts.
      - ops
      - x
    * - 1
-     - 274.2
-     - 167.9
-     - 0.61
-     - 180.6
-     - 0.66
+     - 289.2
+     - 172.0
+     - 0.59
+     - 216.2
+     - 0.75
    * - 5
-     - 102.1
-     - 151.0
-     - 1.48
-     - 199.7
-     - 1.95
+     - 111.1
+     - 154.6
+     - 1.39
+     - 214.8
+     - 1.93
    * - 15
-     - 47.3
-     - 128.4
-     - 2.71
-     - 194.5
-     - 4.11
+     - 49.1
+     - 133.5
+     - 2.72
+     - 208.2
+     - 4.24
    * - 25
-     - 27.8
-     - 55.8
-     - 2.01
-     - 193.1
-     - 6.95
+     - 30.5
+     - 55.9
+     - 1.84
+     - 194.4
+     - 6.38
    * - 50
-     - 14.4
-     - 38.7
-     - 2.69
-     - 190.4
-     - 13.23
+     - 15.9
+     - 38.5
+     - 2.41
+     - 195.5
+     - 12.26
    * - 100
-     - 8.4
-     - 66.7
-     - 7.93
-     - 187.3
-     - 22.29
+     - 8.8
+     - 67.7
+     - 7.72
+     - 199.2
+     - 22.71
    * - 150
-     - 6.0
-     - 60.9
-     - 10.16
-     - 171.5
-     - 28.58
+     - 6.3
+     - 61.1
+     - 9.67
+     - 177.8
+     - 28.14
 
 
 .. _`google-re2`: https://pypi.org/project/google-re2/
@@ -244,7 +246,7 @@ FAQ
 1. How do I ignore files like *.gitignore*?
 +++++++++++++++++++++++++++++++++++++++++++
 
-``PathSpec`` (and ``GitIgnoreSpec``)) positively match files by default. To find
+``GitIgnoreSpec`` (and ``PathSpec``) positively match files by default. To find
 the files to keep, and exclude files like *.gitignore*, you need to set
 ``negate=True`` to flip the results::
 
