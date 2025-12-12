@@ -1,44 +1,75 @@
 """
-This script generates files required for source and wheel distributions,
-and legacy installations.
+This script generates files required for source and wheel distributions, and
+legacy installations.
 """
 
 import argparse
 import configparser
+import re
 import sys
+from pathlib import (
+	Path)
 
 import tomli
+
+CHANGES_RST = Path("CHANGES.rst")
+PYPROJECT_IN_TOML = Path("pyproject.in.toml")
+PYPROJECT_TOML = Path("pyproject.toml")
+README_DIST_RST = Path("README-dist.rst")
+README_RST = Path("README.rst")
+SETUP_CFG = Path("setup.cfg")
+VERSION_PY = Path("pathspec/_version.py")
+
+
+def generate_pyproject_toml() -> None:
+	"""
+	Generate the "pyproject.toml" file from "pyproject.in.toml".
+	"""
+	# Flit will only statically extract the version from a predefined list of
+	# files for an editable install for some odd reason.
+	# - See <https://github.com/pypa/flit/issues/386>.
+
+	print(f"Read: {PYPROJECT_IN_TOML}")
+	output = PYPROJECT_IN_TOML.read_text()
+
+	print(f"Read: {VERSION_PY}")
+	version_input = VERSION_PY.read_text()
+	version = re.search(
+		'^__version__\\s*=\\s*"([^"]+)"', version_input, re.M,
+	).group(1)
+
+	# Replace version.
+	output = output.replace("__VERSION__", version)
+
+	print(f"Write: {PYPROJECT_TOML}")
+	PYPROJECT_TOML.write_text(output)
 
 
 def generate_readme_dist() -> None:
 	"""
-	Generate the "README-dist.rst" file from "README.rst" and
-	"CHANGES.rst".
+	Generate the "README-dist.rst" file from "README.rst" and "CHANGES.rst".
 	"""
-	print("Read: README.rst")
-	with open("README.rst", 'r', encoding='utf8') as fh:
-		output = fh.read()
+	print(f"Read: {README_RST}")
+	output = README_RST.read_text()
 
-	print("Read: CHANGES.rst")
-	with open("CHANGES.rst", 'r', encoding='utf8') as fh:
-		output += "\n\n"
-		output += fh.read()
+	print(f"Read: {CHANGES_RST}")
+	output += "\n\n"
+	output += CHANGES_RST.read_text()
 
-	print("Write: README-dist.rst")
-	with open("README-dist.rst", 'w', encoding='utf8') as fh:
-		fh.write(output)
+	print(f"Write: {README_DIST_RST}")
+	README_DIST_RST.write_text(output)
 
 
 def generate_setup_cfg() -> None:
 	"""
-	Generate the "setup.cfg" file from "pyproject.toml" in order to
-	support legacy installation with "setup.py".
+	Generate the "setup.cfg" file from "pyproject.toml" in order to support legacy
+	installation with "setup.py".
 	"""
-	print("Read: pyproject.toml")
-	with open("pyproject.toml", 'rb') as fh:
+	print(f"Read: {PYPROJECT_TOML}")
+	with PYPROJECT_TOML.open('rb') as fh:
 		config = tomli.load(fh)
 
-	print("Write: setup.cfg")
+	print(f"Write: {SETUP_CFG}")
 	output = configparser.ConfigParser()
 	output['metadata'] = {
 		'author': config['project']['authors'][0]['name'],
@@ -50,7 +81,7 @@ def generate_setup_cfg() -> None:
 		'long_description_content_type': "text/x-rst",
 		'name': config['project']['name'],
 		'url': config['project']['urls']['Source Code'],
-		'version': "attr: pathspec._meta.__version__",
+		'version': "attr: pathspec._version.__version__",
 	}
 	output['options'] = {
 		'packages': "find:",
@@ -62,7 +93,7 @@ def generate_setup_cfg() -> None:
 		'include': "pathspec, pathspec.*",
 	}
 
-	with open("setup.cfg", 'w', encoding='utf8') as fh:
+	with SETUP_CFG.open('w') as fh:
 		output.write(fh)
 
 
@@ -75,6 +106,7 @@ def main() -> int:
 	parser.parse_args()
 
 	generate_readme_dist()
+	generate_pyproject_toml()
 	generate_setup_cfg()
 
 	return 0

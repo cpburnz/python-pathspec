@@ -42,19 +42,19 @@ test-docs: _test_docs
 
 # Create the CPython venv.
 [group('Development')]
-venv-cpy-create: _venv_cpy_base _venv_cpy_install
+venv-cpy-create: _venv_cpy_create
 
 # Update the CPython venv.
 [group('Development')]
-venv-cpy-update: _venv_cpy_install
+venv-cpy-update: _venv_cpy_update
 
 # Create the PyPy venv.
 [group('Development')]
-venv-pypy-create: _venv_pypy_base _venv_pypy_install
+venv-pypy-create: _venv_pypy_create
 
 # Update the PyPy venv.
 [group('Development')]
-venv-pypy-update: _venv_pypy_install
+venv-pypy-update: _venv_pypy_update
 
 # Build the package.
 [group('Distribution')]
@@ -102,17 +102,17 @@ _test_docs:
 _test_primary:
 	{{cpy_run}} python -m unittest -v
 
-_venv_cpy_base:
+_venv_cpy_create:
 	{{cpy_bin}} -m venv --clear dev/venv-cpy
 
-_venv_cpy_install:
+_venv_cpy_update:
 	{{cpy_run}} pip install --upgrade build google-re2 google-re2-stubs hyperscan pip pytest pytest-benchmark setuptools sphinx tomli tox twine typing-extensions wheel
 	{{cpy_run}} pip install -e .
 
-_venv_pypy_base:
+_venv_pypy_create:
 	{{pypy_bin}} -m venv --clear dev/venv-pypy
 
-_venv_pypy_install:
+_venv_pypy_update:
 	{{pypy_run}} pip install --upgrade hyperscan pip pytest pytest-benchmark setuptools wheel
 	{{pypy_run}} pip install -e .
 

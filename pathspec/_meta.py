@@ -56,4 +56,3 @@ __credits__ = [
 	"Dobatymo <https://github.com/Dobatymo>",
 ]
 __license__ = "MPL 2.0"
-__version__ = "0.13.0.dev1"

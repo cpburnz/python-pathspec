@@ -25,6 +25,8 @@ compatibility:
 -	:func:`pathspec.util.match_files`
 """
 
+__version__ = "0.13.0.dev1" # Temporary
+
 from .gitignore import (
 	GitIgnoreSpec)
 from .pathspec import (
@@ -41,7 +43,8 @@ from ._meta import (
 	__author__,
 	__copyright__,
 	__credits__,
-	__license__,
+	__license__)
+from ._version import (
 	__version__)
 
 # Load pattern implementations.

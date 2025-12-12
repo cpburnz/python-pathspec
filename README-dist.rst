@@ -2,10 +2,8 @@
 PathSpec
 ========
 
-*pathspec* is a utility library for pattern matching of file paths. So
-far this only includes Git's wildmatch pattern matching which itself is
-derived from Rsync's wildmatch. Git uses wildmatch for its `gitignore`_
-files.
+*pathspec* is a utility library for pattern matching of file paths. So far this
+only includes Git's `gitignore`_ pattern matching.
 
 .. _`gitignore`: http://git-scm.com/docs/gitignore
 
@@ -16,7 +14,7 @@ Tutorial
 Say you have a "Projects" directory and you want to back it up, but only
 certain files, and ignore others depending on certain conditions::
 
-	>>> import pathspec
+	>>> from pathspec import PathSpec
 	>>> # The gitignore-style patterns for files to select, but we're including
 	>>> # instead of ignoring.
 	>>> spec_text = """
@@ -24,7 +22,7 @@ certain files, and ignore others depending on certain conditions::
 	... # This is a comment because the line begins with a hash: "#"
 	...
 	... # Include several project directories (and all descendants) relative to
-	... # the current directory. To reference a directory you must end with a
+	... # the current directory. To reference only a directory you must end with a
 	... # slash: "/"
 	... /project-a/
 	... /project-b/
@@ -48,31 +46,23 @@ certain files, and ignore others depending on certain conditions::
 	...
 	... """
 
-We want to use the ``GitWildMatchPattern`` class to compile our patterns. The
-``PathSpec`` class provides an interface around pattern implementations::
+The ``PathSpec`` class provides an abstraction around pattern implementations,
+and we want to compile our patterns as "gitignore" patterns. You could call it a
+wrapper for a list of compiled patterns::
 
-	>>> spec = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, spec_text.splitlines())
+	>>> spec = PathSpec.from_lines('gitignore', spec_text.splitlines())
 
-That may be a mouthful but it allows for additional patterns to be implemented
-in the future without them having to deal with anything but matching the paths
-sent to them. ``GitWildMatchPattern`` is the implementation of the actual
-pattern which internally gets converted into a regular expression. ``PathSpec``
-is a simple wrapper around a list of compiled patterns.
+If we wanted to manually compile the patterns, we can use the ``GitIgnoreBasicPattern``
+class directly. It is used in the background for "gitignore" which internally
+converts patterns to regular expressions::
 
-To make things simpler, we can use the registered name for a pattern class
-instead of always having to provide a reference to the class itself. The
-``GitWildMatchPattern`` class is registered as **gitwildmatch**::
-
-	>>> spec = pathspec.PathSpec.from_lines('gitwildmatch', spec_text.splitlines())
-
-If we wanted to manually compile the patterns we can just do the following::
-
-	>>> patterns = map(pathspec.patterns.GitWildMatchPattern, spec_text.splitlines())
+	>>> from pathspec.patterns.gitignore.basic import GitIgnoreBasicPattern
+	>>> patterns = map(GitIgnoreBasicPattern, spec_text.splitlines())
 	>>> spec = PathSpec(patterns)
 
-``PathSpec.from_lines()`` is simply a class method which does just that.
+``PathSpec.from_lines()`` is a class method which simplifies that.
 
-If you want to load the patterns from file, you can pass the file instance
+If you want to load the patterns from file, you can pass the file object
 directly as well::
 
 	>>> with open('patterns.list', 'r') as fh:
@@ -80,23 +70,190 @@ directly as well::
 
 You can perform matching on a whole directory tree with::
 
-	>>> matches = spec.match_tree('path/to/directory')
+	>>> matches = set(spec.match_tree_files('path/to/directory'))
 
 Or you can perform matching on a specific set of file paths with::
 
-	>>> matches = spec.match_files(file_paths)
+	>>> matches = set(spec.match_files(file_paths))
 
 Or check to see if an individual file matches::
 
 	>>> is_matched = spec.match_file(file_path)
 
-There is a specialized class, ``pathspec.GitIgnoreSpec``, which more closely
-implements the behavior of **gitignore**. This uses ``GitWildMatchPattern``
-pattern by default and handles some edge cases differently from the generic
-``PathSpec`` class. ``GitIgnoreSpec`` can be used without specifying the pattern
-factory::
+There's actually two implementations of "gitignore". The basic implementation is
+used by ``PathSpec`` and follows patterns as documented by `gitignore`_.
+However, Git's behavior differs from the documented patterns. There's some
+edge-cases, and in particular, Git allows including files from excluded
+directories which appears to contradict the documentation. ``GitIgnoreSpec``
+handles these cases to more closely replicate Git's behavior::
 
-	>>> spec = pathspec.GitIgnoreSpec.from_lines(spec_text.splitlines())
+	>>> from pathspec import GitIgnoreSpec
+	>>> spec = GitIgnoreSpec.from_lines(spec_text.splitlines())
+
+You do not specify the style of pattern for ``GitIgnoreSpec`` because it should
+always use ``GitIgnoreSpecPattern`` internally.
+
+
+Performance
+-----------
+
+Running lots of regular expression matches against thousands of files in Python
+is slow. Alternate regular expression backends can be used to improve
+performance. ``PathSpec`` and ``GitIgnoreSpec`` both accept a ``backend``
+parameter to control the backend. The default is "best" to automatically choose
+the best available backend. There are currently 3 backends.
+
+The "simple" backend is the default and it simply uses Python's ``re.Pattern``
+objects that are normally created. This can be the fastest when there's only 1
+or 2 patterns.
+
+The "hyperscan" backend uses the `hyperscan`_ library. Hyperscan tends to be at
+least 2 times faster than "simple", and generally slower than "re2". This can be
+faster than "re2" under the right conditions with pattern counts of 1-25.
+
+The "re2" backend uses the `google-re2`_ library (not to be confused with the
+*re2* library on PyPI which is unrelated and abandoned). Google's re2 tends to
+be significantly faster than "simple", and 3 times faster than "hyperscan" at
+high pattern counts.
+
+.. list-table:: PathSpec.match_files(): 6.5k files using CPython 3.13.7 on 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
+   :header-rows: 2
+   :align: right
+
+   * - Patterns
+     - simple
+     - hyperscan
+     -
+     - re2
+     -
+   * -
+     - ops
+     - ops
+     - x
+     - ops
+     - x
+   * - 1
+     - 289.0
+     - 166.4
+     - 0.58
+     - 197.2
+     - 0.68
+   * - 5
+     - 109.4
+     - 161.7
+     - 1.48
+     - 209.1
+     - 1.91
+   * - 15
+     - 48.0
+     - 114.8
+     - 2.39
+     - 180.4
+     - 3.76
+   * - 25
+     - 28.8
+     - 57.6
+     - 2.00
+     - 192.3
+     - 6.67
+   * - 50
+     - 16.4
+     - 36.1
+     - 2.21
+     - 187.5
+     - 11.46
+   * - 100
+     - 9.2
+     - 51.4
+     - 5.57
+     - 188.7
+     - 20.42
+   * - 150
+     - 6.4
+     - 57.2
+     - 9.00
+     - 184.6
+     - 29.04
+
+.. list-table:: GitIgnoreSpec.match_files(): 6.5k files using CPython 3.13.7 on 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
+   :header-rows: 2
+   :align: right
+
+   * - Patterns
+     - simple
+     - hyperscan
+     -
+     - re2
+     -
+   * -
+     - ops
+     - ops
+     - x
+     - ops
+     - x
+   * - 1
+     - 289.2
+     - 172.0
+     - 0.59
+     - 216.2
+     - 0.75
+   * - 5
+     - 111.1
+     - 154.6
+     - 1.39
+     - 214.8
+     - 1.93
+   * - 15
+     - 49.1
+     - 133.5
+     - 2.72
+     - 208.2
+     - 4.24
+   * - 25
+     - 30.5
+     - 55.9
+     - 1.84
+     - 194.4
+     - 6.38
+   * - 50
+     - 15.9
+     - 38.5
+     - 2.41
+     - 195.5
+     - 12.26
+   * - 100
+     - 8.8
+     - 67.7
+     - 7.72
+     - 199.2
+     - 22.71
+   * - 150
+     - 6.3
+     - 61.1
+     - 9.67
+     - 177.8
+     - 28.14
+
+
+.. _`google-re2`: https://pypi.org/project/google-re2/
+.. _`hyperscan`: https://pypi.org/project/hyperscan/
+
+
+FAQ
+---
+
+
+1. How do I ignore files like *.gitignore*?
++++++++++++++++++++++++++++++++++++++++++++
+
+``GitIgnoreSpec`` (and ``PathSpec``) positively match files by default. To find
+the files to keep, and exclude files like *.gitignore*, you need to set
+``negate=True`` to flip the results::
+
+	>>> from pathspec import GitIgnoreSpec
+	>>> spec = GitIgnoreSpec.from_lines([...])
+	>>> keep_files = set(spec.match_tree_files('path/to/directory', negate=True))
+	>>> ignore_files = set(spec.match_tree_files('path/to/directory'))
 
 
 License
@@ -132,6 +289,8 @@ Installation
 *pathspec* is available for install through `PyPI`_::
 
 	pip install pathspec
+	pip install pathspec[hyperscan]
+	pip install pathspec[google-re2]
 
 *pathspec* can also be built from source. The following packages will be
 required:
@@ -175,14 +334,43 @@ Change History
 
 Major changes:
 
-- `Issue #91`_: Dropped support of EOL Python 3.8.
+- `Issue #91`_: Dropped support of EoL Python 3.8.
+- Added concept of backends to allow for faster regular expression matching. The backend can be controlled using the `backend` argument to `PathSpec()`, `PathSpec.from_lines()`, `GitIgnoreSpec()`, and `GitIgnoreSpec.from_lines()`.
+- Renamed "gitwildmatch" pattern back to "gitignore".
+
+API changes:
+
+- Breaking: protected method `pathspec.pathspec.PathSpec._match_file()` (with a leading underscore) has been removed and replaced by backends. This does not affect normal usage of `PathSpec()` or `GitIgnoreSpec()`. Only custom subclasses will be affected. If this breaks your usage, `open an issue <https://github.com/cpburnz/python-pathspec/issues>`_.
+- Deprecated: "gitwildmatch" is an alias for "gitignore".
+- Deprecated: `pathspec.patterns.GitWildMatchPattern` is an alias for `pathspec.patterns.gitignore.spec.GitIgnoreSpecPattern`.
+- Deprecated: `pathspec.patterns.gitwildmatch` module has been restructured under the `pathspec.patterns.gitignore` package.
+- Deprecated: `pathspec.patterns.gitwildmatch.GitWildMatchPattern` is an alias for `pathspec.patterns.gitignore.spec.GitIgnoreSpecPattern`.
+- Deprecated: `pathspec.patterns.gitwildmatch.GitWildMatchPatternError` is an alias for `pathspec.patterns.gitignore.GitIgnorePatternError`.
+- Removed: `pathspec.patterns.gitwildmatch.GitIgnorePattern` has been deprecated since v0.4 (2016-07-15).
+- Removed: `pathspec.iter_tree()` has been deprecated since v0.10 (2022-08-30).
+- Removed: `pathspec.util.iter_tree()` has been deprecated since v0.10 (2022-08-30).
+
+New features:
+
+- Added optional "hyperscan" backend using `hyperscan`_ library. It will automatically be used when installed. This dependency can be installed with ``pip install 'pathspec[hyperscan]'``.
+- Added optional "re2" backend using the `google-re2`_ library. It will automatically be used when installed. This dependency can be installed with ``pip install 'pathspec[google-re2]'``.
+
+Bug fixes:
+
+- `Issue #98`_: UnboundLocalError in RegexPattern when initialized with pattern=None.
 
 Improvements:
 
 - Mark Python 3.13 and 3.14 as supported.
+- No-op patterns are now filtered out when matching files, slightly improving performance.
+- Fix performance regression in `iter_tree_files()` from v0.10.
 
 
+.. _`Issue #38`: https://github.com/cpburnz/python-pathspec/issues/38
 .. _`Issue #91`: https://github.com/cpburnz/python-pathspec/issues/91
+.. _`Issue #98`: https://github.com/cpburnz/python-pathspec/issues/98
+.. _`google-re2`: https://pypi.org/project/google-re2/
+.. _`hyperscan`: https://pypi.org/project/hyperscan/
 
 
 0.12.1 (2023-12-10)
@@ -201,8 +389,7 @@ Bug fixes:
 
 Major changes:
 
-- Dropped support of EOL Python 3.7. See `Pull #82`_.
-
+- Dropped support of EoL Python 3.7. See `Pull #82`_.
 
 API changes:
 
@@ -356,7 +543,7 @@ Improvements:
 
 Major changes:
 
-- Dropped support of EOL Python 2.7, 3.5, 3.6. See `Issue #47`_.
+- Dropped support of EoL Python 2.7, 3.5, 3.6. See `Issue #47`_.
 - The *gitwildmatch* pattern `dir/*` is now handled the same as `dir/`. This means `dir/*` will now match all descendants rather than only direct children. See `Issue #19`_.
 - Added `pathspec.GitIgnoreSpec` class (see new features).
 - Changed build system to `pyproject.toml`_ and build backend to `setuptools.build_meta`_ which may have unforeseen consequences.
