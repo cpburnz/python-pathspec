@@ -19,8 +19,8 @@ from typing import (
 	ClassVar,
 	Optional)  # Replaced by `X | None` in 3.10.
 
-from pathspec.patterns.gitignore.spec import (
-	GitWildMatchPattern)
+from pathspec.patterns.gitignore.basic import (
+	GitIgnoreBasicPattern)
 from pathspec.util import (
 	RecursionError,
 	check_match_file,
@@ -47,7 +47,7 @@ class CheckMatchFileTest(unittest.TestCase):
 		"""
 		Test checking a single file that is included.
 		"""
-		patterns = list(enumerate(map(GitWildMatchPattern, [
+		patterns = list(enumerate(map(GitIgnoreBasicPattern, [
 			"*.txt",
 			"!test/",
 		])))
@@ -60,7 +60,7 @@ class CheckMatchFileTest(unittest.TestCase):
 		"""
 		Test checking a single file that is excluded.
 		"""
-		patterns = list(enumerate(map(GitWildMatchPattern, [
+		patterns = list(enumerate(map(GitIgnoreBasicPattern, [
 			"*.txt",
 			"!test/",
 		])))
@@ -73,7 +73,7 @@ class CheckMatchFileTest(unittest.TestCase):
 		"""
 		Test checking a single file that is ignored.
 		"""
-		patterns = list(enumerate(map(GitWildMatchPattern, [
+		patterns = list(enumerate(map(GitIgnoreBasicPattern, [
 			"*.txt",
 			"!test/",
 		])))
@@ -86,7 +86,7 @@ class CheckMatchFileTest(unittest.TestCase):
 		"""
 		Test matching files individually.
 		"""
-		patterns = list(enumerate(map(GitWildMatchPattern, [
+		patterns = list(enumerate(map(GitIgnoreBasicPattern, [
 			'*.txt',
 			'!b.txt',
 		])))
@@ -633,7 +633,7 @@ class MatchFileTest(unittest.TestCase):
 		"""
 		Test checking a single file that is included.
 		"""
-		patterns = list(map(GitWildMatchPattern, [
+		patterns = list(map(GitIgnoreBasicPattern, [
 			"*.txt",
 			"!test/",
 		]))
@@ -646,7 +646,7 @@ class MatchFileTest(unittest.TestCase):
 		"""
 		Test checking a single file that is excluded.
 		"""
-		patterns = list(map(GitWildMatchPattern, [
+		patterns = list(map(GitIgnoreBasicPattern, [
 			"*.txt",
 			"!test/",
 		]))
@@ -659,7 +659,7 @@ class MatchFileTest(unittest.TestCase):
 		"""
 		Test checking a single file that is ignored.
 		"""
-		patterns = list(map(GitWildMatchPattern, [
+		patterns = list(map(GitIgnoreBasicPattern, [
 			"*.txt",
 			"!test/",
 		]))
@@ -672,7 +672,7 @@ class MatchFileTest(unittest.TestCase):
 		"""
 		Test matching files individually.
 		"""
-		patterns = list(map(GitWildMatchPattern, [
+		patterns = list(map(GitIgnoreBasicPattern, [
 			'*.txt',
 			'!b.txt',
 		]))

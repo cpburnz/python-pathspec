@@ -25,8 +25,6 @@ compatibility:
 -	:func:`pathspec.util.match_files`
 """
 
-__version__ = "0.13.0.dev1" # Temporary
-
 from .gitignore import (
 	GitIgnoreSpec)
 from .pathspec import (

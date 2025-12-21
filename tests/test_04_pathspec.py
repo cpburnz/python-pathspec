@@ -37,8 +37,8 @@ from pathspec._backends.simple.pathspec import (
 	SimplePsBackend)
 from pathspec.pattern import (
 	Pattern)
-from pathspec.patterns.gitignore.spec import (
-	GitWildMatchPatternError)
+from pathspec.patterns.gitignore.base import (
+	GitIgnorePatternError)
 from pathspec.util import (
 	iter_tree_entries)
 
@@ -410,7 +410,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Tests that patterns that end with an escaped space will be treated properly.
 		"""
-		with self.assertRaises(GitWildMatchPatternError):
+		with self.assertRaises(GitIgnorePatternError):
 			# An escape with double spaces is invalid. Disallow it. Better to be
 			# safe than sorry.
 			PathSpec.from_lines('gitwildmatch', [

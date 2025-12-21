@@ -22,7 +22,7 @@ class GitWildMatchPattern(GitIgnoreSpecPattern):
 	"""
 	The :class:`GitWildMatchPattern` class is deprecated and superseded by
 	:class:`.GitIgnoreSpecPattern` and :class:`~pathspec.patterns.gitignore.basic.GitIgnoreBasicPattern`.
-	This class only exists to maintain compatibility with v0.12.
+	This class only exists to maintain backward compatibility with v0.12.
 	"""
 
 	def __init__(self, *args, **kw) -> None:
@@ -52,7 +52,6 @@ class GitWildMatchPattern(GitIgnoreSpecPattern):
 		return super().pattern_to_regex(*args, **kw)
 
 
-# TODO: In a future version (probably v0.14), register GitWildMatchPattern
-# instead so that a deprecation warning will be triggered when using
-# "gitwildmatch".
-#util.register_pattern('gitwildmatch', GitWildMatchPattern)
+# DEPRECATED: Register GitWildMatchPattern as "gitwildmatch" for backward
+# compatibility with v0.12.
+util.register_pattern('gitwildmatch', GitWildMatchPattern)
