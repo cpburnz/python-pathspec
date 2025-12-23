@@ -1,9 +1,9 @@
 """
 This module provides the base definition for patterns.
 """
+from __future__ import annotations
 
 import re
-import warnings
 from collections.abc import (
 	Iterable,
 	Iterator)
@@ -17,6 +17,7 @@ from typing import (
 	Union)  # Replaced by `X | Y` in 3.10.
 
 from ._typing import (
+	deprecated,  # Added in 3.13.
 	override)  # Added in 3.12.
 
 RegexPatternSelf = TypeVar("RegexPatternSelf", bound="RegexPattern")
@@ -52,11 +53,15 @@ class Pattern(object):
 		null-operation (:data:`None`).
 		"""
 
+	@deprecated((
+		"Pattern.match() is deprecated. Use Pattern.match_file() with a loop for "
+		"similar results."
+	))
 	def match(self, files: Iterable[str]) -> Iterator[str]:
 		"""
-		DEPRECATED: This method is no longer used and has been replaced by
-		:meth:`.match_file`. Use the :meth:`.match_file` method with a loop for
-		similar results.
+		DEPRECATED: Deprecated since version 0.10.0. This method is no longer used
+		and has been replaced by :meth:`.match_file`. Use the :meth:`.match_file`
+		method with a loop for similar results.
 
 		Matches this pattern against the specified files.
 
@@ -66,12 +71,6 @@ class Pattern(object):
 		Returns an :class:`~collections.abc.Iterable` yielding each matched file
 		path (:class:`str`).
 		"""
-		warnings.warn((
-			"{cls.__module__}.{cls.__qualname__}.match() is deprecated. Use "
-			"{cls.__module__}.{cls.__qualname__}.match_file() with a loop for "
-			"similar results."
-		).format(cls=self.__class__), DeprecationWarning, stacklevel=2)
-
 		for file in files:
 			if self.match_file(file) is not None:
 				yield file
@@ -170,7 +169,7 @@ class RegexPattern(Pattern):
 		other.pattern = self.pattern
 		return other
 
-	def __eq__(self, other: 'RegexPattern') -> bool:
+	def __eq__(self, other: RegexPattern) -> bool:
 		"""
 		Tests the equality of this regex pattern with *other* (:class:`RegexPattern`)
 		by comparing their :attr:`~Pattern.include` and :attr:`~RegexPattern.regex`
@@ -182,11 +181,12 @@ class RegexPattern(Pattern):
 			return NotImplemented
 
 	@override
-	def match_file(self, file: str) -> Optional['RegexMatchResult']:
+	def match_file(self, file: AnyStr) -> Optional[RegexMatchResult]:
 		"""
 		Matches this pattern against the specified file.
 
-		*file* (:class:`str`) contains each file relative to the root directory
+		*file* (:class:`str` or :class:`bytes`) contains each file relative to the
+		root directory
 		(e.g., "relative/path/to/file").
 
 		Returns the match result (:class:`.RegexMatchResult`) if *file* matched;
@@ -200,16 +200,24 @@ class RegexPattern(Pattern):
 		return None
 
 	@classmethod
-	def pattern_to_regex(cls, pattern: str) -> tuple[str, bool]:
+	def pattern_to_regex(
+		cls,
+		pattern: AnyStr,
+	) -> tuple[Optional[AnyStr], Optional[bool]]:
 		"""
 		Convert the pattern into an uncompiled regular expression.
 
 		*pattern* (:class:`str`) is the pattern to convert into a regular
 		expression.
 
-		Returns the uncompiled regular expression (:class:`str` or :data:`None`),
-		and whether matched files should be included (:data:`True`), excluded
-		(:data:`False`), or is a null-operation (:data:`None`).
+		Returns a :class:`tuple` containing:
+
+			-	*pattern* (:class:`str`, :class:`bytes` or :data:`None`) is the
+				uncompiled regular expression .
+
+			-	*include* (:class:`bool` or :data:`None`) is whether matched files
+				should be included (:data:`True`), excluded (:data:`False`), or is a
+				null-operation (:data:`None`).
 
 			.. NOTE:: The default implementation simply returns *pattern* and
 			   :data:`True`.

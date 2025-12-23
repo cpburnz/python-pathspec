@@ -13,6 +13,7 @@ from typing import (
 	Optional)  # Replaced by `X | None` in 3.10.
 
 from pathspec._typing import (
+	assert_unreachable,
 	override)  # Added in 3.12.
 
 from .base import (
@@ -50,6 +51,178 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 	# Keep the dict-less class hierarchy.
 	__slots__ = ()
 
+	@staticmethod
+	def __normalize_segments(
+		is_dir_pattern: bool,
+		pattern_segs: list[str],
+	) -> tuple[Optional[list[str]], Optional[str]]:
+		"""
+		Normalize the pattern segments to make processing easier.
+
+		*is_dir_pattern* (:class:`bool`) is whether the pattern is a directory
+		pattern (i.e., ends with a slash '/').
+
+		*pattern_segs* (:class:`list` of :class:`str`) contains the pattern
+		segments. This may be modified in place.
+
+		Returns a :class:`tuple` containing either:
+
+		- The normalized segments (:class:`list` of :class:`str`; or :data:`None`).
+
+		- The regular expression override (:class:`str` or :data:`None`).
+		"""
+		if len(pattern_segs) == 2 and pattern_segs[0] == '**' and not pattern_segs[1]:
+			# EDGE CASE: The '**/' pattern should match everything except individual
+			# files in the root directory. This case cannot be adequately handled
+			# through normalization. Use the override.
+			return (None, _DIR_MARK_CG)
+
+		if not pattern_segs[0]:
+			# A pattern beginning with a slash ('/') should match relative to the root
+			# directory. Remove the empty first segment to make the pattern relative
+			# to root.
+			del pattern_segs[0]
+
+		elif len(pattern_segs) == 1 or (len(pattern_segs) == 2 and not pattern_segs[1]):
+			# A single segment pattern with or without a trailing slash ('/') will
+			# match any descendant path. This is equivalent to "**/{pattern}". Prepend
+			# double-asterisk segment to make pattern relative to root.
+			if pattern_segs[0] != '**':
+				pattern_segs.insert(0, '**')
+
+		else:
+			# A pattern without a beginning slash ('/') but contains at least one
+			# prepended directory (e.g., "dir/{pattern}") should match relative to the
+			# root directory. No segment modification is needed.
+			pass
+
+		if not pattern_segs:
+			# After resolving the edge cases, we end up with no pattern at all. This
+			# must be because the pattern is invalid.
+			raise ValueError("Pattern normalized to nothing.")
+
+		if not pattern_segs[-1]:
+			# A pattern ending with a slash ('/') will match all descendant paths if
+			# it is a directory but not if it is a regular file. This is equivalent to
+			# "{pattern}/**". Set empty last segment to a double-asterisk to include
+			# all descendants.
+			pattern_segs[-1] = '**'
+
+		# EDGE CASE: Deal with duplicate double-asterisk sequences. Collapse each
+		# sequence down to one double-asterisk. Iterate over the segments in reverse
+		# and remove the duplicate double asterisks as we go.
+		for i in range(len(pattern_segs) - 1, 0, -1):
+			prev = pattern_segs[i-1]
+			seg = pattern_segs[i]
+			if prev == '**' and seg == '**':
+				del pattern_segs[i]
+
+		seg_count = len(pattern_segs)
+		if seg_count == 1 and pattern_segs[0] == '**':
+			if is_dir_pattern:
+				# The pattern "**/" will be normalized to "**", but it should match
+				# everything except for files in the root. Special case this pattern.
+				return (None, _DIR_MARK_CG)
+			else:
+				# The pattern "**" will match every path. Special case this pattern.
+				return (None, '.')
+
+		elif (
+			seg_count == 2
+			and pattern_segs[0] == '**'
+			and pattern_segs[1] == '*'
+		):
+			# The pattern "*" will be normalized to "**/*" and will match every
+			# path. Special case this pattern for efficiency.
+			return (None, '.')
+
+		elif (
+			seg_count == 3
+			and pattern_segs[0] == '**'
+			and pattern_segs[1] == '*'
+			and pattern_segs[2] == '**'
+		):
+			# The pattern "*/" will be normalized to "**/*/**" which will match every
+			# file not in the root directory. Special case this pattern for
+			# efficiency.
+			if is_dir_pattern:
+				return (None, _DIR_MARK_CG)
+			else:
+				return (None, '/')
+
+		# No regular expression override, return modified pattern segments.
+		return (pattern_segs, None)
+
+	@classmethod
+	def __translate_segments(
+		cls,
+		is_dir_pattern: bool,
+		pattern_segs: list[str],
+	) -> list[str]:
+		"""
+		Translate the pattern segments to regular expressions.
+
+		*is_dir_pattern* (:class:`bool`) is whether the pattern is a directory
+		pattern (i.e., ends with a slash '/').
+
+		*pattern_segs* (:class:`list` of :class:`str`) contains the pattern
+		segments.
+
+		Returns the regular expression parts (:class:`list` of :class:`str`).
+		"""
+		# Build regular expression from pattern.
+		out_parts = []
+		need_slash = False
+		end = len(pattern_segs) - 1
+		for i, seg in enumerate(pattern_segs):
+			if seg == '**':
+				if i == 0:
+					# A normalized pattern beginning with double-asterisks ('**') will
+					# match any leading path segments.
+					out_parts.append('^(?:.+/)?')
+
+				elif i < end:
+					# A pattern with inner double-asterisks ('**') will match multiple (or
+					# zero) inner path segments.
+					out_parts.append('(?:/.+)?')
+					need_slash = True
+
+				else:
+					assert i == end, (i, end)
+					# A normalized pattern ending with double-asterisks ('**') will match
+					# any trailing path segments.
+					if is_dir_pattern:
+						out_parts.append(_DIR_MARK_CG)
+					else:
+						out_parts.append('/')
+
+			else:
+				# Match path segment.
+				if i == 0:
+					# Anchor to root directory.
+					out_parts.append('^')
+
+				if need_slash:
+					out_parts.append('/')
+
+				if seg == '*':
+					# Match whole path segment.
+					out_parts.append('[^/]+')
+
+				else:
+					# Match segment glob pattern.
+					out_parts.append(cls._translate_segment_glob(seg))
+
+				if i == end:
+					# A pattern ending without a slash ('/') will match a file or a
+					# directory (with paths underneath it). E.g., "foo" matches "foo",
+					# "foo/bar", "foo/bar/baz", etc.
+					out_parts.append(_DIR_MARK_OPT)
+
+				need_slash = True
+
+		return out_parts
+
 	@override
 	@classmethod
 	def pattern_to_regex(
@@ -80,7 +253,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 		if pattern_str.endswith('\\ '):
 			# EDGE CASE: Spaces can be escaped with backslash. If a pattern that ends
-			# with backslash followed by a space, only strip from left.
+			# with a backslash is followed by a space, only strip from the left.
 			pattern_str = pattern_str.lstrip()
 		else:
 			pattern_str = pattern_str.strip()
@@ -126,147 +299,34 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		is_dir_pattern = not pattern_segs[-1]
 
 		# Normalize pattern to make processing easier.
+		try:
+			pattern_segs, override_regex = cls.__normalize_segments(
+				is_dir_pattern, pattern_segs,
+			)
+		except ValueError as e:
+			raise GitIgnorePatternError((
+				f"Invalid git pattern: {original_pattern!r}"
+			)) from e  # GitIgnorePatternError
 
-		if len(pattern_segs) == 2 and pattern_segs[0] == '**' and not pattern_segs[1]:
-			# EDGE CASE: The '**/' pattern should match everything except individual
-			# files in the root directory. This case cannot be adequately handled
-			# through normalization. Use the override.
-			override_regex = _DIR_MARK_CG
-
-		if not pattern_segs[0]:
-			# A pattern beginning with a slash ('/') should match relative to the root
-			# directory. Remove the empty first segment to make the pattern relative
-			# to root.
-			del pattern_segs[0]
-
-		elif len(pattern_segs) == 1 or (len(pattern_segs) == 2 and not pattern_segs[1]):
-			# A single segment pattern with or without a trailing slash ('/') will
-			# match any descendant path. This is equivalent to "**/{pattern}". Prepend
-			# double-asterisk segment to make pattern relative to root.
-			if pattern_segs[0] != '**':
-				pattern_segs.insert(0, '**')
-
-		else:
-			# A pattern without a beginning slash ('/') but contains at least one
-			# prepended directory (e.g., "dir/{pattern}") should match relative to the
-			# root directory. No segment modification is needed.
-			pass
-
-		if not pattern_segs:
-			# After resolving the edge cases, we end up with no pattern at all. This
-			# must be because the pattern is invalid.
-			raise GitIgnorePatternError(f"Invalid git pattern: {original_pattern!r}")
-
-		if not pattern_segs[-1]:
-			# A pattern ending with a slash ('/') will match all descendant paths if
-			# it is a directory but not if it is a regular file. This is equivalent to
-			# "{pattern}/**". Set empty last segment to a double-asterisk to include
-			# all descendants.
-			pattern_segs[-1] = '**'
-
-		# EDGE CASE: Deal with duplicate double-asterisk sequences. Collapse each
-		# sequence down to one double-asterisk. Iterate over the segments in
-		# reverse and remove the duplicate double asterisks as we go.
-		for i in range(len(pattern_segs) - 1, 0, -1):
-			prev = pattern_segs[i-1]
-			seg = pattern_segs[i]
-			if prev == '**' and seg == '**':
-				del pattern_segs[i]
-
-		if override_regex is None:
-			seg_count = len(pattern_segs)
-			if seg_count == 1 and pattern_segs[0] == '**':
-				if is_dir_pattern:
-					# The pattern "**/" will be normalized to "**", but it should match
-					# everything except for files in the root. Special case this pattern.
-					override_regex = _DIR_MARK_CG
-				else:
-					# The pattern "**" will match every path. Special case this pattern.
-					override_regex = '.'
-
-			elif (
-				seg_count == 2
-				and pattern_segs[0] == '**'
-				and pattern_segs[1] == '*'
-			):
-				# The pattern "*" will be normalized to "**/*" and will match every
-				# path. Special case this pattern for efficiency.
-				override_regex = '.'
-
-			elif (
-				seg_count == 3
-				and pattern_segs[0] == '**'
-				and pattern_segs[1] == '*'
-				and pattern_segs[2] == '**'
-			):
-				# The pattern "*/" will be normalized to "**/*/**" which will match
-				# every file not in the root directory. Special case this pattern for
-				# efficiency.
-				if is_dir_pattern:
-					override_regex = _DIR_MARK_CG
-				else:
-					override_regex = '/'
-
-		if override_regex is None:
-			# Build regular expression from pattern.
-			output = []
-			need_slash = False
-			end = len(pattern_segs) - 1
-			for i, seg in enumerate(pattern_segs):
-				if seg == '**':
-					if i == 0:
-						# A normalized pattern beginning with double-asterisks ('**') will
-						# match any leading path segments.
-						output.append('^(?:.+/)?')
-
-					elif i < end:
-						# A pattern with inner double-asterisks ('**') will match multiple
-						# (or zero) inner path segments.
-						output.append('(?:/.+)?')
-						need_slash = True
-
-					else:
-						assert i == end, (i, end)
-						# A normalized pattern ending with double-asterisks ('**') will
-						# match any trailing path segments.
-						if is_dir_pattern:
-							output.append(_DIR_MARK_CG)
-						else:
-							output.append('/')
-
-				else:
-					# Match path segment.
-					if i == 0:
-						# Anchor to root directory.
-						output.append('^')
-
-					if need_slash:
-						output.append('/')
-
-					if seg == '*':
-						# Match whole path segment.
-						output.append('[^/]+')
-
-					else:
-						# Match segment glob pattern.
-						try:
-							output.append(cls._translate_segment_glob(seg))
-						except ValueError as e:
-							raise GitIgnorePatternError(f"Invalid git pattern: {original_pattern!r}") from e
-
-					if i == end:
-						# A pattern ending without a slash ('/') will match a file or a
-						# directory (with paths underneath it). E.g., "foo" matches "foo",
-						# "foo/bar", "foo/bar/baz", etc.
-						output.append(_DIR_MARK_OPT)
-
-					need_slash = True
-
-			regex = ''.join(output)
-
-		else:
+		if override_regex is not None:
 			# Use regex override.
 			regex = override_regex
+
+		elif pattern_segs is not None:
+			# Build regular expression from pattern.
+			try:
+				regex_parts = cls.__translate_segments(is_dir_pattern, pattern_segs)
+			except ValueError as e:
+				raise GitIgnorePatternError((
+					f"Invalid git pattern: {original_pattern!r}"
+				)) from e  # GitIgnorePatternError
+
+			regex = ''.join(regex_parts)
+
+		else:
+			assert_unreachable((
+				f"{override_regex=} and {pattern_segs=} cannot both be null."
+			))  # assert_unreachable
 
 		# Encode regex if needed.
 		out_regex: AnyStr

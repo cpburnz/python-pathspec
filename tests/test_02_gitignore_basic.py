@@ -108,17 +108,17 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		self.assertTrue(include)
 		self.assertIsNotNone(regex)
 
-		equivalent_regex, include = GitIgnoreBasicPattern.pattern_to_regex('/**/**')
+		equiv_regex, include = GitIgnoreBasicPattern.pattern_to_regex('/**/**')
 		self.assertTrue(include)
-		self.assertEqual(equivalent_regex, regex)
+		self.assertEqual(equiv_regex, regex)
 
-		equivalent_regex, include = GitIgnoreBasicPattern.pattern_to_regex('/')
+		equiv_regex, include = GitIgnoreBasicPattern.pattern_to_regex('/')
 		self.assertTrue(include)
-		self.assertEqual(equivalent_regex, regex)
+		self.assertEqual(equiv_regex, regex)
 
-		equivalent_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**')
+		equiv_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**')
 		self.assertTrue(include)
-		self.assertEqual(equivalent_regex, regex)
+		self.assertEqual(equiv_regex, regex)
 
 	def test_01_relative(self):
 		"""
@@ -333,37 +333,37 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		self.assertTrue(include)
 		self.assertEqual(regex, '.')
 
-		equivalent_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/**')
+		equiv_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/**')
 		self.assertTrue(include)
-		self.assertEqual(equivalent_regex, regex)
+		self.assertEqual(equiv_regex, regex)
 
-		equivalent_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/**/**')
+		equiv_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/**/**')
 		self.assertTrue(include)
-		self.assertEqual(equivalent_regex, regex)
+		self.assertEqual(equiv_regex, regex)
 
 		regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/api')
 		self.assertTrue(include)
 		self.assertEqual(regex, f'^(?:.+/)?api{_DIR_OPT}')
 
-		equivalent_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/**/api')
+		equiv_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/**/api')
 		self.assertTrue(include)
-		self.assertEqual(equivalent_regex, regex)
+		self.assertEqual(equiv_regex, regex)
 
 		regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/api/')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^(?:.+/)?api/')
 
-		equivalent_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/**/api/')
+		equiv_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/**/api/')
 		self.assertTrue(include)
-		self.assertEqual(equivalent_regex, regex)
+		self.assertEqual(equiv_regex, regex)
 
 		regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/api/**')
 		self.assertTrue(include)
 		self.assertEqual(regex, '^(?:.+/)?api/')
 
-		equivalent_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/**/api/**/**')
+		equiv_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/**/api/**/**')
 		self.assertTrue(include)
-		self.assertEqual(equivalent_regex, regex)
+		self.assertEqual(equiv_regex, regex)
 
 	def test_03_double_asterisk_trailing_slash_edge_case(self):
 		"""
@@ -384,9 +384,9 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		+ /
 		'''
 
-		equivalent_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/**/')
+		equiv_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/**/')
 		self.assertTrue(include)
-		self.assertEqual(equivalent_regex, regex)
+		self.assertEqual(equiv_regex, regex)
 
 	def test_04_infix_wildcard(self):
 		"""
@@ -858,17 +858,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		"""
 		pattern = GitIgnoreBasicPattern('!libfoo/*')
 
-		# TODO: BUG
-		'''
-		self.assertEqual(pattern.regex.pattern, f'^libfoo/[^/]+{_DIR_OPT}')
-		~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-		AssertionError: '^libfoo/[^/]+/?$' != '^libfoo/[^/]+$'
-		- ^libfoo/[^/]+/?$
-		?              --
-		+ ^libfoo/[^/]+$
-		'''
-
-		self.assertEqual(pattern.regex.pattern, f'^libfoo/[^/]+$')
+		self.assertEqual(pattern.regex.pattern, f'^libfoo/[^/]+/?$')
 		self.assertIs(pattern.include, False)
 		self.assertTrue(pattern.match_file('libfoo/__init__.py'))
 

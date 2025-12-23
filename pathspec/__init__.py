@@ -35,7 +35,8 @@ from .pattern import (
 from .util import (
 	RecursionError,
 	lookup_pattern,
-	match_files)
+	match_files,  # Deprecated since 0.10.0.
+	iter_tree)  # Deprecated since 0.10.0.
 
 from ._meta import (
 	__author__,

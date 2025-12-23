@@ -7,7 +7,6 @@ import os.path
 import pathlib
 import posixpath
 import stat
-import warnings
 from collections.abc import (
 	Callable,
 	Collection,
@@ -28,6 +27,8 @@ from typing import (
 
 from .pattern import (
 	Pattern)
+from ._typing import (
+	deprecated)  # Added in 3.13.
 
 StrPath = Union[str, PathLike[str]]
 
@@ -190,6 +191,17 @@ def _is_iterable(value: Any) -> bool:
 	Returns whether *value* is an iterable (:class:`bool`).
 	"""
 	return isinstance(value, Iterable) and not isinstance(value, (str, bytes))
+
+
+@deprecated((
+	"pathspec.util.iter_tree() is deprecated. Use iter_tree_files() instead."
+))
+def iter_tree(root, on_error=None, follow_links=None):
+	"""
+	DEPRECATED: Deprecated since version 0.10.0. The :func:`.iter_tree` function
+	is an alias for the :func:`.iter_tree_files` function.
+	"""
+	return iter_tree_files(root, on_error=on_error, follow_links=follow_links)
 
 
 def iter_tree_entries(
@@ -432,13 +444,18 @@ def match_file(patterns: Iterable[Pattern], file: str) -> bool:
 	return matched
 
 
+@deprecated((
+	"pathspec.util.match_files() is deprecated. Use match_file() with a loop for "
+	"better results."
+))
 def match_files(
 	patterns: Iterable[Pattern],
 	files: Iterable[str],
 ) -> set[str]:
 	"""
-	DEPRECATED: This is an old function no longer used. Use the
-	:func:`~pathspec.util.match_file` function with a loop for better results.
+	DEPRECATED: Deprecated since version 0.10.0. This is an old function no longer
+	used. Use the :func:`~pathspec.util.match_file` function with a loop for
+	better results.
 
 	Matches the files to the patterns.
 
@@ -450,11 +467,6 @@ def match_files(
 
 	Returns the matched files (:class:`set` of :class:`str`).
 	"""
-	warnings.warn((
-		f"{__name__}.match_files() is deprecated. Use {__name__}.match_file() with "
-		f"a loop for better results."
-	), DeprecationWarning, stacklevel=2)
-
 	use_patterns = [__pat for __pat in patterns if __pat.include is not None]
 
 	return_files = set()
@@ -504,13 +516,17 @@ def normalize_file(
 	return norm_file
 
 
+@deprecated((
+	"pathspec.util.normalize_files() is deprecated. Use normalize_file() with a "
+	"loop for better results."
+))
 def normalize_files(
 	files: Iterable[StrPath],
 	separators: Optional[Collection[str]] = None,
 ) -> dict[str, list[StrPath]]:
 	"""
-	DEPRECATED: This function is no longer used. Use the :func:`.normalize_file`
-	function with a loop for better results.
+	DEPRECATED: Deprecated since 0.10.0. This function is no longer used. Use the
+	:func:`.normalize_file` function with a loop for better results.
 
 	Normalizes the file paths to use the POSIX path separator.
 
@@ -525,11 +541,6 @@ def normalize_files(
 	the original file paths (:class:`list` of :class:`str` or
 	:class:`os.PathLike`).
 	"""
-	warnings.warn((
-		"util.normalize_files() is deprecated. Use util.normalize_file() with a "
-		"loop for better results."
-	), DeprecationWarning, stacklevel=2)
-
 	norm_files = {}
 	for path in files:
 		norm_file = normalize_file(path, separators=separators)

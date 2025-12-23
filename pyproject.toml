@@ -29,7 +29,7 @@ license = {text = "MPL 2.0"}
 name = "pathspec"
 readme = "README-dist.rst"
 requires-python = ">=3.9"
-version = "0.13.0.dev1"
+version = "1.0.0.dev1"
 
 [project.optional-dependencies]
 google-re2 = [
@@ -38,9 +38,12 @@ google-re2 = [
 hyperscan = [
 	"hyperscan >=0.7",
 ]
+optional = [
+	"typing-extensions >=4",
+]
 tests = [
 	"pytest >=9",
-	"typing_extensions >=4.15",
+	"typing-extensions >=4.15",
 ]
 
 [project.urls]

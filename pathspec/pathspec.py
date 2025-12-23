@@ -2,7 +2,6 @@
 This module provides an object-oriented interface for pattern matching of files.
 """
 
-import warnings
 from collections.abc import (
 	Callable,
 	Collection,
@@ -26,6 +25,8 @@ from pathspec._backends.agg import (
 	make_pathspec_backend)
 from pathspec.pattern import (
 	Pattern)
+from pathspec._typing import (
+	deprecated)  # Added in 3.13.
 from pathspec.util import (
 	CheckResult,
 	StrPath,
@@ -405,16 +406,15 @@ class PathSpec(object):
 		entries = util.iter_tree_entries(root, on_error=on_error, follow_links=follow_links)
 		yield from self.match_entries(entries, negate=negate)
 
-	# Alias `match_tree_files()` as `match_tree()` for backward compatibility
-	# before v0.3.2. The warning was only added in v0.13.
+	# NOTICE: The warning was only added in 1.0.0 (from TODO 2025-12-23).
+	@deprecated((
+		"PathSpec.match_tree() is deprecated. Use .match_tree_files() instead."
+	))
 	def match_tree(self, *args, **kw) -> Iterator[str]:
 		"""
-		DEPRECATED: Use :meth:`PathSpec.match_tree_files` instead.
+		DEPRECATED: Deprecated since version 0.3.2. Use :meth:`PathSpec.match_tree_files`
+		instead.
 		"""
-		warnings.warn((
-			f"{self.__class__.__qualname__}.match_tree() is deprecated. Use "
-			f"{self.__class__.__qualname__}.match_tree_files() instead."
-		), DeprecationWarning, stacklevel=2)
 		return self.match_tree_files(*args, **kw)
 
 	def match_tree_files(

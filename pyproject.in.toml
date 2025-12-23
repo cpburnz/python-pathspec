@@ -38,9 +38,12 @@ google-re2 = [
 hyperscan = [
 	"hyperscan >=0.7",
 ]
+optional = [
+	"typing-extensions >=4",
+]
 tests = [
 	"pytest >=9",
-	"typing_extensions >=4.15",
+	"typing-extensions >=4.15",
 ]
 
 [project.urls]

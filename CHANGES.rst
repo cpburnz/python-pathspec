@@ -3,7 +3,7 @@ Change History
 ==============
 
 
-0.13.0 (TBD)
+1.0.0 (TBD: Soon)
 -------------------
 
 Major changes:
@@ -21,17 +21,19 @@ API changes:
 - Deprecated: `pathspec.patterns.gitwildmatch.GitWildMatchPattern` is an alias for `pathspec.patterns.gitignore.spec.GitIgnoreSpecPattern`.
 - Deprecated: `pathspec.patterns.gitwildmatch.GitWildMatchPatternError` is an alias for `pathspec.patterns.gitignore.GitIgnorePatternError`.
 - Removed: `pathspec.patterns.gitwildmatch.GitIgnorePattern` has been deprecated since v0.4 (2016-07-15).
-- Removed: `pathspec.iter_tree()` has been deprecated since v0.10 (2022-08-30).
-- Removed: `pathspec.util.iter_tree()` has been deprecated since v0.10 (2022-08-30).
+- Signature of class method `pathspec.pattern.RegexPattern.match_file()` has been changed from `def match_file(self, file: str) -> RegexMatchResult | None` to `def match_file(self, file: AnyStr) -> RegexMatchResult | None` to reflect usage.
+- Signature of class method `pathspec.pattern.RegexPattern.pattern_to_regex()` has been changed from `def pattern_to_regex(cls, pattern: str) -> tuple[str, bool]` to `def pattern_to_regex(cls, pattern: AnyStr) -> tuple[AnyStr | None, bool | None]` to reflect usage and documentation.
 
 New features:
 
 - Added optional "hyperscan" backend using `hyperscan`_ library. It will automatically be used when installed. This dependency can be installed with ``pip install 'pathspec[hyperscan]'``.
 - Added optional "re2" backend using the `google-re2`_ library. It will automatically be used when installed. This dependency can be installed with ``pip install 'pathspec[google-re2]'``.
+- Added optional dependency on `typing-extensions`_ library to improve some type hints.
 
 Bug fixes:
 
-- `Issue #98`_: UnboundLocalError in RegexPattern when initialized with pattern=None.
+- `Issue #98`_: UnboundLocalError in RegexPattern when initialized with `pattern=None`.
+- Type hint on return value of `pathspec.pattern.RegexPattern.match_file()` to match documentation.
 
 Improvements:
 
@@ -45,6 +47,7 @@ Improvements:
 .. _`Issue #98`: https://github.com/cpburnz/python-pathspec/issues/98
 .. _`google-re2`: https://pypi.org/project/google-re2/
 .. _`hyperscan`: https://pypi.org/project/hyperscan/
+.. _`typing-extensions`: https://pypi.org/project/typing-extensions/
 
 
 0.12.1 (2023-12-10)

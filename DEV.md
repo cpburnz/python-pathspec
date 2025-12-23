@@ -5,9 +5,7 @@ Development Notes
 TODO
 ----
 
-- Tests.
 - Benchmarks.
-- Later: Improve docs.
 - Do not remove recently deprecated functions/methods.
 
 
