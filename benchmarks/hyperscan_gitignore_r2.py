@@ -30,7 +30,7 @@ from pathspec._backends.hyperscan.pathspec import (
 from pathspec.pattern import (
 	RegexPattern)
 from pathspec.patterns.gitignore.spec import (
-	GitWildMatchPattern,
+	GitIgnoreSpecPattern,
 	_BYTES_ENCODING)
 
 
@@ -62,7 +62,7 @@ class _HyperscanGiR2BaseBackend(HyperscanPsBackend):
 			regex = pattern.regex.pattern
 
 			use_regexes: list[tuple[Union[str, bytes], bool]] = []
-			if isinstance(pattern, GitWildMatchPattern):
+			if isinstance(pattern, GitIgnoreSpecPattern):
 				# GitWildMatch uses capture groups for its directory marker but
 				# Hyperscan does not support capture groups. Check for this scenario.
 				if isinstance(regex, str):
