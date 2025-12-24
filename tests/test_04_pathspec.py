@@ -26,9 +26,9 @@ from unittest import (
 
 from pathspec import (
 	PathSpec)
-from pathspec._backends.base import (
-	Backend,
-	BackendNamesHint)
+from pathspec.backend import (
+	BackendNamesHint,
+	_Backend)
 from pathspec._backends.hyperscan.pathspec import (
 	HyperscanPsBackend)
 from pathspec._backends.re2.pathspec import (
@@ -107,7 +107,7 @@ class PathSpecTest(unittest.TestCase):
 		lines = list(lines)
 
 		configs: list[tuple[
-			str, BackendNamesHint, Optional[Callable[[Sequence[Pattern]], Backend]]
+			str, BackendNamesHint, Optional[Callable[[Sequence[Pattern]], _Backend]]
 		]] = []
 
 		# Simple backend, no optimizations.

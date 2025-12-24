@@ -21,7 +21,7 @@ from unittest import (
 from pathspec import (
 	PathSpec,
 	RegexPattern)
-from pathspec._backends.base import (
+from pathspec.backend import (
 	BackendNamesHint)
 from pathspec._backends.hyperscan.base import (
 	hyperscan_error)
