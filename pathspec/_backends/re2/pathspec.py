@@ -17,13 +17,13 @@ try:
 except ModuleNotFoundError:
 	re2 = None
 
+from pathspec.backend import (
+	_Backend)
 from pathspec.pattern import (
 	RegexPattern)
 from pathspec._typing import (
 	override)  # Added in 3.12.
 
-from ..base import (
-	Backend)
 from .._utils import (
 	enumerate_patterns)
 
@@ -35,7 +35,7 @@ from ._base import (
 	Re2RegexDebug)
 
 
-class Re2PsBackend(Backend):
+class Re2PsBackend(_Backend):
 	"""
 	The :class:`Re2PsBackend` class is the :module:`re2` implementation used by
 	:class:`~pathspec.pathspec.PathSpec` for matching files.

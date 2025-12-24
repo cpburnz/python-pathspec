@@ -1,23 +1,26 @@
 """
-This module defines base classes for implementing pattern (or regex) matching
-backends.
-
-WARNING: The *pathspec._backends* package is not part of the public API. Its
-contents and structure are likely to change.
+This module defines the necessary classes and type hints for exposing the bare
+minimum of the internal implementations for the pattern (regular expression)
+matching backends. The exact structure of the backends is not solidified and is
+subject to change.
 """
-
-# TODO: Move this module (only) to `pathspec.backend`.
 
 from typing import (
 	Literal,
 	Optional)
 
 BackendNamesHint = Literal['best', 'hyperscan', 're2', 'simple']
+"""
+The supported backend values.
+"""
 
 
-class Backend(object):
+class _Backend(object):
 	"""
-	The :class:`Backend` class is the abstract base class defining how to match
+	.. warning:: This class is not part of the public API. It is subject to
+		change.
+
+	The :class:`_Backend` class is the abstract base class defining how to match
 	files against patterns.
 	"""
 

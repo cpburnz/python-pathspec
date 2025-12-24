@@ -18,13 +18,13 @@ try:
 except ModuleNotFoundError:
 	hyperscan = None
 
+from pathspec.backend import (
+	_Backend)
 from pathspec.pattern import (
 	RegexPattern)
 from pathspec._typing import (
 	override)  # Added in 3.12.
 
-from ..base import (
-	Backend)
 from .._utils import (
 	enumerate_patterns)
 
@@ -36,7 +36,7 @@ from ._base import (
 	HyperscanExprDebug)
 
 
-class HyperscanPsBackend(Backend):
+class HyperscanPsBackend(_Backend):
 	"""
 	The :class:`HyperscanPsBackend` class is the :module:`hyperscan`
 	implementation used by :class:`~pathspec.pathspec.PathSpec` for matching

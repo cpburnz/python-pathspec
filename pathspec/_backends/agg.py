@@ -11,13 +11,13 @@ from collections.abc import (
 from typing import (
 	cast)
 
+from pathspec.backend import (
+	BackendNamesHint,
+	_Backend)
 from pathspec.pattern import (
 	Pattern,
 	RegexPattern)
 
-from .base import (
-	Backend,
-	BackendNamesHint)
 from .hyperscan.base import (
 	hyperscan_error)
 from .hyperscan.gitignore import (
@@ -51,7 +51,7 @@ else:
 def make_gitignore_backend(
 	name: BackendNamesHint,
 	patterns: Sequence[Pattern],
-) -> Backend:
+) -> _Backend:
 	"""
 	Create the specified backend with the supplied patterns for
 	:class:`~pathspec.gitignore.GitIgnoreSpec`.
@@ -61,7 +61,7 @@ def make_gitignore_backend(
 	*patterns* (:class:`.Iterable` of :class:`.Pattern`) contains the compiled
 	patterns.
 
-	Returns the backend (:class:`.Backend`).
+	Returns the backend (:class:`._Backend`).
 	"""
 	if name == 'best':
 		name = _BEST_BACKEND
@@ -79,7 +79,7 @@ def make_gitignore_backend(
 def make_pathspec_backend(
 	name: BackendNamesHint,
 	patterns: Sequence[Pattern],
-) -> Backend:
+) -> _Backend:
 	"""
 	Create the specified backend with the supplied patterns for
 	:class:`~pathspec.pathspec.PathSpec`.
@@ -89,7 +89,7 @@ def make_pathspec_backend(
 	*patterns* (:class:`Iterable` of :class:`Pattern`) contains the compiled
 	patterns.
 
-	Returns the backend (:class:`.Backend`).
+	Returns the backend (:class:`._Backend`).
 	"""
 	if name == 'best':
 		name = _BEST_BACKEND

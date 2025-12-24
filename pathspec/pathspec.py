@@ -24,8 +24,8 @@ except ImportError:
 	Self = TypeVar("Self", bound='PathSpec')
 
 from pathspec import util
-from pathspec._backends.base import (
-	Backend,
+from pathspec.backend import (
+	_Backend,
 	BackendNamesHint)
 from pathspec._backends.agg import (
 	make_pathspec_backend)
@@ -53,7 +53,7 @@ class PathSpec(object):
 		patterns: Union[Sequence[Pattern], Iterable[Pattern]],
 		*,
 		backend: Union[BackendNamesHint, str, None] = None,
-		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
+		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], _Backend]] = None,
 	) -> None:
 		"""
 		Initializes the :class:`.PathSpec` instance.
@@ -79,9 +79,9 @@ class PathSpec(object):
 		else:
 			use_backend = self._make_backend(backend, patterns)
 
-		self._backend: Backend = use_backend
+		self._backend: _Backend = use_backend
 		"""
-		*_backend* (:class:`.Backend`) is the pattern (regular expression) matching
+		*_backend* (:class:`._Backend`) is the pattern (regular expression) matching
 		backend.
 		"""
 
@@ -224,7 +224,7 @@ class PathSpec(object):
 		lines: Iterable[AnyStr],
 		*,
 		backend: Union[BackendNamesHint, str, None] = None,
-		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
+		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], _Backend]] = None,
 	) -> Self:
 		"""
 		Compiles the pattern lines.
@@ -262,8 +262,11 @@ class PathSpec(object):
 	def _make_backend(
 		name: BackendNamesHint,
 		patterns: Sequence[Pattern],
-	) -> Backend:
+	) -> _Backend:
 		"""
+		.. warning:: This method is not part of the public API. It is subject to
+			change.
+
 		Create the backend for the patterns.
 
 		*name* (:class:`str`) is the name of the backend.
@@ -271,7 +274,7 @@ class PathSpec(object):
 		*patterns* (:class:`~collections.abc.Sequence` of :class:`.Pattern`)
 		contains the compiled patterns.
 
-		Returns the matcher (:class:`.Backend`).
+		Returns the matcher (:class:`._Backend`).
 		"""
 		return make_pathspec_backend(name, patterns)
 

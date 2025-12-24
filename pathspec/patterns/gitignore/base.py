@@ -17,6 +17,9 @@ The encoding to use when parsing a byte string pattern.
 
 class _GitIgnoreBasePattern(RegexPattern):
 	"""
+	.. warning:: This class is not part of the public API. It is subject to
+		change.
+
 	The :class:`_GitIgnoreBasePattern` class is the base implementation for a
 	compiled gitignore pattern.
 	"""
@@ -158,7 +161,9 @@ class _GitIgnoreBasePattern(RegexPattern):
 				regex += re.escape(char)
 
 		if escape:
-			raise ValueError(f"Escape character found with no next character to escape: {pattern!r}")
+			raise ValueError((
+				f"Escape character found with no next character to escape: {pattern!r}"
+			))  # ValueError
 
 		return regex
 

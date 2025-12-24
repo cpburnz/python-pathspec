@@ -1,4 +1,4 @@
-:tocdepth: 2
+:tocdepth: 3
 
 API
 ===
@@ -29,7 +29,18 @@ pathspec.gitignore
 		:members:
 		:inherited-members:
 		:show-inheritance:
-		:special-members: __init__, __eq__
+		:special-members: __init__, __eq__, __len__
+
+
+pathspec.backend
+----------------
+
+.. automodule:: pathspec.backend
+	:members:
+
+	.. autoclass:: _Backend
+		:show-inheritance:
+
 
 
 pathspec.pattern

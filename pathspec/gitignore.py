@@ -23,9 +23,9 @@ try:
 except ImportError:
 	Self = TypeVar("Self", bound='GitIgnoreSpec')
 
-from pathspec._backends.base import (
-	Backend,
-	BackendNamesHint)
+from pathspec.backend import (
+	BackendNamesHint,
+	_Backend)
 from pathspec._backends.agg import (
 	make_gitignore_backend)
 from pathspec.pathspec import (
@@ -72,7 +72,7 @@ class GitIgnoreSpec(PathSpec):
 		lines: Iterable[AnyStr],
 		*,
 		backend: Union[BackendNamesHint, str, None] = None,
-		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
+		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], _Backend]] = None,
 	) -> Self:
 		...
 
@@ -84,7 +84,7 @@ class GitIgnoreSpec(PathSpec):
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern], None] = None,
 		*,
 		backend: Union[BackendNamesHint, str, None] = None,
-		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
+		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], _Backend]] = None,
 	) -> Self:
 		...
 
@@ -96,7 +96,7 @@ class GitIgnoreSpec(PathSpec):
 		pattern_factory: Union[str, Callable[[AnyStr], Pattern], None] = None,
 		*,
 		backend: Union[BackendNamesHint, str, None] = None,
-		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], Backend]] = None,
+		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], _Backend]] = None,
 	) -> Self:
 		"""
 		Compiles the pattern lines.
@@ -147,8 +147,11 @@ class GitIgnoreSpec(PathSpec):
 	def _make_backend(
 		name: BackendNamesHint,
 		patterns: Sequence[Pattern],
-	) -> Backend:
+	) -> _Backend:
 		"""
+		.. warning:: This method is not part of the public API. It is subject to
+			change.
+
 		Create the backend for the patterns.
 
 		*name* (:class:`str`) is the name of the backend.
@@ -156,6 +159,6 @@ class GitIgnoreSpec(PathSpec):
 		*patterns* (:class:`~collections.abc.Sequence` of :class:`.Pattern`)
 		contains the compiled patterns.
 
-		Returns the backend (:class:`.Backend`).
+		Returns the backend (:class:`._Backend`).
 		"""
 		return make_gitignore_backend(name, patterns)

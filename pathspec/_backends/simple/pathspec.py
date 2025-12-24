@@ -10,6 +10,8 @@ from collections.abc import (
 from typing import (
 	Optional)  # Replaced by `X | None` in 3.10.
 
+from pathspec.backend import (
+	_Backend)
 from pathspec.pattern import (
 	Pattern)
 from pathspec._typing import (
@@ -17,13 +19,11 @@ from pathspec._typing import (
 from pathspec.util import (
 	check_match_file)
 
-from ..base import (
-	Backend)
 from .._utils import (
 	enumerate_patterns)
 
 
-class SimplePsBackend(Backend):
+class SimplePsBackend(_Backend):
 	"""
 	The :class:`SimplePsBackend` class is the default (or simple) implementation
 	used by :class:`~pathspec.pathspec.PathSpec` for matching files.
