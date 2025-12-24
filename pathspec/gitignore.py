@@ -2,7 +2,7 @@
 This module provides :class:`.GitIgnoreSpec` which replicates *.gitignore*
 behavior, and handles edge-cases where Git's behavior differs from what's
 documented. Git allows including files from excluded directories which appears
-to contradict the documentation. This is uses :class:`.GitIgnoreSpecPattern`
+to contradict the documentation. This uses :class:`.GitIgnoreSpecPattern`
 to fully replicate Git's handling.
 """
 from __future__ import annotations
@@ -18,6 +18,10 @@ from typing import (
 	Union,  # Replaced by `X | Y` in 3.10.
 	cast,
 	overload)
+try:
+	from typing import Self  # Added in 3.11.
+except ImportError:
+	Self = TypeVar("Self", bound='GitIgnoreSpec')
 
 from pathspec._backends.base import (
 	Backend,
@@ -38,24 +42,18 @@ from pathspec.util import (
 	_is_iterable,
 	lookup_pattern)
 
-Self = TypeVar("Self", bound="GitIgnoreSpec")
-"""
-:class:`GitIgnoreSpec` self type hint to support Python v<3.11 using PEP 673
-recommendation.
-"""
-
 
 class GitIgnoreSpec(PathSpec):
 	"""
-	The :class:`GitIgnoreSpec` class extends :class:`~pathspec.pathspec.PathSpec`
-	to replicate *gitignore* behavior. This is uses :class:`.GitIgnoreSpecPattern`
-	to fully replicate Git's handling.
+	The :class:`GitIgnoreSpec` class extends :class:`.PathSpec` to replicate
+	*gitignore* behavior. This is uses :class:`.GitIgnoreSpecPattern` to fully
+	replicate Git's handling.
 	"""
 
 	def __eq__(self, other: object) -> bool:
 		"""
-		Tests the equality of this gitignore-spec with *other* (:class:`GitIgnoreSpec`)
-		by comparing their :attr:`~pathspec.pattern.Pattern` attributes. A
+		Tests the equality of this gitignore-spec with *other* (:class:`.GitIgnoreSpec`)
+		by comparing their :attr:`self.patterns <.PathSpec.patterns>` attributes. A
 		non-:class:`GitIgnoreSpec` will not compare equal.
 		"""
 		if isinstance(other, GitIgnoreSpec):
@@ -114,10 +112,10 @@ class GitIgnoreSpec(PathSpec):
 		an uncompiled pattern (:class:`str`) and return the compiled pattern
 		(:class:`.Pattern`). Default is :class:`None` for :class:`.GitIgnoreSpecPattern`.
 
-		*backend* (:class:`str` or :data:`None`) is the pattern (or regex) matching
-		backend to use. Default is :data:`None` for "best" to use the best available
-		backend. Priority of backends is: "re2", "hyperscan", "simple". The "simple"
-		backend is always available.
+		*backend* (:class:`str` or :data:`None`) is the pattern (regular expression)
+		matching backend to use. Default is :data:`None` for "best" to use the best
+		available backend. Priority of backends is: "re2", "hyperscan", "simple".
+		The "simple" backend is always available.
 
 		Returns the :class:`GitIgnoreSpec` instance.
 		"""
@@ -155,8 +153,8 @@ class GitIgnoreSpec(PathSpec):
 
 		*name* (:class:`str`) is the name of the backend.
 
-		*patterns* (:class:`.Sequence` of :class:`.Pattern`) contains the compiled
-		patterns.
+		*patterns* (:class:`~collections.abc.Sequence` of :class:`.Pattern`)
+		contains the compiled patterns.
 
 		Returns the backend (:class:`.Backend`).
 		"""

@@ -27,6 +27,7 @@ pathspec.gitignore
 
 	.. autoclass:: GitIgnoreSpec
 		:members:
+		:inherited-members:
 		:show-inheritance:
 		:special-members: __init__, __eq__
 
@@ -52,12 +53,42 @@ pathspec.pattern
 		:special-members: __init__
 
 
-pathspec.patterns.gitwildmatch
-------------------------------
+pathspec.patterns.gitignore
+---------------------------
 
-.. automodule:: pathspec.patterns.gitwildmatch
+.. automodule:: pathspec.patterns.gitignore
 
-	.. autoclass:: GitWildMatchPattern
+
+pathspec.patterns.gitignore.base
+--------------------------------
+
+.. automodule:: pathspec.patterns.gitignore.base
+
+	.. autoclass:: _GitIgnoreBasePattern
+		:show-inheritance:
+
+	.. autoclass:: GitIgnorePatternError
+		:members:
+		:show-inheritance:
+
+
+pathspec.patterns.gitignore.basic
+---------------------------------
+
+.. automodule:: pathspec.patterns.gitignore.basic
+
+	.. autoclass:: GitIgnoreBasicPattern
+		:members:
+		:inherited-members:
+		:show-inheritance:
+
+
+pathspec.patterns.gitignore.spec
+--------------------------------
+
+.. automodule:: pathspec.patterns.gitignore.spec
+
+	.. autoclass:: GitIgnoreSpecPattern
 		:members:
 		:inherited-members:
 		:show-inheritance:

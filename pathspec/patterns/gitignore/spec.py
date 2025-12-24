@@ -2,8 +2,8 @@
 This module provides :class:`GitIgnoreSpecPattern` which implements Git's
 `gitignore`_ patterns, and handles edge-cases where Git's behavior differs from
 what's documented. Git allows including files from excluded directories which
-appears to contradict the documentation. This is used by :class:`pathspec.gitignore.GitIgnoreSpec`
-to fully replicate Git's handling.
+appears to contradict the documentation. This is used by
+:class:`~pathspec.gitignore.GitIgnoreSpec` to fully replicate Git's handling.
 
 .. _`gitignore`: https://git-scm.com/docs/gitignore
 """
@@ -17,9 +17,9 @@ from pathspec._typing import (
 	override)  # Added in 3.12.
 
 from .base import (
+	GitIgnorePatternError,
 	_BYTES_ENCODING,
-	_GitIgnoreBasePattern,
-	GitIgnorePatternError)
+	_GitIgnoreBasePattern)
 
 _DIR_MARK = 'ps_d'
 """
@@ -71,12 +71,6 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 		- The regular expression override (:class:`str` or :data:`None`).
 		"""
-		if len(pattern_segs) == 2 and pattern_segs[0] == '**' and not pattern_segs[1]:
-			# EDGE CASE: The '**/' pattern should match everything except individual
-			# files in the root directory. This case cannot be adequately handled
-			# through normalization. Use the override.
-			return (None, _DIR_MARK_CG)
-
 		if not pattern_segs[0]:
 			# A pattern beginning with a slash ('/') should match relative to the root
 			# directory. Remove the empty first segment to make the pattern relative
@@ -97,8 +91,8 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			pass
 
 		if not pattern_segs:
-			# After resolving the edge cases, we end up with no pattern at all. This
-			# must be because the pattern is invalid.
+			# After normalization, we end up with no pattern at all. This must be
+			# because the pattern is invalid.
 			raise ValueError("Pattern normalized to nothing.")
 
 		if not pattern_segs[-1]:
@@ -108,9 +102,9 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			# all descendants.
 			pattern_segs[-1] = '**'
 
-		# EDGE CASE: Deal with duplicate double-asterisk sequences. Collapse each
-		# sequence down to one double-asterisk. Iterate over the segments in reverse
-		# and remove the duplicate double asterisks as we go.
+		# EDGE CASE: Collapse duplicate double-asterisk sequences (i.e., '**/**').
+		# Iterate over the segments in reverse order and remove the duplicate double
+		# asterisks as we go.
 		for i in range(len(pattern_segs) - 1, 0, -1):
 			prev = pattern_segs[i-1]
 			seg = pattern_segs[i]
@@ -152,6 +146,121 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 		# No regular expression override, return modified pattern segments.
 		return (pattern_segs, None)
+
+	@override
+	@classmethod
+	def pattern_to_regex(
+		cls,
+		pattern: AnyStr,
+	) -> tuple[Optional[AnyStr], Optional[bool]]:
+		"""
+		Convert the pattern into a regular expression.
+
+		*pattern* (:class:`str` or :class:`bytes`) is the pattern to convert into a
+		regular expression.
+
+		Returns a :class:`tuple` containing:
+
+			-	*pattern* (:class:`str`, :class:`bytes` or :data:`None`) is the
+				uncompiled regular expression.
+
+			-	*include* (:class:`bool` or :data:`None`) is whether matched files
+				should be included (:data:`True`), excluded (:data:`False`), or is a
+				null-operation (:data:`None`).
+		"""
+		if isinstance(pattern, str):
+			pattern_str = pattern
+			return_type = str
+		elif isinstance(pattern, bytes):
+			pattern_str = pattern.decode(_BYTES_ENCODING)
+			return_type = bytes
+		else:
+			raise TypeError(f"{pattern=!r} is not a unicode or byte string.")
+
+		original_pattern = pattern_str
+		del pattern
+
+		if pattern_str.endswith('\\ '):
+			# EDGE CASE: Spaces can be escaped with backslash. If a pattern that ends
+			# with a backslash is followed by a space, only strip from the left.
+			pattern_str = pattern_str.lstrip()
+		else:
+			pattern_str = pattern_str.strip()
+
+		regex: Optional[str]
+		include: Optional[bool]
+
+		if not pattern_str:
+			# A blank pattern is a null-operation (neither includes nor excludes
+			# files).
+			return (None, None)
+
+		elif pattern_str.startswith('#'):
+			# A pattern starting with a hash ('#') serves as a comment (neither
+			# includes nor excludes files). Escape the hash with a backslash to match
+			# a literal hash (i.e., '\#').
+			return (None, None)
+
+		elif pattern_str == '/':
+			# EDGE CASE: According to `git check-ignore` (v2.4.1), a single '/' does
+			# not match any file.
+			return (None, None)
+
+		if pattern_str.startswith('!'):
+			# A pattern starting with an exclamation mark ('!') negates the pattern
+			# (exclude instead of include). Escape the exclamation mark with a back
+			# slash to match a literal exclamation mark (i.e., '\!').
+			include = False
+			# Remove leading exclamation mark.
+			pattern_str = pattern_str[1:]
+		else:
+			include = True
+
+		# Split pattern into segments.
+		pattern_segs = pattern_str.split('/')
+
+		# Check whether the pattern is specifically a directory pattern before
+		# normalization.
+		is_dir_pattern = not pattern_segs[-1]
+
+		# Normalize pattern to make processing easier.
+		try:
+			pattern_segs, override_regex = cls.__normalize_segments(
+				is_dir_pattern, pattern_segs,
+			)
+		except ValueError as e:
+			raise GitIgnorePatternError((
+				f"Invalid git pattern: {original_pattern!r}"
+			)) from e  # GitIgnorePatternError
+
+		if override_regex is not None:
+			# Use regex override.
+			regex = override_regex
+
+		elif pattern_segs is not None:
+			# Build regular expression from pattern.
+			try:
+				regex_parts = cls.__translate_segments(is_dir_pattern, pattern_segs)
+			except ValueError as e:
+				raise GitIgnorePatternError((
+					f"Invalid git pattern: {original_pattern!r}"
+				)) from e  # GitIgnorePatternError
+
+			regex = ''.join(regex_parts)
+
+		else:
+			assert_unreachable((
+				f"{override_regex=} and {pattern_segs=} cannot both be null."
+			))  # assert_unreachable
+
+		# Encode regex if needed.
+		out_regex: AnyStr
+		if regex is not None and return_type is bytes:
+			out_regex = regex.encode(_BYTES_ENCODING)
+		else:
+			out_regex = regex
+
+		return (out_regex, include)
 
 	@classmethod
 	def __translate_segments(
@@ -222,117 +331,3 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 				need_slash = True
 
 		return out_parts
-
-	@override
-	@classmethod
-	def pattern_to_regex(
-		cls,
-		pattern: AnyStr,
-	) -> tuple[Optional[AnyStr], Optional[bool]]:
-		"""
-		Convert the pattern into a regular expression.
-
-		*pattern* (:class:`str` or :class:`bytes`) is the pattern to convert into a
-		regular expression.
-
-		Returns the uncompiled regular expression (:class:`str`, :class:`bytes`, or
-		:data:`None`); and whether matched files should be included (:data:`True`),
-		excluded (:data:`False`), or if it is a null-operation (:data:`None`).
-		"""
-		if isinstance(pattern, str):
-			pattern_str = pattern
-			return_type = str
-		elif isinstance(pattern, bytes):
-			pattern_str = pattern.decode(_BYTES_ENCODING)
-			return_type = bytes
-		else:
-			raise TypeError(f"{pattern=!r} is not a unicode or byte string.")
-
-		original_pattern = pattern_str
-		del pattern
-
-		if pattern_str.endswith('\\ '):
-			# EDGE CASE: Spaces can be escaped with backslash. If a pattern that ends
-			# with a backslash is followed by a space, only strip from the left.
-			pattern_str = pattern_str.lstrip()
-		else:
-			pattern_str = pattern_str.strip()
-
-		regex: Optional[str]
-		include: Optional[bool]
-
-		if not pattern_str:
-			# A blank pattern is a null-operation (neither includes nor excludes
-			# files).
-			return (None, None)
-
-		elif pattern_str.startswith('#'):
-			# A pattern starting with a hash ('#') serves as a comment (neither
-			# includes nor excludes files). Escape the hash with a backslash to match
-			# a literal hash (i.e., '\#').
-			return (None, None)
-
-		elif pattern_str == '/':
-			# EDGE CASE: According to `git check-ignore` (v2.4.1), a single '/' does
-			# not match any file.
-			return (None, None)
-
-		if pattern_str.startswith('!'):
-			# A pattern starting with an exclamation mark ('!') negates the pattern
-			# (exclude instead of include). Escape the exclamation mark with a back
-			# slash to match a literal exclamation mark (i.e., '\!').
-			include = False
-			# Remove leading exclamation mark.
-			pattern_str = pattern_str[1:]
-		else:
-			include = True
-
-		# Allow a regex override for edge cases that cannot be handled through
-		# normalization.
-		override_regex: Optional[str] = None
-
-		# Split pattern into segments.
-		pattern_segs = pattern_str.split('/')
-
-		# Check whether the pattern is specifically a directory pattern before
-		# normalization.
-		is_dir_pattern = not pattern_segs[-1]
-
-		# Normalize pattern to make processing easier.
-		try:
-			pattern_segs, override_regex = cls.__normalize_segments(
-				is_dir_pattern, pattern_segs,
-			)
-		except ValueError as e:
-			raise GitIgnorePatternError((
-				f"Invalid git pattern: {original_pattern!r}"
-			)) from e  # GitIgnorePatternError
-
-		if override_regex is not None:
-			# Use regex override.
-			regex = override_regex
-
-		elif pattern_segs is not None:
-			# Build regular expression from pattern.
-			try:
-				regex_parts = cls.__translate_segments(is_dir_pattern, pattern_segs)
-			except ValueError as e:
-				raise GitIgnorePatternError((
-					f"Invalid git pattern: {original_pattern!r}"
-				)) from e  # GitIgnorePatternError
-
-			regex = ''.join(regex_parts)
-
-		else:
-			assert_unreachable((
-				f"{override_regex=} and {pattern_segs=} cannot both be null."
-			))  # assert_unreachable
-
-		# Encode regex if needed.
-		out_regex: AnyStr
-		if regex is not None and return_type is bytes:
-			out_regex = regex.encode(_BYTES_ENCODING)
-		else:
-			out_regex = regex
-
-		return (out_regex, include)

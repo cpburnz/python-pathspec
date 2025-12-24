@@ -66,7 +66,7 @@ If you want to load the patterns from file, you can pass the file object
 directly as well::
 
 	>>> with open('patterns.list', 'r') as fh:
-	>>>     spec = pathspec.PathSpec.from_lines('gitwildmatch', fh)
+	>>>     spec = PathSpec.from_lines('gitignore', fh)
 
 You can perform matching on a whole directory tree with::
 

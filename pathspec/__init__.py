@@ -22,6 +22,8 @@ The following functions are also imported:
 The following deprecated functions are also imported to maintain backward
 compatibility:
 
+-	:func:`pathspec.util.iter_tree`
+
 -	:func:`pathspec.util.match_files`
 """
 
@@ -34,9 +36,9 @@ from .pattern import (
 	RegexPattern)
 from .util import (
 	RecursionError,
+	iter_tree,  # Deprecated since 0.10.0.
 	lookup_pattern,
-	match_files,  # Deprecated since 0.10.0.
-	iter_tree)  # Deprecated since 0.10.0.
+	match_files)  # Deprecated since 0.10.0.
 
 from ._meta import (
 	__author__,

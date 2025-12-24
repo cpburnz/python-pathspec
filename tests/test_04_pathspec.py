@@ -206,7 +206,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Tests that absolute paths will be properly normalized and matched.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'foo',
 		]):
 			with sub_test() as spec:
@@ -236,7 +236,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Tests that absolute paths will be properly normalized and matched.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'/foo',
 		]):
 			with sub_test() as spec:
@@ -264,7 +264,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test checking a single file that is included.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			"*.txt",
 			"!test/",
 		]):
@@ -278,7 +278,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test checking a single file that is excluded.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			"*.txt",
 			"!test/",
 		]):
@@ -292,7 +292,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test checking a single file that is unmatched.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			"*.txt",
 			"!test/",
 		]):
@@ -307,7 +307,7 @@ class PathSpecTest(unittest.TestCase):
 		Test that checking files one at a time yields the same results as checking
 		multiples files at once.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.txt',
 			'!test1/',
 		]):
@@ -331,7 +331,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test that checking files and matching files yield the same results.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.txt',
 			'!test1/**',
 		]):
@@ -357,7 +357,7 @@ class PathSpecTest(unittest.TestCase):
 		Tests that paths referencing the current directory will be properly
 		normalized and matched.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.txt',
 			'!test1/',
 		]):
@@ -385,7 +385,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Tests that patterns that end with an escaped space will be treated properly.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'\\ ',
 			'abc\\ ',
 		]):
@@ -413,7 +413,7 @@ class PathSpecTest(unittest.TestCase):
 		with self.assertRaises(GitIgnorePatternError):
 			# An escape with double spaces is invalid. Disallow it. Better to be
 			# safe than sorry.
-			PathSpec.from_lines('gitwildmatch', [
+			PathSpec.from_lines('gitignore', [
 				'\\  ',
 			], backend='simple')
 
@@ -421,7 +421,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test matching a single file that is included.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			"*.txt",
 			"!test/",
 		]):
@@ -434,7 +434,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test matching a single file that is excluded.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			"*.txt",
 			"!test/",
 		]):
@@ -451,7 +451,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test match a single file that is unmatched.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			"*.txt",
 			"!test/",
 		]):
@@ -469,7 +469,7 @@ class PathSpecTest(unittest.TestCase):
 		Test that matching files one at a time yields the same results as matching
 		multiples files at once.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.txt',
 			'!test1/',
 		]):
@@ -494,7 +494,7 @@ class PathSpecTest(unittest.TestCase):
 		Tests that paths referencing the current directory will be properly
 		normalized and matched.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.txt',
 			'!test1/',
 		]):
@@ -522,7 +522,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Tests that Windows paths will be properly normalized and matched.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.txt',
 			'!test1/',
 		]):
@@ -550,11 +550,11 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Tests equality.
 		"""
-		first_spec = PathSpec.from_lines('gitwildmatch', [
+		first_spec = PathSpec.from_lines('gitignore', [
 			'*.txt',
 			'!test1/**',
 		], backend='simple')
-		second_spec = PathSpec.from_lines('gitwildmatch', [
+		second_spec = PathSpec.from_lines('gitignore', [
 			'*.txt',
 			'!test1/**',
 		], backend='simple')
@@ -564,10 +564,10 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Tests inequality.
 		"""
-		first_spec = PathSpec.from_lines('gitwildmatch', [
+		first_spec = PathSpec.from_lines('gitignore', [
 			'*.txt',
 		], backend='simple')
-		second_spec = PathSpec.from_lines('gitwildmatch', [
+		second_spec = PathSpec.from_lines('gitignore', [
 			'!*.txt',
 		], backend='simple')
 		self.assertNotEqual(first_spec, second_spec)
@@ -576,11 +576,11 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test spec addition using :data:`+` operator.
 		"""
-		first_spec = PathSpec.from_lines('gitwildmatch', [
+		first_spec = PathSpec.from_lines('gitignore', [
 			'test.png',
 			'test.txt',
 		], backend='simple')
-		second_spec = PathSpec.from_lines('gitwildmatch', [
+		second_spec = PathSpec.from_lines('gitignore', [
 			'test.html',
 			'test.jpg',
 		], backend='simple')
@@ -607,11 +607,11 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test spec addition using :data:`+=` operator.
 		"""
-		spec = PathSpec.from_lines('gitwildmatch', [
+		spec = PathSpec.from_lines('gitignore', [
 			'test.png',
 			'test.txt',
 		], backend='simple')
-		spec += PathSpec.from_lines('gitwildmatch', [
+		spec += PathSpec.from_lines('gitignore', [
 			'test.html',
 			'test.jpg',
 		], backend='simple')
@@ -637,7 +637,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test spec length.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'foo',
 			'bar',
 		]):
@@ -648,7 +648,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test matching files collectively.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.txt',
 			'!b.txt',
 		]):
@@ -682,7 +682,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test matching files individually.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.txt',
 			'!b.txt',
 		]):
@@ -710,7 +710,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test matching files collectively.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.txt',
 			'!b.txt',
 		]):
@@ -738,7 +738,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test matching a file tree.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.txt',
 			'!b.txt',
 		]):
@@ -775,7 +775,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test matching a file tree.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.txt',
 			'!b.txt',
 		]):
@@ -812,7 +812,7 @@ class PathSpecTest(unittest.TestCase):
 		Test including a file and excluding a directory with the same name pattern,
 		scenario A.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.yaml',
 			'!*.yaml/',
 		]):
@@ -849,7 +849,7 @@ class PathSpecTest(unittest.TestCase):
 		Test including a file and excluding a directory with the same name
 		pattern, scenario B.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'!*.yaml/',
 			'*.yaml',
 		]):
@@ -885,7 +885,7 @@ class PathSpecTest(unittest.TestCase):
 		Test including a file and excluding a directory with the same name
 		pattern, scenario C.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.yaml',
 			'!dir.yaml',
 		]):
@@ -921,7 +921,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test including all files and excluding a directory.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*',
 			'!product_dir/',
 		]):
@@ -943,7 +943,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test excluding files in a directory.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.log',
 			'!important/*.log',
 			'trace.*',
@@ -975,7 +975,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test negating patterns.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'build',
 			'*.log',
 			'.*',
@@ -1006,7 +1006,7 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Test negating patterns.
 		"""
-		for sub_test in self.parameterize_from_lines('gitwildmatch', [
+		for sub_test in self.parameterize_from_lines('gitignore', [
 			'build',
 			'*.log',
 			'.*',

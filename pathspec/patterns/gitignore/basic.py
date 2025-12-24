@@ -10,11 +10,10 @@ from typing import (
 	AnyStr,
 	Optional)  # Replaced by `X | None` in 3.10.
 
-from pathspec import (
-	util)
+from pathspec import util
 from pathspec._typing import (
 	assert_unreachable,
-	override)
+	override)  # Added in 3.12.
 
 from .base import (
 	GitIgnorePatternError,
@@ -75,11 +74,11 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 			# because the pattern is invalid.
 			raise ValueError("Pattern normalized to nothing.")
 
-		if not pattern_segs[-1] and (len(pattern_segs) < 2 or pattern_segs[-2] != '**'):
+		if not pattern_segs[-1]:
 			# A pattern ending with a slash ('/') will match all descendant paths if
-			# it is a directory but not if it is a regular file. This is equivalent
-			# to "{pattern}/**". Set empty last segment to a double-asterisk to
-			# include all descendants.
+			# it is a directory but not if it is a regular file. This is equivalent to
+			# "{pattern}/**". Set empty last segment to a double-asterisk to include
+			# all descendants.
 			pattern_segs[-1] = '**'
 
 		# EDGE CASE: Collapse duplicate double-asterisk sequences (i.e., '**/**').

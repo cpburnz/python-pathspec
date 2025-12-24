@@ -157,7 +157,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 		"""
 		Test reversed args for `.from_lines()`.
 		"""
-		spec = GitIgnoreSpec.from_lines('gitwildmatch', ['*.txt'])
+		spec = GitIgnoreSpec.from_lines('gitignore', ['*.txt'])
 		files = {
 			'a.txt',
 			'b.bin',

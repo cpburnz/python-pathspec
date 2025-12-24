@@ -15,8 +15,6 @@ from collections.abc import (
 	Sequence)
 from dataclasses import (
 	dataclass)
-from os import (
-	PathLike)
 from typing import (
 	Any,
 	AnyStr,
@@ -30,7 +28,7 @@ from .pattern import (
 from ._typing import (
 	deprecated)  # Added in 3.13.
 
-StrPath = Union[str, PathLike[str]]
+StrPath = Union[str, os.PathLike[str]]
 
 TStrPath = TypeVar("TStrPath", bound=StrPath)
 """
@@ -82,8 +80,8 @@ def check_match_file(
 	Check the file against the patterns.
 
 	*patterns* (:class:`~collections.abc.Iterable`) yields each indexed pattern
-	(:class:`tuple`) which contains the pattern index (:class:`int`) and actual
-	pattern (:class:`~pathspec.pattern.Pattern`).
+	(:class:`tuple`) which contains the pattern index (:class:`int`) and actua
+	pattern (:class:`.Pattern`).
 
 	*file* (:class:`str`) is the normalized file path to be matched against
 	*patterns*.
@@ -126,8 +124,8 @@ def detailed_match_files(
 	Matches the files to the patterns, and returns which patterns matched the
 	files.
 
-	*patterns* (:class:`~collections.abc.Iterable` of :class:`~pathspec.pattern.Pattern`)
-	contains the patterns to use.
+	*patterns* (:class:`~collections.abc.Iterable` of :class:`.Pattern`) contains
+	the patterns to use.
 
 	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains the
 	normalized file paths to be matched against *patterns*.
@@ -169,11 +167,12 @@ def _filter_check_patterns(
 	"""
 	Filters out null-patterns.
 
-	*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the patterns.
+	*patterns* (:class:`~collections.abc.Iterable` of :class:`.Pattern`) contains
+	the patterns.
 
 	Returns a :class:`list` containing each indexed pattern (:class:`tuple`) which
 	contains the pattern index (:class:`int`) and the actual pattern
-	(:class:`~pathspec.pattern.Pattern`).
+	(:class:`.Pattern`).
 	"""
 	return [
 		(__index, __pat)
@@ -198,8 +197,8 @@ def _is_iterable(value: Any) -> bool:
 ))
 def iter_tree(root, on_error=None, follow_links=None):
 	"""
-	DEPRECATED: Deprecated since version 0.10.0. The :func:`.iter_tree` function
-	is an alias for the :func:`.iter_tree_files` function.
+	.. version-deprecated:: 0.10.0
+		This is an alias for the :func:`.iter_tree_files` function.
 	"""
 	return iter_tree_files(root, on_error=on_error, follow_links=follow_links)
 
@@ -223,7 +222,7 @@ def iter_tree_entries(
 	symbolic links that resolve to directories. Default is :data:`None` for
 	:data:`True`.
 
-	Raises :exc:`RecursionError` if recursion is detected.
+	Raises :exc:`.RecursionError` if recursion is detected.
 
 	Returns an :class:`~collections.abc.Iterator` yielding each file or directory
 	entry (:class:`.TreeEntry`) relative to *root*.
@@ -336,7 +335,7 @@ def iter_tree_files(
 	symbolic links that resolve to directories. Default is :data:`None` for
 	:data:`True`.
 
-	Raises :exc:`RecursionError` if recursion is detected.
+	Raises :exc:`.RecursionError` if recursion is detected.
 
 	Returns an :class:`~collections.abc.Iterator` yielding the path to each file
 	(:class:`str`) relative to *root*.
@@ -428,8 +427,8 @@ def match_file(patterns: Iterable[Pattern], file: str) -> bool:
 	"""
 	Matches the file to the patterns.
 
-	*patterns* (:class:`~collections.abc.Iterable` of :class:`~pathspec.pattern.Pattern`)
-	contains the patterns to use.
+	*patterns* (:class:`~collections.abc.Iterable` of :class:`.Pattern`) contains
+	the patterns to use.
 
 	*file* (:class:`str`) is the normalized file path to be matched against
 	*patterns*.
@@ -453,14 +452,14 @@ def match_files(
 	files: Iterable[str],
 ) -> set[str]:
 	"""
-	DEPRECATED: Deprecated since version 0.10.0. This is an old function no longer
-	used. Use the :func:`~pathspec.util.match_file` function with a loop for
-	better results.
+	.. version-deprecated:: 0.10.0
+		This function is no longer used. Use the :func:`.match_file` function with a
+		loop for better results.
 
 	Matches the files to the patterns.
 
-	*patterns* (:class:`~collections.abc.Iterable` of :class:`~pathspec.pattern.Pattern`)
-	contains the patterns to use.
+	*patterns* (:class:`~collections.abc.Iterable` of :class:`.Pattern`) contains
+	the patterns to use.
 
 	*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains the
 	normalized file paths to be matched against *patterns*.
@@ -488,10 +487,11 @@ def normalize_file(
 	*file* (:class:`str` or :class:`os.PathLike`) is the file path.
 
 	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
-	``None``) optionally contains the path separators to normalize. This does not
-	need to include the POSIX path separator (``"/"``), but including it will not
-	affect the results. Default is ``None`` for ``NORMALIZE_PATH_SEPS``. To
-	prevent normalization, pass an empty container (e.g., an empty tuple ``()``).
+	:data:`None`) optionally contains the path separators to normalize. This does
+	not need to include the POSIX path separator (``"/"``), but including it will
+	not affect the results. Default is ``None`` for :data:`.NORMALIZE_PATH_SEPS`.
+	To prevent normalization, pass an empty container (e.g., an empty tuple
+	``()``).
 
 	Returns the normalized file path (:class:`str`).
 	"""
@@ -525,8 +525,9 @@ def normalize_files(
 	separators: Optional[Collection[str]] = None,
 ) -> dict[str, list[StrPath]]:
 	"""
-	DEPRECATED: Deprecated since 0.10.0. This function is no longer used. Use the
-	:func:`.normalize_file` function with a loop for better results.
+	.. version-deprecated:: 0.10.0
+		This function is no longer used. Use the :func:`.normalize_file` function
+		with a loop for better results.
 
 	Normalizes the file paths to use the POSIX path separator.
 
@@ -535,7 +536,7 @@ def normalize_files(
 
 	*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
 	:data:`None`) optionally contains the path separators to normalize. See
-	:func:`normalize_file` for more information.
+	:func:`.normalize_file` for more information.
 
 	Returns a :class:`dict` mapping each normalized file path (:class:`str`) to
 	the original file paths (:class:`list` of :class:`str` or
@@ -568,7 +569,7 @@ def register_pattern(
 
 	*override* (:class:`bool` or :data:`None`) optionally is whether to allow
 	overriding an already registered pattern under the same name (:data:`True`),
-	instead of raising an :exc:`AlreadyRegisteredError` (:data:`False`). Default
+	instead of raising an :exc:`.AlreadyRegisteredError` (:data:`False`). Default
 	is :data:`None` for :data:`False`.
 	"""
 	if not isinstance(name, str):
@@ -609,9 +610,9 @@ class AlreadyRegisteredError(Exception):
 		"""
 		*message* (:class:`str`) is the error message.
 		"""
-		return "{name!r} is already registered for pattern factory:{pattern_factory!r}.".format(
-			name=self.name,
-			pattern_factory=self.pattern_factory,
+		return (
+			f"{self.name!r} is already registered for pattern factory="
+			f"{self.pattern_factory!r}."
 		)
 
 	@property
@@ -732,14 +733,13 @@ class MatchDetail(object):
 		"""
 		Initialize the :class:`.MatchDetail` instance.
 
-		*patterns* (:class:`~collections.abc.Sequence` of :class:`~pathspec.pattern.Pattern`)
-		contains the patterns that matched the file in the order they were
-		encountered.
+		*patterns* (:class:`~collections.abc.Sequence` of :class:`.Pattern`)
+		contains the patterns that matched the file in the order they were encountered.
 		"""
 
 		self.patterns = patterns
 		"""
-		*patterns* (:class:`~collections.abc.Sequence` of :class:`~pathspec.pattern.Pattern`)
+		*patterns* (:class:`~collections.abc.Sequence` of :class:`.Pattern`)
 		contains the patterns that matched the file in the order they were
 		encountered.
 		"""
@@ -747,8 +747,7 @@ class MatchDetail(object):
 
 class TreeEntry(object):
 	"""
-	The :class:`.TreeEntry` class contains information about a file-system
-	entry.
+	The :class:`TreeEntry` class contains information about a file-system entry.
 	"""
 
 	# Make the class dict-less.
@@ -762,14 +761,13 @@ class TreeEntry(object):
 		stat: os.stat_result,
 	) -> None:
 		"""
-		Initialize the :class:`.TreeEntry` instance.
+		Initialize the :class:`TreeEntry` instance.
 
 		*name* (:class:`str`) is the base name of the entry.
 
 		*path* (:class:`str`) is the relative path of the entry.
 
-		*lstat* (:class:`os.stat_result`) is the stat result of the direct
-		entry.
+		*lstat* (:class:`os.stat_result`) is the stat result of the direct entry.
 
 		*stat* (:class:`os.stat_result`) is the stat result of the entry,
 		potentially linked.
@@ -777,8 +775,7 @@ class TreeEntry(object):
 
 		self._lstat: os.stat_result = lstat
 		"""
-		*_lstat* (:class:`os.stat_result`) is the stat result of the direct
-		entry.
+		*_lstat* (:class:`os.stat_result`) is the stat result of the direct entry.
 		"""
 
 		self.name: str = name
@@ -793,17 +790,16 @@ class TreeEntry(object):
 
 		self._stat: os.stat_result = stat
 		"""
-		*_stat* (:class:`os.stat_result`) is the stat result of the linked
-		entry.
+		*_stat* (:class:`os.stat_result`) is the stat result of the linked entry.
 		"""
 
 	def is_dir(self, follow_links: Optional[bool] = None) -> bool:
 		"""
 		Get whether the entry is a directory.
 
-		*follow_links* (:class:`bool` or :data:`None`) is whether to follow
-		symbolic links. If this is :data:`True`, a symlink to a directory
-		will result in :data:`True`. Default is :data:`None` for :data:`True`.
+		*follow_links* (:class:`bool` or :data:`None`) is whether to follow symbolic
+		links. If this is :data:`True`, a symlink to a directory will result in
+		:data:`True`. Default is :data:`None` for :data:`True`.
 
 		Returns whether the entry is a directory (:class:`bool`).
 		"""
@@ -817,9 +813,9 @@ class TreeEntry(object):
 		"""
 		Get whether the entry is a regular file.
 
-		*follow_links* (:class:`bool` or :data:`None`) is whether to follow
-		symbolic links. If this is :data:`True`, a symlink to a regular file
-		will result in :data:`True`. Default is :data:`None` for :data:`True`.
+		*follow_links* (:class:`bool` or :data:`None`) is whether to follow symbolic
+		links. If this is :data:`True`, a symlink to a regular file will result in
+		:data:`True`. Default is :data:`None` for :data:`True`.
 
 		Returns whether the entry is a regular file (:class:`bool`).
 		"""
@@ -839,9 +835,9 @@ class TreeEntry(object):
 		"""
 		Get the cached stat result for the entry.
 
-		*follow_links* (:class:`bool` or :data:`None`) is whether to follow
-		symbolic links. If this is :data:`True`, the stat result of the
-		linked file will be returned. Default is :data:`None` for :data:`True`.
+		*follow_links* (:class:`bool` or :data:`None`) is whether to follow symbolic
+		links. If this is :data:`True`, the stat result of the linked file will be
+		returned. Default is :data:`None` for :data:`True`.
 
 		Returns that stat result (:class:`os.stat_result`).
 		"""

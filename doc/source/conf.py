@@ -19,7 +19,8 @@ import sys
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../../'))
-from pathspec._meta import __author__, __copyright__, __version__
+from pathspec._meta import __author__, __copyright__
+from pathspec._version import __version__
 
 
 # -- General configuration ------------------------------------------------
@@ -31,7 +32,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.viewco
 
 # The autodoc extension doesn't understand the `Self` typehint.
 # To avoid documentation build errors, autodoc typehints must be disabled.
-autodoc_typehints = "none"
+autodoc_typehints = "signature"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -88,7 +89,7 @@ autodoc_member_order = 'bysource'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'default'
+html_theme = 'sphinxdoc'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

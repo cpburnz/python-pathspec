@@ -59,14 +59,14 @@ class Pattern(object):
 	))
 	def match(self, files: Iterable[str]) -> Iterator[str]:
 		"""
-		DEPRECATED: Deprecated since version 0.10.0. This method is no longer used
-		and has been replaced by :meth:`.match_file`. Use the :meth:`.match_file`
-		method with a loop for similar results.
+		.. version-deprecated:: 0.10.0
+			This method is no longer used. Use the :meth:`self.match_file <.Pattern.match_file>`
+			method with a loop for similar results.
 
 		Matches this pattern against the specified files.
 
 		*files* (:class:`~collections.abc.Iterable` of :class:`str`) contains each
-		file relative to the root directory (e.g., ``"relative/path/to/file"``).
+		file relative to the root directory.
 
 		Returns an :class:`~collections.abc.Iterable` yielding each matched file
 		path (:class:`str`).

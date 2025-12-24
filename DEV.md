@@ -6,7 +6,6 @@ TODO
 ----
 
 - Benchmarks.
-- Do not remove recently deprecated functions/methods.
 
 
 Python Versions

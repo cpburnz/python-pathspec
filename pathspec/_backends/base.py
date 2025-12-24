@@ -6,6 +6,8 @@ WARNING: The *pathspec._backends* package is not part of the public API. Its
 contents and structure are likely to change.
 """
 
+# TODO: Move this module (only) to `pathspec.backend`.
+
 from typing import (
 	Literal,
 	Optional)

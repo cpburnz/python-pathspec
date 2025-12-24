@@ -375,15 +375,6 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		self.assertTrue(include)
 		self.assertEqual(regex, '/')
 
-		# TODO: BUG!
-		'''
-    self.assertEqual(regex, '/')
-    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^
-		AssertionError: '^(?:.+/)?(?:/|$)' != '/'
-		- ^(?:.+/)?(?:/|$)
-		+ /
-		'''
-
 		equiv_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/**/')
 		self.assertTrue(include)
 		self.assertEqual(equiv_regex, regex)

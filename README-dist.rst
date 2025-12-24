@@ -66,7 +66,7 @@ If you want to load the patterns from file, you can pass the file object
 directly as well::
 
 	>>> with open('patterns.list', 'r') as fh:
-	>>>     spec = pathspec.PathSpec.from_lines('gitwildmatch', fh)
+	>>>     spec = PathSpec.from_lines('gitignore', fh)
 
 You can perform matching on a whole directory tree with::
 
@@ -347,7 +347,7 @@ API changes:
 - Deprecated: `pathspec.patterns.gitwildmatch.GitWildMatchPattern` is an alias for `pathspec.patterns.gitignore.spec.GitIgnoreSpecPattern`.
 - Deprecated: `pathspec.patterns.gitwildmatch.GitWildMatchPatternError` is an alias for `pathspec.patterns.gitignore.GitIgnorePatternError`.
 - Removed: `pathspec.patterns.gitwildmatch.GitIgnorePattern` has been deprecated since v0.4 (2016-07-15).
-- Signature of class method `pathspec.pattern.RegexPattern.match_file()` has been changed from `def match_file(self, file: str) -> RegexMatchResult | None` to `def match_file(self, file: AnyStr) -> RegexMatchResult | None` to reflect usage.
+- Signature of method `pathspec.pattern.RegexPattern.match_file()` has been changed from `def match_file(self, file: str) -> RegexMatchResult | None` to `def match_file(self, file: AnyStr) -> RegexMatchResult | None` to reflect usage.
 - Signature of class method `pathspec.pattern.RegexPattern.pattern_to_regex()` has been changed from `def pattern_to_regex(cls, pattern: str) -> tuple[str, bool]` to `def pattern_to_regex(cls, pattern: AnyStr) -> tuple[AnyStr | None, bool | None]` to reflect usage and documentation.
 
 New features:
