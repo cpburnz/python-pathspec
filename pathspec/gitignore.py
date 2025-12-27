@@ -12,7 +12,6 @@ from collections.abc import (
 	Iterable,
 	Sequence)
 from typing import (
-	AnyStr,
 	Optional,  # Replaced by `X | None` in 3.10.
 	TypeVar,
 	Union,  # Replaced by `X | Y` in 3.10.
@@ -37,6 +36,7 @@ from pathspec.patterns.gitignore.basic import (
 from pathspec.patterns.gitignore.spec import (
 	GitIgnoreSpecPattern)
 from pathspec._typing import (
+	AnyStr,  # Removed in 3.18.
 	override)  # Added in 3.12.
 from pathspec.util import (
 	_is_iterable,

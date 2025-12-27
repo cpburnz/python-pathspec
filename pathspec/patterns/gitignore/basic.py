@@ -7,11 +7,11 @@ when including files in excluded directories.
 """
 
 from typing import (
-	AnyStr,
 	Optional)  # Replaced by `X | None` in 3.10.
 
 from pathspec import util
 from pathspec._typing import (
+	AnyStr,  # Removed in 3.18.
 	assert_unreachable,
 	override)  # Added in 3.12.
 
@@ -158,10 +158,12 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 
 		if pattern_str.endswith('\\ '):
 			# EDGE CASE: Spaces can be escaped with backslash. If a pattern that ends
-			# with a backslash is followed by a space, only strip from the left.
-			pattern_str = pattern_str.lstrip()
+			# with a backslash is followed by a space, do not strip from the left.
+			pass
 		else:
-			pattern_str = pattern_str.strip()
+			# EDGE CASE: Leading spaces should be kept (only trailing spaces should be
+			# removed).
+			pattern_str = pattern_str.rstrip()
 
 		regex: Optional[str]
 		include: Optional[bool]

@@ -19,7 +19,6 @@ from functools import (
 from pathlib import (
 	Path)
 from typing import (
-	AnyStr,
 	Optional)  # Replaced by `X | None` in 3.10.
 from unittest import (
 	SkipTest)
@@ -39,6 +38,8 @@ from pathspec.pattern import (
 	Pattern)
 from pathspec.patterns.gitignore.base import (
 	GitIgnorePatternError)
+from pathspec._typing import (
+	AnyStr)  # Removed in 3.18.
 from pathspec.util import (
 	iter_tree_entries)
 

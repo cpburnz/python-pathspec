@@ -11,16 +11,16 @@ from dataclasses import (
 	dataclass)
 from typing import (
 	Any,
-	AnyStr,
 	Optional,  # Replaced by `X | None` in 3.10.
 	TypeVar,
 	Union)  # Replaced by `X | Y` in 3.10.
 try:
-	from typing import Self as RegexPatternSelf
+	from typing import Self as RegexPatternSelf  # Added in 3.11.
 except ImportError:
 	RegexPatternSelf = TypeVar("RegexPatternSelf", bound='RegexPattern')
 
 from ._typing import (
+	AnyStr,  # Removed in 3.18.
 	deprecated,  # Added in 3.13.
 	override)  # Added in 3.12.
 
@@ -114,7 +114,7 @@ class RegexPattern(Pattern):
 		case it is whether matched files should be included (:data:`True`), excluded
 		(:data:`False`), or is a null operation (:data:`None`).
 
-			.. NOTE:: Subclasses do not need to support the *include* parameter.
+			.. note:: Subclasses do not need to support the *include* parameter.
 		"""
 
 		if isinstance(pattern, (str, bytes)):
@@ -183,9 +183,8 @@ class RegexPattern(Pattern):
 		"""
 		Matches this pattern against the specified file.
 
-		*file* (:class:`str` or :class:`bytes`) contains each file relative to the
-		root directory
-		(e.g., "relative/path/to/file").
+		*file* (:class:`str` or :class:`bytes`) is the file path relative to the
+		root directory (e.g., "relative/path/to/file").
 
 		Returns the match result (:class:`.RegexMatchResult`) if *file* matched;
 		otherwise, :data:`None`.
@@ -205,8 +204,8 @@ class RegexPattern(Pattern):
 		"""
 		Convert the pattern into an uncompiled regular expression.
 
-		*pattern* (:class:`str`) is the pattern to convert into a regular
-		expression.
+		*pattern* (:class:`str` or :class:`bytes`) is the pattern to convert into a
+		regular expression.
 
 		Returns a :class:`tuple` containing:
 
@@ -217,7 +216,7 @@ class RegexPattern(Pattern):
 				should be included (:data:`True`), excluded (:data:`False`), or is a
 				null-operation (:data:`None`).
 
-			.. NOTE:: The default implementation simply returns *pattern* and
+			.. note:: The default implementation simply returns *pattern* and
 			   :data:`True`.
 		"""
 		return pattern, True

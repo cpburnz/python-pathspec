@@ -3,11 +3,11 @@ This module provides common classes for the gitignore patterns.
 """
 
 import re
-from typing import (
-	AnyStr)
 
 from pathspec.pattern import (
 	RegexPattern)
+from pathspec._typing import (
+	AnyStr)  # Removed in 3.18.
 
 _BYTES_ENCODING = 'latin1'
 """

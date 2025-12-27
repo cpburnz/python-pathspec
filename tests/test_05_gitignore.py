@@ -14,7 +14,6 @@ from contextlib import (
 from functools import (
 	partial)
 from typing import (
-	AnyStr,
 	Optional)  # Replaced by `X | None` in 3.10.
 from unittest import (
 	SkipTest)
@@ -32,6 +31,8 @@ from pathspec.gitignore import (
 	GitIgnoreSpec)
 from pathspec.pattern import (
 	Pattern)
+from pathspec._typing import (
+	AnyStr)  # Removed in 3.18.
 
 from .util import (
 	debug_results,

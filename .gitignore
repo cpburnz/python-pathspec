@@ -13,5 +13,6 @@ MANIFEST
 
 # Hidden files.
 .*
-!.readthedocs.yaml
+!.github/
 !.gitignore
+!.readthedocs.yaml

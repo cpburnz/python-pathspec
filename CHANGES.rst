@@ -14,12 +14,12 @@ Major changes:
 
 API changes:
 
-- Breaking: protected method `pathspec.pathspec.PathSpec._match_file()` (with a leading underscore) has been removed and replaced by backends. This does not affect normal usage of `PathSpec()` or `GitIgnoreSpec()`. Only custom subclasses will be affected. If this breaks your usage, `open an issue <https://github.com/cpburnz/python-pathspec/issues>`_.
-- Deprecated: "gitwildmatch" is an alias for "gitignore".
-- Deprecated: `pathspec.patterns.GitWildMatchPattern` is an alias for `pathspec.patterns.gitignore.spec.GitIgnoreSpecPattern`.
-- Deprecated: `pathspec.patterns.gitwildmatch` module has been restructured under the `pathspec.patterns.gitignore` package.
-- Deprecated: `pathspec.patterns.gitwildmatch.GitWildMatchPattern` is an alias for `pathspec.patterns.gitignore.spec.GitIgnoreSpecPattern`.
-- Deprecated: `pathspec.patterns.gitwildmatch.GitWildMatchPatternError` is an alias for `pathspec.patterns.gitignore.GitIgnorePatternError`.
+- Breaking: protected method `pathspec.pathspec.PathSpec._match_file()` (with a leading underscore) has been removed and replaced by backends. This does not affect normal usage of `PathSpec` or `GitIgnoreSpec`. Only custom subclasses will be affected. If this breaks your usage, let me know by `opening an issue <https://github.com/cpburnz/python-pathspec/issues>`_.
+- Deprecated: "gitwildmatch" is now an alias for "gitignore".
+- Deprecated: `pathspec.patterns.GitWildMatchPattern` is now an alias for `pathspec.patterns.gitignore.spec.GitIgnoreSpecPattern`.
+- Deprecated: `pathspec.patterns.gitwildmatch` module has been replaced by the `pathspec.patterns.gitignore` package.
+- Deprecated: `pathspec.patterns.gitwildmatch.GitWildMatchPattern` is now an alias for `pathspec.patterns.gitignore.spec.GitIgnoreSpecPattern`.
+- Deprecated: `pathspec.patterns.gitwildmatch.GitWildMatchPatternError` is now an alias for `pathspec.patterns.gitignore.GitIgnorePatternError`.
 - Removed: `pathspec.patterns.gitwildmatch.GitIgnorePattern` has been deprecated since v0.4 (2016-07-15).
 - Signature of method `pathspec.pattern.RegexPattern.match_file()` has been changed from `def match_file(self, file: str) -> RegexMatchResult | None` to `def match_file(self, file: AnyStr) -> RegexMatchResult | None` to reflect usage.
 - Signature of class method `pathspec.pattern.RegexPattern.pattern_to_regex()` has been changed from `def pattern_to_regex(cls, pattern: str) -> tuple[str, bool]` to `def pattern_to_regex(cls, pattern: AnyStr) -> tuple[AnyStr | None, bool | None]` to reflect usage and documentation.
@@ -32,6 +32,7 @@ New features:
 
 Bug fixes:
 
+- `Issue #93`_: Do not remove leading spaces.
 - `Issue #98`_: UnboundLocalError in RegexPattern when initialized with `pattern=None`.
 - Type hint on return value of `pathspec.pattern.RegexPattern.match_file()` to match documentation.
 
@@ -44,6 +45,7 @@ Improvements:
 
 .. _`Issue #38`: https://github.com/cpburnz/python-pathspec/issues/38
 .. _`Issue #91`: https://github.com/cpburnz/python-pathspec/issues/91
+.. _`Issue #93`: https://github.com/cpburnz/python-pathspec/issues/93
 .. _`Issue #98`: https://github.com/cpburnz/python-pathspec/issues/98
 .. _`google-re2`: https://pypi.org/project/google-re2/
 .. _`hyperscan`: https://pypi.org/project/hyperscan/

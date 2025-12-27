@@ -13,7 +13,6 @@ from collections.abc import (
 from itertools import (
 	zip_longest)
 from typing import (
-	AnyStr,
 	Optional,  # Replaced by `X | None` in 3.10.
 	TypeVar,
 	Union,  # Replaced by `X | Y` in 3.10.
@@ -32,6 +31,7 @@ from pathspec._backends.agg import (
 from pathspec.pattern import (
 	Pattern)
 from pathspec._typing import (
+	AnyStr,  # Removed in 3.18.
 	deprecated)  # Added in 3.13.
 from pathspec.util import (
 	CheckResult,

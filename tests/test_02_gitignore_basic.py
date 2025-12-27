@@ -864,3 +864,65 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		self.assertEqual(pattern.regex.pattern, '^(?:.+/)?libfoo/')
 		self.assertIs(pattern.include, False)
 		self.assertTrue(pattern.match_file('libfoo/__init__.py'))
+
+	def test_15_issue_93_a_1(self):
+		"""
+		Test patterns with trailing double asterisks in a segment.
+		"""
+		pattern = GitIgnoreBasicPattern('foo**')
+		self.assertIs(pattern.include, True)
+		self.assertEqual(pattern.regex.pattern, f'^(?:.+/)?foo[^/]*[^/]*{_DIR_OPT}')
+		self.assertTrue(pattern.match_file('foosrodah'))
+
+	def test_15_issue_93_a_2(self):
+		"""
+		Test patterns with trailing double asterisks in a segment.
+		"""
+		pattern = GitIgnoreBasicPattern('foo**/bar')
+		self.assertIs(pattern.include, True)
+		self.assertEqual(pattern.regex.pattern, f'^foo[^/]*[^/]*/bar{_DIR_OPT}')
+		self.assertFalse(pattern.match_file('foobar'))
+		self.assertTrue(pattern.match_file('foosrodah/bar'))
+
+	def test_15_issue_93_b_1_single(self):
+		"""
+		Test patterns with leading spaces.
+		"""
+		pattern = GitIgnoreBasicPattern(' foo')
+		self.assertIs(pattern.include, True)
+		self.assertEqual(pattern.regex.pattern, f'^(?:.+/)?\\ foo{_DIR_OPT}')
+		self.assertFalse(pattern.match_file('foo'))
+		self.assertTrue(pattern.match_file(' foo'))
+
+	def test_15_issue_93_b_2_double(self):
+		"""
+		Test patterns with leading spaces.
+		"""
+		pattern = GitIgnoreBasicPattern('  foo')
+		self.assertIs(pattern.include, True)
+		self.assertEqual(pattern.regex.pattern, f'^(?:.+/)?\\ \\ foo{_DIR_OPT}')
+		self.assertFalse(pattern.match_file('foo'))
+		self.assertFalse(pattern.match_file(' foo'))
+		self.assertTrue(pattern.match_file('  foo'))
+
+	def test_15_issue_93_c_1(self):
+		"""
+		Test patterns with invalid range notation.
+		"""
+		# TODO BUG: This test is a placeholder for the current behavior. Git behaves
+		# differently for this scenario.
+		# - See <https://github.com/cpburnz/python-pathspec/issues/93>.
+		pattern = GitIgnoreBasicPattern('[')
+		self.assertIs(pattern.include, True)
+		self.assertEqual(pattern.regex.pattern, f'^(?:.+/)?\\[{_DIR_OPT}')
+
+	def test_15_issue_93_c_2(self):
+		"""
+		Test patterns with invalid range notation.
+		"""
+		# TODO BUG: This test is a placeholder for the current behavior. Git behaves
+		# differently for this scenario.
+		# - See <https://github.com/cpburnz/python-pathspec/issues/93>.
+		pattern = GitIgnoreBasicPattern('[!]')
+		self.assertIs(pattern.include, True)
+		self.assertEqual(pattern.regex.pattern, f'^(?:.+/)?\\[!\\]{_DIR_OPT}')

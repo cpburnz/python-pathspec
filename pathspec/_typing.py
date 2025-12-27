@@ -16,6 +16,10 @@ from typing import (
 	Optional,  # Replaced by `X | None` in 3.10.
 	TypeVar)
 try:
+	from typing import AnyStr  # Removed in 3.18.
+except ImportError:
+	AnyStr = TypeVar('AnyStr', str, bytes)
+try:
 	from typing import Never  # Added in 3.11.
 except ImportError:
 	from typing import NoReturn as Never

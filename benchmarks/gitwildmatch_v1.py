@@ -5,7 +5,6 @@ but not included in the released library.
 
 import re
 from typing import (
-	AnyStr,
 	Optional)  # Replaced by `X | None` in 3.10.
 from typing_extensions import (
 	override)
@@ -15,6 +14,8 @@ from pathspec.pattern import (
 from pathspec.patterns.gitignore.spec import (
 	_BYTES_ENCODING,
 	_DIR_MARK)
+from pathspec._typing import (
+	AnyStr)  # Removed in 3.18.
 
 
 class GitWildMatchV1Pattern(RegexPattern):

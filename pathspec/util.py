@@ -17,7 +17,6 @@ from dataclasses import (
 	dataclass)
 from typing import (
 	Any,
-	AnyStr,
 	Generic,
 	Optional,  # Replaced by `X | None` in 3.10.
 	TypeVar,
@@ -26,6 +25,7 @@ from typing import (
 from .pattern import (
 	Pattern)
 from ._typing import (
+	AnyStr,  # Removed in 3.18.
 	deprecated)  # Added in 3.13.
 
 StrPath = Union[str, os.PathLike[str]]

@@ -73,9 +73,9 @@ dist-publish: _dist_publish
 # Development
 ################################################################################
 
-cpy_bin := 'python3'
+cpy_bin := env('cpy_bin', 'python3')
 cpy_run := 'dev/venv.sh dev/venv-cpy'
-pypy_bin := 'pypy3'
+pypy_bin := env('pypy_bin', 'pypy3')
 pypy_run := 'dev/venv.sh dev/venv-pypy'
 
 _bench_all:
