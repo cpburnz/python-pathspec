@@ -1,5 +1,5 @@
 """
-This script generates the RST tables for the benchmark run.
+This script generates the markdown tables for the benchmark run.
 """
 
 import argparse
@@ -10,9 +10,9 @@ import re
 import sys
 
 
-def output_rst_tables(in_file: pathlib.Path) -> None:
+def output_md_tables(in_file: pathlib.Path) -> None:
 	"""
-	Output the RST tables for the benchmark.
+	Output the markdown tables for the benchmark.
 	"""
 	run_info = json.loads(in_file.read_text())
 
@@ -34,34 +34,27 @@ def output_rst_tables(in_file: pathlib.Path) -> None:
 		table_to_times.setdefault(table_key, {}).setdefault(line_count, {})[backend] = ops
 
 	print()
+	print(f"{python} on {machine}")
+	print("----------")
+	print()
 	for table_key, table_rows in table_to_times.items():
-		print(f".. list-table:: {table_key.method}: {table_key.file_count} files using {python} on {machine}")
-		print("   :header-rows: 2")
-		print("   :align: right")
+		print(f"{table_key.method}: {table_key.file_count} files ")
 		print()
-		print("   * - Patterns")
-		print("     - simple")
-		print("     - hyperscan")
-		print("     -")
-		print("     - re2")
-		print("     -")
-		print("   * -")
-		print("     - ops")
-		print("     - ops")
-		print("     - x")
-		print("     - ops")
-		print("     - x")
+		print("| Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |")
+		print("| --: | --: | --: | --: | --: | --: |")
 
 		for line_count, backend_ops in sorted(table_rows.items()):
 			sm_ops = backend_ops['sm']
-			hs_ops = backend_ops['hs']
-			re2_ops = backend_ops['re2']
-			print(f"   * - {line_count}")
-			print(f"     - {sm_ops:.1f}")
-			print(f"     - {hs_ops:.1f}")
-			print(f"     - {hs_ops/sm_ops:.2f}")
-			print(f"     - {re2_ops:.1f}")
-			print(f"     - {re2_ops/sm_ops:.2f}")
+			hs_ops = backend_ops.get('hs')
+			re2_ops = backend_ops.get('re2')
+			print("| " + " | ".join([
+				str(line_count),
+				format(sm_ops, '.1f'),
+				format(hs_ops, '.1f') if hs_ops else "-",
+				format(hs_ops / sm_ops, '.2f') if hs_ops else "-",
+				format(re2_ops, '.1f') if re2_ops else "-",
+				format(re2_ops / sm_ops, '.2f') if re2_ops else "-",
+			]) + " |")
 
 		print()
 
@@ -77,7 +70,7 @@ def main() -> int:
 	), metavar="<json>")
 	args = parser.parse_args()
 
-	output_rst_tables(args.i)
+	output_md_tables(args.i)
 
 	return 0
 

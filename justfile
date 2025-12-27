@@ -113,7 +113,7 @@ _venv_pypy_create:
 	{{pypy_bin}} -m venv --clear dev/venv-pypy
 
 _venv_pypy_update:
-	{{pypy_run}} pip install --upgrade pip pytest pytest-benchmark setuptools wheel
+	{{pypy_run}} pip install --upgrade pip pytest pytest-benchmark regex setuptools wheel
 	{{pypy_run}} pip install -e .
 
 
