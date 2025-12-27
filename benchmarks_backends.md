@@ -9,7 +9,7 @@ patterns and file paths. File-system speed is not tested.
 CPython 3.13.11 on Intel(R) Xeon(R) CPU E5-2690 0 @ 2.90GHz
 ----------
 
-GitIgnoreSpec.match_files(): 6.5k files 
+GitIgnoreSpec.match_files(): 6.5k files
 
 | Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |
 | --: | --: | --: | --: | --: | --: |
@@ -21,7 +21,7 @@ GitIgnoreSpec.match_files(): 6.5k files
 | 100 | 4.9 | 32.7 | 6.62 | 77.6 | 15.73 |
 | 150 | 3.6 | 30.3 | 8.41 | 73.0 | 20.25 |
 
-PathSpec.match_files(): 6.5k files 
+PathSpec.match_files(): 6.5k files
 
 | Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |
 | --: | --: | --: | --: | --: | --: |
@@ -34,10 +34,10 @@ PathSpec.match_files(): 6.5k files
 | 150 | 3.7 | 28.6 | 7.68 | 72.8 | 19.58 |
 
 
-PyPy 7.3.20 on Intel(R) Xeon(R) CPU E5-2690 0 @ 2.90GHz
+PyPy 3.11.13 (7.3.20) on Intel(R) Xeon(R) CPU E5-2690 0 @ 2.90GHz
 ----------
 
-GitIgnoreSpec.match_files(): 6.5k files 
+GitIgnoreSpec.match_files(): 6.5k files
 
 | Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |
 | --: | --: | --: | --: | --: | --: |
@@ -49,7 +49,7 @@ GitIgnoreSpec.match_files(): 6.5k files
 | 100 | 1.9 | - | - | - | - |
 | 150 | 0.9 | - | - | - | - |
 
-PathSpec.match_files(): 6.5k files 
+PathSpec.match_files(): 6.5k files
 
 | Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |
 | --: | --: | --: | --: | --: | --: |
@@ -65,7 +65,7 @@ PathSpec.match_files(): 6.5k files
 CPython 3.13.11 on 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
 ----------
 
-GitIgnoreSpec.match_files(): 6.5k files 
+GitIgnoreSpec.match_files(): 6.5k files
 
 | Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |
 | --: | --: | --: | --: | --: | --: |
@@ -77,7 +77,7 @@ GitIgnoreSpec.match_files(): 6.5k files
 | 100 | 8.5 | 66.9 | 7.88 | 190.9 | 22.47 |
 | 150 | 5.8 | 60.5 | 10.46 | 173.0 | 29.91 |
 
-PathSpec.match_files(): 6.5k files 
+PathSpec.match_files(): 6.5k files
 
 | Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |
 | --: | --: | --: | --: | --: | --: |
@@ -90,10 +90,10 @@ PathSpec.match_files(): 6.5k files
 | 150 | 6.1 | 56.3 | 9.19 | 176.8 | 28.84 |
 
 
-PyPy 7.3.20 on 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
+PyPy 3.11.13 (7.3.20) on 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
 ----------
 
-GitIgnoreSpec.match_files(): 6.5k files 
+GitIgnoreSpec.match_files(): 6.5k files
 
 | Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |
 | --: | --: | --: | --: | --: | --: |
@@ -105,7 +105,7 @@ GitIgnoreSpec.match_files(): 6.5k files
 | 100 | 5.6 | - | - | - | - |
 | 150 | 2.9 | - | - | - | - |
 
-PathSpec.match_files(): 6.5k files 
+PathSpec.match_files(): 6.5k files
 
 | Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |
 | --: | --: | --: | --: | --: | --: |
@@ -118,10 +118,38 @@ PathSpec.match_files(): 6.5k files
 | 150 | 3.1 | - | - | - | - |
 
 
+PyPy 3.10.16 (7.3.19) on 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
+----------
+
+GitIgnoreSpec.match_files(): 6.5k files
+
+| Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |
+| --: | --: | --: | --: | --: | --: |
+| 1 | 589.9 | 106.6 | 0.18 | - | - |
+| 5 | 117.2 | 91.9 | 0.78 | - | - |
+| 15 | 44.5 | 81.3 | 1.83 | - | - |
+| 25 | 27.4 | 44.0 | 1.60 | - | - |
+| 50 | 13.0 | 32.1 | 2.48 | - | - |
+| 100 | 5.5 | 51.8 | 9.36 | - | - |
+| 150 | 3.1 | 47.1 | 15.28 | - | - |
+
+PathSpec.match_files(): 6.5k files
+
+| Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |
+| --: | --: | --: | --: | --: | --: |
+| 1 | 581.4 | 106.7 | 0.18 | - | - |
+| 5 | 135.7 | 90.7 | 0.67 | - | - |
+| 15 | 54.8 | 81.7 | 1.49 | - | - |
+| 25 | 31.5 | 43.0 | 1.36 | - | - |
+| 50 | 12.5 | 30.2 | 2.41 | - | - |
+| 100 | 6.3 | 42.2 | 6.69 | - | - |
+| 150 | 3.3 | 44.2 | 13.51 | - | - |
+
+
 CPython 3.13.11 on AMD RYZEN AI MAX+ 395 w/ Radeon 8060S
 ----------
 
-GitIgnoreSpec.match_files(): 6.5k files 
+GitIgnoreSpec.match_files(): 6.5k files
 
 | Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |
 | --: | --: | --: | --: | --: | --: |
@@ -133,7 +161,7 @@ GitIgnoreSpec.match_files(): 6.5k files
 | 100 | 13.4 | 92.4 | 6.91 | 271.3 | 20.29 |
 | 150 | 8.7 | 84.6 | 9.70 | 246.5 | 28.26 |
 
-PathSpec.match_files(): 6.5k files 
+PathSpec.match_files(): 6.5k files
 
 | Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |
 | --: | --: | --: | --: | --: | --: |
@@ -146,10 +174,10 @@ PathSpec.match_files(): 6.5k files
 | 150 | 9.8 | 79.9 | 8.14 | 263.7 | 26.87 |
 
 
-PyPy 7.3.20 on AMD RYZEN AI MAX+ 395 w/ Radeon 8060S
+PyPy 3.11.13 (7.3.20) on AMD RYZEN AI MAX+ 395 w/ Radeon 8060S
 ----------
 
-GitIgnoreSpec.match_files(): 6.5k files 
+GitIgnoreSpec.match_files(): 6.5k files
 
 | Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |
 | --: | --: | --: | --: | --: | --: |
@@ -161,7 +189,7 @@ GitIgnoreSpec.match_files(): 6.5k files
 | 100 | 10.1 | - | - | - | - |
 | 150 | 5.3 | - | - | - | - |
 
-PathSpec.match_files(): 6.5k files 
+PathSpec.match_files(): 6.5k files
 
 | Patterns | simple<br>ops | hyperscan<br>ops | <br>x | re2<br>ops | <br>x |
 | --: | --: | --: | --: | --: | --: |

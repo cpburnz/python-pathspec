@@ -5,7 +5,7 @@ Development Notes
 TODO
 ----
 
-- Benchmarks.
+- Release v1.0.0.
 
 
 Python Versions

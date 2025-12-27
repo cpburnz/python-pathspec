@@ -16,10 +16,15 @@ def output_md_tables(in_file: pathlib.Path) -> None:
 	"""
 	run_info = json.loads(in_file.read_text())
 
+	python_ver = run_info['machine_info']['python_version']
+	impl_ver = run_info['machine_info']['python_implementation_version']
 	python = "{python} {version}".format(
 		python=run_info['machine_info']['python_implementation'],
-		version=run_info['machine_info']['python_implementation_version'],
+		version=python_ver,
 	)
+	if impl_ver != python_ver:
+		python += f" ({impl_ver})"
+
 	machine = run_info['machine_info']['cpu']['brand_raw']
 
 	table_to_times: dict[TableKey, dict[int, dict[str, float]]] = {}
