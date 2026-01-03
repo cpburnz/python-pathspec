@@ -120,7 +120,7 @@ See `benchmarks_backends.md`_ for comparisons between native Python regular
 expressions and the optional backends.
 
 
-.. _`benchmarks_backends.md`: benchmarks_backends.md
+.. _`benchmarks_backends.md`: https://github.com/cpburnz/python-pathspec/blob/master/benchmarks_backends.md
 .. _`google-re2`: https://pypi.org/project/google-re2/
 .. _`hyperscan`: https://pypi.org/project/hyperscan/
 
@@ -175,8 +175,6 @@ Installation
 *pathspec* is available for install through `PyPI`_::
 
 	pip install pathspec
-	pip install pathspec[hyperscan]
-	pip install pathspec[google-re2]
 
 *pathspec* can also be built from source. The following packages will be
 required:
@@ -191,6 +189,15 @@ required:
 .. _`PyPI`: http://pypi.python.org/pypi/pathspec
 .. _`build`: https://pypi.org/project/build/
 
+The following optional dependencies can be installed:
+
+- `google-re2`_: Enables optional "re2" backend.
+- `hyperscan`_: Enables optional "hyperscan" backend.
+- `typing-extensions`_: Improves some type hints.
+
+
+.. _`typing-extensions`: https://pypi.org/project/typing-extensions/
+
 
 Documentation
 -------------
@@ -198,6 +205,14 @@ Documentation
 Documentation for *pathspec* is available on `Read the Docs`_.
 
 .. _`Read the Docs`: https://python-path-specification.readthedocs.io
+
+The full change history can be found in *CHANGES.rst* and `Change History`_.
+
+.. _`Change History`: https://python-path-specification.readthedocs.io/en/stable/changes.html
+
+An upgrade guide is available in *UPGRADING.rst* and `Upgrade Guide`_.
+
+.. _`Upgrade Guide`: https://python-path-specification.readthedocs.io/en/stable/upgrading.html
 
 
 Other Languages

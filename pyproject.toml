@@ -32,14 +32,14 @@ requires-python = ">=3.9"
 version = "1.0.0.dev1"
 
 [project.optional-dependencies]
-google-re2 = [
-	"google-re2 >=1.1",
-]
 hyperscan = [
 	"hyperscan >=0.7",
 ]
 optional = [
 	"typing-extensions >=4",
+]
+re2 = [
+	"google-re2 >=1.1",
 ]
 tests = [
 	"pytest >=9",
@@ -56,10 +56,12 @@ include = [
 	"*.cfg",
 	"*.in",
 	"*.ini",
+	"*.md",
 	"*.py",
 	"*.rst",
 	"*.toml",
 	"LICENSE",
+	"benchmarks/",
 	"doc/",
 	"tests/",
 ]

@@ -3,7 +3,7 @@ This module contains the project meta-data.
 """
 
 __author__ = "Caleb P. Burns"
-__copyright__ = "Copyright © 2013-2025 Caleb P. Burns"
+__copyright__ = "Copyright © 2013-2026 Caleb P. Burns"
 __credits__ = [
 	"Hong Minhee <https://github.com/dahlia>",
 	"Brandon High <https://github.com/highb>",

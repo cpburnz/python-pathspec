@@ -199,9 +199,9 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 		if pattern_str == '/':
 			# EDGE CASE: A single slash ('/') is not addressed by the gitignore
 			# documentation. Git treats it as a no-op (does not match any files). The
-			# straight forward interpretation is to treat it as '**' to match every
-			# file. Remove the directory pattern flag so that it is treated as '**'
-			# instead of '**/'.
+			# straight forward interpretation is to treat it as a directory and match
+			# every descendant path (equivalent to '**'). Remove the directory pattern
+			# flag so that it is treated as '**' instead of '**/'.
 			is_dir_pattern = False
 
 		# Normalize pattern to make processing easier.

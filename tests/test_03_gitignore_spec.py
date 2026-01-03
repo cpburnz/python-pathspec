@@ -117,7 +117,6 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 		self.assertTrue(include)
 		self.assertEqual(equiv_regex, regex)
 
-
 	def test_01_relative(self):
 		"""
 		Tests a relative path pattern.

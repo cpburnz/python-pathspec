@@ -1,9 +1,13 @@
+include *.cfg
 include *.in
 include *.ini
+include *.md
 include *.py
 include *.rst
+include *.toml
 include pathspec/py.typed
 include LICENSE
+recursive-include benchmarks *
 recursive-include doc *
 recursive-include tests *
 prune dev

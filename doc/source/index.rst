@@ -14,6 +14,7 @@ Welcome to pathspec's documentation!
    readme
    api
    changes
+   upgrading
 
 
 Indices and tables
