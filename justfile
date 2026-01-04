@@ -28,6 +28,10 @@ bench-gitignore: _bench_gitignore
 [group('Development')]
 bench-pathspec: _bench_pathspec
 
+# Build Sphinx documentation.
+[group('Development')]
+build-docs: _build_docs
+
 # Run tests using the CPython virtual environment.
 [group('Development')]
 test: _test_primary
@@ -92,6 +96,9 @@ _bench_match_files:
 
 _bench_pathspec:
 	{{cpy_run}} pytest -q -c benchmarks/pytest.ini benchmarks/bench_pathspec_*_to_*.py
+
+_build_docs:
+	{{cpy_run}} sphinx-build -aWEnqb html doc/source doc/build
 
 _test_all:
 	{{cpy_run}} tox

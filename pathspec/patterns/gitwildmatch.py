@@ -1,6 +1,6 @@
 """
-DEPRECATED: Deprecated since version 0.12.0. This module only exists for
-backward compatibility.
+.. version-deprecated: 1.0.0
+	This module is superseded by :module:`pathspec.patterns.gitignore`.
 """
 
 from pathspec import util
@@ -11,16 +11,15 @@ from pathspec._typing import (
 from .gitignore.spec import (
 	GitIgnoreSpecPattern)
 
-# DEPRECATED: Deprecated since version 0.12.0. Expose GitWildMatchPatternError
+# DEPRECATED: Deprecated since version 1.0.0. Expose GitWildMatchPatternError
 # in this module for backward compatibility.
 from .gitignore import (
 	GitIgnorePatternError as GitWildMatchPatternError)
 
 
-# TODO: Review dvc's usage of this class.
 class GitWildMatchPattern(GitIgnoreSpecPattern):
 	"""
-	.. version-deprecated:: 0.12.0
+	.. version-deprecated:: 1.0.0
 		This class is superseded by :class:`GitIgnoreSpecPattern` and
 		:class:`~pathspec.patterns.gitignore.basic.GitIgnoreBasicPattern`.
 	"""
@@ -48,6 +47,6 @@ class GitWildMatchPattern(GitIgnoreSpecPattern):
 		return super().pattern_to_regex(*args, **kw)
 
 
-# DEPRECATED: Deprecated since version 0.12.0. Register GitWildMatchPattern as
+# DEPRECATED: Deprecated since version 1.0.0. Register GitWildMatchPattern as
 # "gitwildmatch" for backward compatibility.
 util.register_pattern('gitwildmatch', GitWildMatchPattern)

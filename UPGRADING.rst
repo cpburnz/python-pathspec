@@ -3,7 +3,7 @@ Upgrade Guide
 =============
 
 
-From 0.12.0 to 1.0.0
+From 0.12.1 to 1.0.0
 --------------------
 
 `PathSpec`:
