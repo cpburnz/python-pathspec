@@ -677,3 +677,15 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					"libfoo/__init__.py",
 				}, debug)
 				self.assertEqual(files - ignores, set())
+
+	def test_09_issue_100(self):
+		"""
+		Test an empty list of patterns.
+		"""
+		for sub_test in self.parameterize_from_lines([]):
+			with sub_test() as spec:
+				files = {'foo'}
+				results = list(spec.check_files(files))
+				includes = get_includes(results)
+				debug = debug_results(spec, results)
+				self.assertEqual(includes, set(), debug)

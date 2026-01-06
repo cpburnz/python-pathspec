@@ -1029,3 +1029,15 @@ class PathSpecTest(unittest.TestCase):
 
 				self.assertEqual(files - ignores, keeps)
 				self.assertEqual(files - keeps, ignores)
+
+	def test_10_issue_100(self):
+		"""
+		Test an empty list of patterns.
+		"""
+		for sub_test in self.parameterize_from_lines('gitignore', []):
+			with sub_test() as spec:
+				files = {'foo'}
+				results = list(spec.check_files(files))
+				includes = get_includes(results)
+				debug = debug_results(spec, results)
+				self.assertEqual(includes, set(), debug)

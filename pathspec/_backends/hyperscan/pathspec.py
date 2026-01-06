@@ -59,32 +59,40 @@ class HyperscanPsBackend(_Backend):
 		if hyperscan is None:
 			raise hyperscan_error
 
-		if not patterns:
-			raise ValueError(f"{patterns=!r} cannot be empty.")
-		elif not isinstance(patterns[0], RegexPattern):
+		if patterns and not isinstance(patterns[0], RegexPattern):
 			raise TypeError(f"{patterns[0]=!r} must be a RegexPattern.")
 
 		use_patterns = enumerate_patterns(
 			patterns, filter=True, reverse=False,
 		)
 
-		self._db = self._make_db()
+		debug_exprs = bool(_debug_exprs)
+		if use_patterns:
+			db = self._make_db()
+			expr_data = self._init_db(
+				db=db,
+				debug=debug_exprs,
+				patterns=use_patterns,
+				sort_ids=_test_sort,
+			)
+		else:
+			# WARNING: The hyperscan database cannot be initialized with zero
+			# patterns.
+			db = None
+			expr_data = []
+
+		self._db: Optional[hyperscan.Database] = db
 		"""
 		*_db* (:class:`hyperscan.Database`) is the Hyperscan database.
 		"""
 
-		self._debug_exprs = bool(_debug_exprs)
+		self._debug_exprs = debug_exprs
 		"""
 		*_debug_exprs* (:class:`bool`) is whether to include additional debugging
 		information for the expressions.
 		"""
 
-		self._expr_data: list[HyperscanExprDat] = self._init_db(
-			db=self._db,
-			debug=self._debug_exprs,
-			patterns=use_patterns,
-			sort_ids=_test_sort,
-		)
+		self._expr_data: list[HyperscanExprDat] = expr_data
 		"""
 		*_expr_data* (:class:`list`) maps expression index (:class:`int`) to
 		expression data (:class:`:class:`HyperscanExprDat`).
@@ -130,12 +138,15 @@ class HyperscanPsBackend(_Backend):
 		Returns a :class:`list` indexed by expression id (:class:`int`) to its data
 		(:class:`HyperscanExprDat`).
 		"""
+		# WARNING: Hyperscan raises a `hyperscan.error` exception when compiled with
+		# zero elements.
+		assert patterns, patterns
+
 		# Prepare patterns.
 		expr_data: list[HyperscanExprDat] = []
 		exprs: list[bytes] = []
 		for pattern_index, pattern in patterns:
-			if pattern.include is None:
-				continue
+			assert pattern.include is not None, (pattern_index, pattern)
 
 			# Encode regex.
 			assert isinstance(pattern, RegexPattern), pattern
@@ -176,6 +187,7 @@ class HyperscanPsBackend(_Backend):
 			elements=len(exprs),
 			flags=HS_FLAGS,
 		)
+
 		return expr_data
 
 	@override
@@ -191,8 +203,14 @@ class HyperscanPsBackend(_Backend):
 		"""
 		# NOTICE: According to benchmarking, a method callback is 20% faster than
 		# using a closure here.
+		db = self._db
+		if self._db is None:
+			# Database was not initialized because there were no patterns. Return no
+			# match.
+			return (None, None)
+
 		self._out = (None, -1)
-		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
+		db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
 
 		out_include, out_index = self._out
 		if out_index == -1:

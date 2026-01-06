@@ -99,12 +99,15 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		Returns a :class:`list` indexed by expression id (:class:`int`) to its data
 		(:class:`HyperscanExprDat`).
 		"""
+		# WARNING: Hyperscan raises a `hyperscan.error` exception when compiled with
+		# zero elements.
+		assert patterns, patterns
+
 		# Prepare patterns.
 		expr_data: list[HyperscanExprDat] = []
 		exprs: list[bytes] = []
 		for pattern_index, pattern in patterns:
-			if pattern.include is None:
-				continue
+			assert pattern.include is not None, (pattern_index, pattern)
 
 			# Encode regex.
 			assert isinstance(pattern, RegexPattern), pattern
@@ -189,8 +192,14 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		"""
 		# NOTICE: According to benchmarking, a method callback is 13% faster than
 		# using a closure here.
+		db = self._db
+		if self._db is None:
+			# Database was not initialized because there were no patterns. Return no
+			# match.
+			return (None, None)
+
 		self._out = (None, -1, 0)
-		self._db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
+		db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
 
 		out_include, out_index = self._out[:2]
 		if out_index == -1:

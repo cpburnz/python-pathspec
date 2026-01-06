@@ -57,9 +57,7 @@ class Re2PsBackend(_Backend):
 		if re2_error is not None:
 			raise re2_error
 
-		if not patterns:
-			raise ValueError(f"{patterns=!r} cannot be empty.")
-		elif not isinstance(patterns[0], RegexPattern):
+		if patterns and not isinstance(patterns[0], RegexPattern):
 			raise TypeError(f"{patterns[0]=!r} must be a RegexPattern.")
 
 		use_patterns = dict(enumerate_patterns(
