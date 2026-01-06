@@ -1,4 +1,15 @@
 
+1.0.1 (2026-01-06)
+------------------
+
+Bug fixes:
+
+- `Issue #100`_: ValueError(f"{patterns=!r} cannot be empty.") when using black.
+
+
+.. _`Issue #100`: https://github.com/cpburnz/python-pathspec/issues/100
+
+
 1.0.0 (2026-01-05)
 ------------------
 
