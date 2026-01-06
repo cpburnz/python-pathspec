@@ -186,16 +186,14 @@ required:
 	python -m build
 	pip install dist/pathspec-*-py3-none-any.whl
 
-.. _`PyPI`: http://pypi.python.org/pypi/pathspec
-.. _`build`: https://pypi.org/project/build/
-
 The following optional dependencies can be installed:
 
 - `google-re2`_: Enables optional "re2" backend.
 - `hyperscan`_: Enables optional "hyperscan" backend.
 - `typing-extensions`_: Improves some type hints.
 
-
+.. _`PyPI`: http://pypi.python.org/pypi/pathspec
+.. _`build`: https://pypi.org/project/build/
 .. _`typing-extensions`: https://pypi.org/project/typing-extensions/
 
 
@@ -204,14 +202,14 @@ Documentation
 
 Documentation for *pathspec* is available on `Read the Docs`_.
 
-.. _`Read the Docs`: https://python-path-specification.readthedocs.io
+The full change history can be found in `CHANGES.rst`_ and `Change History`_.
 
-The full change history can be found in *CHANGES.rst* and `Change History`_.
+An upgrade guide is available in `UPGRADING.rst`_ and `Upgrade Guide`_.
 
+.. _`CHANGES.rst`: https://github.com/cpburnz/python-pathspec/blob/master/CHANGES.rst
 .. _`Change History`: https://python-path-specification.readthedocs.io/en/stable/changes.html
-
-An upgrade guide is available in *UPGRADING.rst* and `Upgrade Guide`_.
-
+.. _`Read the Docs`: https://python-path-specification.readthedocs.io
+.. _`UPGRADING.rst`: https://github.com/cpburnz/python-pathspec/blob/master/UPGRADING.rst
 .. _`Upgrade Guide`: https://python-path-specification.readthedocs.io/en/stable/upgrading.html
 
 
