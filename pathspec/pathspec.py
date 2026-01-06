@@ -411,7 +411,7 @@ class PathSpec(object):
 		entries = util.iter_tree_entries(root, on_error=on_error, follow_links=follow_links)
 		yield from self.match_entries(entries, negate=negate)
 
-	# NOTICE: The deprecation warning was only added in 1.0.0 (from TODO 2026-01-03).
+	# NOTICE: The deprecation warning was only added in 1.0.0 (from 2026-01-05).
 	@deprecated((
 		"PathSpec.match_tree() is deprecated. Use .match_tree_files() instead."
 	))
