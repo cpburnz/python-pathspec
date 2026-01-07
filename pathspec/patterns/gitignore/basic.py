@@ -262,6 +262,8 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 				if i == 0:
 					# A normalized pattern beginning with double-asterisks ('**') will
 					# match any leading path segments.
+					# - NOTICE: '(?:^|/)' benchmarks slower using p15 (sm=0.9382,
+					#   hs=0.9966, re2=0.9337).
 					out_parts.append('^(?:.+/)?')
 
 				elif i < end:

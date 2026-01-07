@@ -1,9 +1,9 @@
 """
 This module provides :class:`.GitIgnoreSpec` which replicates *.gitignore*
 behavior, and handles edge-cases where Git's behavior differs from what's
-documented. Git allows including files from excluded directories which appears
-to contradict the documentation. This uses :class:`.GitIgnoreSpecPattern`
-to fully replicate Git's handling.
+documented. Git allows including files from excluded directories which directly
+contradicts the documentation. This uses :class:`.GitIgnoreSpecPattern` to fully
+replicate Git's handling.
 """
 from __future__ import annotations
 
@@ -106,11 +106,10 @@ class GitIgnoreSpec(PathSpec):
 		:class:`io.TextIOBase` (e.g., from :func:`open` or :class:`io.StringIO`) or
 		the result from :meth:`str.splitlines`.
 
-		*pattern_factory* does not need to be set for :class:`GitIgnoreSpec`. It can
-		be either the name of a registered pattern factory (:class:`str`), or a
-		:class:`~collections.abc.Callable` used to compile patterns. It must accept
-		an uncompiled pattern (:class:`str`) and return the compiled pattern
-		(:class:`.Pattern`). Default is :class:`None` for :class:`.GitIgnoreSpecPattern`.
+		*pattern_factory* does not need to be set for :class:`GitIgnoreSpec`. If
+		set, it should be either :data:`"gitignore"` or :class:`.GitIgnoreSpecPattern`.
+		There is no guarantee it will work with any other pattern class. Default is
+		:data:`None` for :class:`.GitIgnoreSpecPattern`.
 
 		*backend* (:class:`str` or :data:`None`) is the pattern (regular expression)
 		matching backend to use. Default is :data:`None` for "best" to use the best

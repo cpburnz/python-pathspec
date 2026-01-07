@@ -48,12 +48,16 @@ __credits__ = [
 	"Bartłomiej Żak <https://github.com/bzakdd>",
 	"Matthias <https://github.com/haimat>",
 	"Avasam <https://github.com/Avasam>",
+	"Anıl Karagenç <https://github.com/karagenc>",
 	"Yannic Schröder <https://github.com/yschroeder>",
 	"axesider <https://github.com/axesider>",
 	"TomRuk <https://github.com/tomruk>",
 	"Oleh Prypin <https://github.com/oprypin>",
+	"Lumina <https://github.com/lumina37>",
 	"Kurt McKee <https://github.com/kurtmckee>",
 	"Dobatymo <https://github.com/Dobatymo>",
 	"Tomoki Nakamaru <https://github.com/tomokinakamaru>",
+	"Sebastien Eskenazi <https://github.com/SebastienEske>",
+	"Bar Vered <https://github.com/barv-jfrog>",
 ]
 __license__ = "MPL 2.0"
