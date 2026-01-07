@@ -107,7 +107,7 @@ class GitIgnoreSpec(PathSpec):
 		the result from :meth:`str.splitlines`.
 
 		*pattern_factory* does not need to be set for :class:`GitIgnoreSpec`. If
-		set, it should be either :data:`"gitignore"` or :class:`.GitIgnoreSpecPattern`.
+		set, it should be either ``"gitignore"`` or :class:`.GitIgnoreSpecPattern`.
 		There is no guarantee it will work with any other pattern class. Default is
 		:data:`None` for :class:`.GitIgnoreSpecPattern`.
 
