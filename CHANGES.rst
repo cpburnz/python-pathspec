@@ -2,6 +2,14 @@ Change History
 ==============
 
 
+1.0.2 (2026-01-07)
+------------------
+
+Bug fixes:
+
+- Type hint `collections.abc.Callable` is does not properly replace `typing.Callable` until Python 3.9.2.
+
+
 1.0.1 (2026-01-06)
 ------------------
 

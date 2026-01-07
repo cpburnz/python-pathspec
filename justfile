@@ -68,10 +68,6 @@ dist-build: _dist_build
 [group('Distribution')]
 dist-prebuild: _dist_prebuild
 
-# Publish the package to PyPI.
-[group('Distribution')]
-dist-publish: _dist_publish
-
 
 ################################################################################
 # Development
@@ -134,7 +130,3 @@ _dist_build: _dist_prebuild
 
 _dist_prebuild:
 	{{cpy_run}} python prebuild.py
-
-_dist_publish:
-	{{cpy_run}} twine check ./dist/*
-	{{cpy_run}} twine upload -r pathspec --skip-existing ./dist/*

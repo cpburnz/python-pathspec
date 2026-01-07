@@ -8,10 +8,10 @@ replicate Git's handling.
 from __future__ import annotations
 
 from collections.abc import (
-	Callable,
 	Iterable,
 	Sequence)
 from typing import (
+	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
 	Optional,  # Replaced by `X | None` in 3.10.
 	TypeVar,
 	Union,  # Replaced by `X | Y` in 3.10.

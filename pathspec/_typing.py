@@ -9,10 +9,9 @@ a vendored copy of :module:`typing_extensions`.
 
 import functools
 import warnings
-from collections.abc import (
-	Callable)
 from typing import (
 	Any,
+	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
 	Optional,  # Replaced by `X | None` in 3.10.
 	TypeVar)
 try:

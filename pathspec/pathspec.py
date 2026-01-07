@@ -5,7 +5,6 @@ for pattern matching of files.
 from __future__ import annotations
 
 from collections.abc import (
-	Callable,
 	Collection,
 	Iterable,
 	Iterator,
@@ -13,6 +12,7 @@ from collections.abc import (
 from itertools import (
 	zip_longest)
 from typing import (
+	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
 	Optional,  # Replaced by `X | None` in 3.10.
 	TypeVar,
 	Union,  # Replaced by `X | Y` in 3.10.

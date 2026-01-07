@@ -8,7 +8,6 @@ import pathlib
 import posixpath
 import stat
 from collections.abc import (
-	Callable,
 	Collection,
 	Iterable,
 	Iterator,
@@ -17,6 +16,7 @@ from dataclasses import (
 	dataclass)
 from typing import (
 	Any,
+	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
 	Generic,
 	Optional,  # Replaced by `X | None` in 3.10.
 	TypeVar,

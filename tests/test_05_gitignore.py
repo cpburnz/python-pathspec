@@ -4,7 +4,6 @@ This script tests :class:`.GitIgnoreSpec`.
 
 import unittest
 from collections.abc import (
-	Callable,
 	Iterable,
 	Iterator,
 	Sequence)
@@ -14,6 +13,7 @@ from contextlib import (
 from functools import (
 	partial)
 from typing import (
+	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
 	Optional)  # Replaced by `X | None` in 3.10.
 from unittest import (
 	SkipTest)

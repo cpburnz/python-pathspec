@@ -59,5 +59,6 @@ __credits__ = [
 	"Tomoki Nakamaru <https://github.com/tomokinakamaru>",
 	"Sebastien Eskenazi <https://github.com/SebastienEske>",
 	"Bar Vered <https://github.com/barv-jfrog>",
+	"Tzach Shabtay <https://github.com/tzachshabtay>",
 ]
 __license__ = "MPL 2.0"

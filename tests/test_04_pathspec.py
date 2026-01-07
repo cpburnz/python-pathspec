@@ -7,7 +7,6 @@ import shutil
 import tempfile
 import unittest
 from collections.abc import (
-	Callable,
 	Iterable,
 	Iterator,
 	Sequence)
@@ -19,6 +18,7 @@ from functools import (
 from pathlib import (
 	Path)
 from typing import (
+	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
 	Optional)  # Replaced by `X | None` in 3.10.
 from unittest import (
 	SkipTest)

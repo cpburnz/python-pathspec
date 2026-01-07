@@ -7,10 +7,10 @@ API. Its contents and structure are likely to change.
 from __future__ import annotations
 
 from collections.abc import (
-	Callable,
 	Sequence)
 from typing import (
 	Any,
+	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
 	Optional,  # Replaced by `X | None` in 3.10.
 	Union)  # Replaced by `X | Y` in 3.10.
 
