@@ -2,4 +2,4 @@
 This module defines the version.
 """
 
-__version__ = "1.0.2.a1"
+__version__ = "1.0.2"
