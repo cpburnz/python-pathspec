@@ -60,7 +60,7 @@ def generate_pyproject_toml() -> None:
 	print(f"Read: {VERSION_PY}")
 	version_input = VERSION_PY.read_text()
 	version = re.search(
-		'^__version__\\s*=\\s*"([^"]+)"', version_input, re.M,
+		'^__version__\\s*=\\s*["\'](.+)["\']', version_input, re.M,
 	).group(1)
 
 	# Replace version.
