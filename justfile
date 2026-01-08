@@ -28,10 +28,6 @@ bench-gitignore: _bench_gitignore
 [group('Development')]
 bench-pathspec: _bench_pathspec
 
-# Build Sphinx documentation.
-[group('Development')]
-build-docs: _build_docs
-
 # Run tests using the CPython virtual environment.
 [group('Development')]
 test: _test_primary
@@ -62,11 +58,15 @@ venv-pypy-update: _venv_pypy_update
 
 # Build the package.
 [group('Distribution')]
-dist-build: _dist_build
+build-dist: _dist_build
+
+# Build Sphinx documentation.
+[group('Distribution')]
+build-docs: _build_docs
 
 # Generate files used by distribution.
 [group('Distribution')]
-dist-prebuild: _dist_prebuild
+prebuild: _dist_prebuild
 
 
 ################################################################################
