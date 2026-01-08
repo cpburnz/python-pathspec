@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
+          fetch-tags: true
           persist-credentials: false
 
       - name: Set up Python
