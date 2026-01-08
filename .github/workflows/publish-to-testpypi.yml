@@ -23,7 +23,7 @@ jobs:
         run: python3 -m pip install --user build
 
       - name: Add commit to version
-        run: sed -i -e 's/__version__\s*=\s*"(.+)"/__version__ = "\1+$(git rev-parse --short HEAD)"/' pathspec/_version.py
+        run: sed -i -E "s/__version__\s*=\s*"'"'\(.+\)'"'"/__version__ = '\1+$(git rev-parse --short HEAD)'/" pathspec/_version.py
 
       - name: Prebuild
         run: python3 prebuild.py
