@@ -12,11 +12,19 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-tags: true
           persist-credentials: false
 
       - name: Fetch tags
         run: git fetch --tags origin
+
+      - name: DEBUG Check tag
+        run: git rev-list --tags --max-count=1
+
+      - name: DEBUG Check tag date
+        run: git show -s --format='%as' $(git rev-list --tags --max-count=1)
+
+      - name: Fetch old commits
+        run: git fetch --shallow-since=$(git show -s --format='%as' $(git rev-list --tags --max-count=1)) origin
 
       - name: Set up Python
         uses: actions/setup-python@v6
