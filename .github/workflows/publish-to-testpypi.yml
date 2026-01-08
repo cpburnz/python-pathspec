@@ -15,6 +15,9 @@ jobs:
           fetch-tags: true
           persist-credentials: false
 
+      - name: Fetch tags
+        run: git fetch --tags origin
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
