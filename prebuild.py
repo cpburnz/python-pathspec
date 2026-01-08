@@ -9,8 +9,10 @@ import re
 import sys
 from pathlib import (
 	Path)
-
-import tomli
+try:
+	import tomllib  # Added in 3.11.
+except ModuleNotFoundError:
+	import tomli as tomllib
 
 CHANGES_0_IN_RST = Path("CHANGES_0.in.rst")
 CHANGES_1_IN_RST = Path("CHANGES_1.in.rst")
@@ -95,7 +97,7 @@ def generate_setup_cfg() -> None:
 	"""
 	print(f"Read: {PYPROJECT_TOML}")
 	with PYPROJECT_TOML.open('rb') as fh:
-		config = tomli.load(fh)
+		config = tomllib.load(fh)
 
 	print(f"Write: {SETUP_CFG}")
 	output = configparser.ConfigParser()
