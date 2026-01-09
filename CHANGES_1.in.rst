@@ -9,7 +9,7 @@ Bug fixes:
 
 
 .. _`Issue #101`: https://github.com/cpburnz/python-pathspec/issues/101
-.. _`Issue #102`: https://github.com/cpburnz/python-pathspec/issues/101
+.. _`Issue #102`: https://github.com/cpburnz/python-pathspec/issues/102
 
 
 1.0.2 (2026-01-07)
