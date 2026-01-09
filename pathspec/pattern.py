@@ -14,16 +14,17 @@ from typing import (
 	Optional,  # Replaced by `X | None` in 3.10.
 	TypeVar,
 	Union)  # Replaced by `X | Y` in 3.10.
-try:
-	from typing import Self as RegexPatternSelf  # Added in 3.11.
-except ImportError:
-	RegexPatternSelf = TypeVar("RegexPatternSelf", bound='RegexPattern')
 
 from ._typing import (
 	AnyStr,  # Removed in 3.18.
 	deprecated,  # Added in 3.13.
 	override)  # Added in 3.12.
 
+RegexPatternSelf = TypeVar("RegexPatternSelf", bound='RegexPattern')
+"""
+:class:`RegexPattern` self type hint to support Python v<3.11 using PEP 673
+recommendation.
+"""
 
 class Pattern(object):
 	"""

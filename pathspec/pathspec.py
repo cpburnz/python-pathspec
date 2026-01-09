@@ -17,10 +17,12 @@ from typing import (
 	TypeVar,
 	Union,  # Replaced by `X | Y` in 3.10.
 	cast)
-try:
-	from typing import Self  # Added in 3.11.
-except ImportError:
-	Self = TypeVar("Self", bound='PathSpec')
+
+Self = TypeVar("Self", bound='PathSpec')
+"""
+:class:`PathSpec` self type hint to support Python v<3.11 using PEP 673
+recommendation.
+"""
 
 from pathspec import util
 from pathspec.backend import (

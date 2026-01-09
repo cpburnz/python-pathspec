@@ -17,10 +17,6 @@ from typing import (
 	Union,  # Replaced by `X | Y` in 3.10.
 	cast,
 	overload)
-try:
-	from typing import Self  # Added in 3.11.
-except ImportError:
-	Self = TypeVar("Self", bound='GitIgnoreSpec')
 
 from pathspec.backend import (
 	BackendNamesHint,
@@ -41,6 +37,12 @@ from pathspec._typing import (
 from pathspec.util import (
 	_is_iterable,
 	lookup_pattern)
+
+Self = TypeVar("Self", bound='GitIgnoreSpec')
+"""
+:class:`GitIgnoreSpec` self type hint to support Python v<3.11 using PEP 673
+recommendation.
+"""
 
 
 class GitIgnoreSpec(PathSpec):
