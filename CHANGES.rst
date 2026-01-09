@@ -2,15 +2,17 @@ Change History
 ==============
 
 
-1.0.3 (2026-01-09)
+1.0.3 (probably 2026-01-09)
 ------------------
 
 Bug fixes:
 
 - `Issue #101`_: pyright strict errors with pathspec >= 1.0.0.
+- `Issue #102`_: No module named 'tomllib'.
 
 
 .. _`Issue #101`: https://github.com/cpburnz/python-pathspec/issues/101
+.. _`Issue #102`: https://github.com/cpburnz/python-pathspec/issues/101
 
 
 1.0.2 (2026-01-07)
