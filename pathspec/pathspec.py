@@ -20,7 +20,7 @@ from typing import (
 
 Self = TypeVar("Self", bound='PathSpec')
 """
-:class:`PathSpec` self type hint to support Python v<3.11 using PEP 673
+:class:`.PathSpec` self type hint to support Python v<3.11 using PEP 673
 recommendation.
 """
 

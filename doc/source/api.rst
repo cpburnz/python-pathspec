@@ -19,6 +19,8 @@ pathspec.pathspec
 		:show-inheritance:
 		:special-members: __init__, __eq__, __len__
 
+	.. autoclass:: Self
+
 
 pathspec.gitignore
 ------------------
@@ -31,6 +33,7 @@ pathspec.gitignore
 		:show-inheritance:
 		:special-members: __init__, __eq__, __len__
 
+	.. autoclass:: Self
 
 pathspec.backend
 ----------------

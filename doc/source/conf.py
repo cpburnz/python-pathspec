@@ -28,7 +28,11 @@ from pathspec._version import __version__
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.viewcode']
+extensions = [
+	'sphinx.ext.autodoc',
+	'sphinx.ext.intersphinx',
+	'sphinx.ext.viewcode',
+]
 
 # The autodoc extension doesn't understand the `Self` typehint.
 # To avoid documentation build errors, autodoc typehints must be disabled.

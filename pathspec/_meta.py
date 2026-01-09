@@ -60,6 +60,7 @@ __credits__ = [
 	"Sebastien Eskenazi <https://github.com/SebastienEske>",
 	"Bar Vered <https://github.com/barv-jfrog>",
 	"Tzach Shabtay <https://github.com/tzachshabtay>",
-	"Adam Dangoor <https://github.com/adamtheturtle>"
+	"Adam Dangoor <https://github.com/adamtheturtle>",
+	"Marcel Telka <https://github.com/mtelka>",
 ]
 __license__ = "MPL 2.0"

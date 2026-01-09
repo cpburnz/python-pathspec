@@ -40,7 +40,7 @@ from pathspec.util import (
 
 Self = TypeVar("Self", bound='GitIgnoreSpec')
 """
-:class:`GitIgnoreSpec` self type hint to support Python v<3.11 using PEP 673
+:class:`.GitIgnoreSpec` self type hint to support Python v<3.11 using PEP 673
 recommendation.
 """
 
