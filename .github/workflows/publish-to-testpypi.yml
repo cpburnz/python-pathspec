@@ -26,7 +26,7 @@ jobs:
           python-version: "3.x"
 
       - name: Install pypa/build
-        run: python3 -m pip install --user build
+        run: python3 -m pip install --user build packaging
 
       - name: Prepublish BS
         run: python3 testpypi_prepublish.py
