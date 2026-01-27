@@ -1,6 +1,6 @@
 
-1.0.4 (TBD)
------------
+1.0.4 (2026-01-26)
+------------------
 
 - `Issue #103`_: Using re2 fails if pyre2 is also installed.
 

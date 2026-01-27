@@ -2,6 +2,14 @@ Change History
 ==============
 
 
+1.0.4 (2026-01-26)
+------------------
+
+- `Issue #103`_: Using re2 fails if pyre2 is also installed.
+
+.. _`Issue #103`: https://github.com/cpburnz/python-pathspec/issues/103
+
+
 1.0.3 (2026-01-09)
 ------------------
 
