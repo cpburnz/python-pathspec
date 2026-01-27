@@ -7,17 +7,12 @@ contents and structure are likely to change.
 from __future__ import annotations
 
 from typing import (
-	Optional)
+	Optional)  # Replaced by `X | None` in 3.10.
 
-try:
-	import re2
-	re2_error = None
-except ModuleNotFoundError as e:
-	re2 = None
-	re2_error = e
+from ._base import (
+	re2_error)
 
-re2_error: Optional[ModuleNotFoundError]
+re2_error: Optional[Exception]
 """
-*re2_error* (:class:`ModuleNotFoundError` or :data:`None`) is the re2 import
-error.
+*re2_error* (:class:`Exception` or :data:`None`) is the re2 import error.
 """

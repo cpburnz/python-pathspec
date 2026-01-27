@@ -62,5 +62,6 @@ __credits__ = [
 	"Tzach Shabtay <https://github.com/tzachshabtay>",
 	"Adam Dangoor <https://github.com/adamtheturtle>",
 	"Marcel Telka <https://github.com/mtelka>",
+	"Dmytro Kostochko <https://github.com/Alerion>",
 ]
 __license__ = "MPL 2.0"

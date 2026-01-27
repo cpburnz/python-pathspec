@@ -10,17 +10,26 @@ from __future__ import annotations
 from dataclasses import (
 	dataclass)
 from typing import (
+	Optional,  # Replaced by `X | None` in 3.10.
 	Union)  # Replaced by `X | Y` in 3.10.
 
 try:
 	import re2
-except ModuleNotFoundError:
+	re2_error = None
+except ModuleNotFoundError as e:
 	re2 = None
+	re2_error = e
 	RE2_OPTIONS = None
 else:
-	RE2_OPTIONS = re2.Options()
-	RE2_OPTIONS.log_errors = False
-	RE2_OPTIONS.never_capture = True
+	# Both the `google-re2` and `pyre2` libraries use the `re2` namespace.
+	# `google-re2` is the only one currently supported.
+	try:
+		RE2_OPTIONS = re2.Options()
+		RE2_OPTIONS.log_errors = False
+		RE2_OPTIONS.never_capture = True
+	except Exception as e:
+		re2_error = e
+		RE2_OPTIONS = None
 
 RE2_OPTIONS: re2.Options
 """
@@ -30,6 +39,11 @@ The re2 options to use:
 
 -	`never_capture=True` disables capture groups because they effectively cannot
 	be utilized with :class:`re2.Set`.
+"""
+
+re2_error: Optional[Exception]
+"""
+*re2_error* (:class:`Exception` or :data:`None`) is the re2 import error.
 """
 
 
