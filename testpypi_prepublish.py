@@ -28,16 +28,15 @@ def update_pyproject_toml() -> None:
 	], text=True).strip()
 
 	print("Get commit count.")
-	count = subprocess.check_output([
+	count = int(subprocess.check_output([
 		'git', 'rev-list', f'{tag}..HEAD', '--count',
-	], text=True).strip()
+	], text=True).strip())
 
 	print(f"Read: {VERSION_PY}")
 	version_input = VERSION_PY.read_text()
-	raw_version = re.search(
+	version = Version(re.search(
 		'^__version__\\s*=\\s*["\'](.+)["\']', version_input, re.M,
-	).group(1)
-	version = Version(raw_version)
+	).group(1))
 	if not version.is_postrelease:
 		version = copy.replace(version, post=1)
 
