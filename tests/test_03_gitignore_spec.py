@@ -911,20 +911,16 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 		"""
 		Test patterns with invalid range notation.
 		"""
-		# TODO BUG: This test is a placeholder for the current behavior. Git behaves
-		# differently for this scenario.
-		# - See <https://github.com/cpburnz/python-pathspec/issues/93>.
 		pattern = GitIgnoreSpecPattern('[')
-		self.assertIs(pattern.include, True)
-		self.assertEqual(pattern.regex.pattern, f'^(?:.+/)?\\[{_DIR_MARK_OPT}')
+		self.assertIsNone(pattern.include)
+		self.assertIsNone(pattern.regex)
+		self.assertFalse(pattern.match_file('['))
 
 	def test_15_issue_93_c_2(self):
 		"""
 		Test patterns with invalid range notation.
 		"""
-		# TODO BUG: This test is a placeholder for the current behavior. Git behaves
-		# differently for this scenario.
-		# - See <https://github.com/cpburnz/python-pathspec/issues/93>.
 		pattern = GitIgnoreSpecPattern('[!]')
-		self.assertIs(pattern.include, True)
-		self.assertEqual(pattern.regex.pattern, f'^(?:.+/)?\\[!\\]{_DIR_MARK_OPT}')
+		self.assertIsNone(pattern.include)
+		self.assertIsNone(pattern.regex)
+		self.assertFalse(pattern.match_file('[!]'))
