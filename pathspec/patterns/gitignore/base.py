@@ -47,7 +47,7 @@ class _GitIgnoreBasePattern(RegexPattern):
 			raise TypeError(f"s:{s!r} is not a unicode or byte string.")
 
 		# Reference: https://git-scm.com/docs/gitignore#_pattern_format
-		out_string = ''.join((f"\\{x}" if x in '[]!*#?' else x) for x in string)
+		out_string = ''.join((f"\\{x}" if x in '\\[]!*#?' else x) for x in string)
 
 		if return_type is bytes:
 			return out_string.encode(_BYTES_ENCODING)
