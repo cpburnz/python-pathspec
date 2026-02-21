@@ -31,6 +31,54 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 	__slots__ = ()
 
 	@staticmethod
+	def __has_unclosed_bracket(pattern: str) -> bool:
+		"""
+		Check if the pattern contains an unclosed bracket expression.
+		
+		Git silently discards patterns with unclosed brackets, treating them
+		as null-operations that match nothing.
+		
+		*pattern* (:class:`str`) is the pattern to check.
+		
+		Returns :data:`True` if there's an unclosed '[', :data:`False` otherwise.
+		"""
+		i, end = 0, len(pattern)
+		escape = False
+		
+		while i < end:
+			char = pattern[i]
+			i += 1
+			
+			if escape:
+				escape = False
+			elif char == '\\':
+				escape = True
+			elif char == '[':
+				# Found opening bracket, check if it's properly closed
+				j = i
+				
+				# Pass bracket expression negation
+				if j < end and (pattern[j] == '!' or pattern[j] == '^'):
+					j += 1
+				
+				# Pass first closing bracket if at beginning
+				if j < end and pattern[j] == ']':
+					j += 1
+				
+				# Find closing bracket
+				while j < end and pattern[j] != ']':
+					j += 1
+				
+				if j >= end:
+					# No closing bracket found - invalid pattern
+					return True
+				
+				# Found closing bracket, continue from after it
+				i = j + 1
+		
+		return False
+
+	@staticmethod
 	def __normalize_segments(
 		is_dir_pattern: bool,
 		pattern_segs: list[str],
@@ -188,6 +236,11 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 			pattern_str = pattern_str[1:]
 		else:
 			include = True
+
+		# EDGE CASE: Git silently discards patterns with unclosed bracket expressions.
+		# Check for this and return null-operation if found.
+		if cls.__has_unclosed_bracket(pattern_str):
+			return (None, None)
 
 		# Split pattern into segments.
 		pattern_segs = pattern_str.split('/')
