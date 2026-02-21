@@ -156,7 +156,8 @@ def detailed_match_files(
 			else:
 				# Remove files.
 				for file in result_files:
-					del return_files[file]
+					if file in return_files:
+						del return_files[file]
 
 	return return_files
 
