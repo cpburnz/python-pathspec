@@ -1,0 +1,111 @@
+# Hyperscan does not have a wheel for Python 3.15 yet.
+# Hyperscan does not have wheels for PyPy 3.9 and 3.11.
+env_list = [
+	"py39",
+	"py310",
+	"py311",
+	"py312",
+	"py313",
+	"py314",
+	"py315",
+	"py39-hyperscan",
+	"py310-hyperscan",
+	"py311-hyperscan",
+	"py312-hyperscan",
+	"py313-hyperscan",
+	"py314-hyperscan",
+	"py39-re2",
+	"py310-re2",
+	"py311-re2",
+	"py312-re2",
+	"py313-re2",
+	"py314-re2",
+	"pypy39",
+	"pypy310",
+	"pypy311",
+	"pypy310-hyperscan",
+	"pypy311-hyperscan",
+	"docs"
+]
+
+[env_run_base]
+package = "wheel"
+commands = [["python", "-m", "unittest", "discover", "-t", ".", "-s", "tests/"]]
+
+[env.docs]
+base_python = ["py313"]
+commands = [["sphinx-build", "-aWEnqb", "html", "doc/source", "doc/build"]]
+deps = ["-rdoc/requirements.txt"]
+
+[env.ci-base]
+# Placeholder env for base (only simple backend) for CI.
+
+[env.ci-hyperscan]
+# Hyperscan env for CI.
+extras = ["hyperscan"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=hyperscan", "{opts}", "{packages}"]
+
+[env.ci-re2]
+# Re2 env for CI.
+extras = ["re2"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=google-re2", "{opts}", "{packages}"]
+
+[env.py39-hyperscan]
+extras = ["hyperscan"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=hyperscan", "{opts}", "{packages}"]
+
+[env.py39-re2]
+extras = ["re2"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=google-re2", "{opts}", "{packages}"]
+
+[env.py310-hyperscan]
+extras = ["hyperscan"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=hyperscan", "{opts}", "{packages}"]
+
+[env.py310-re2]
+extras = ["re2"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=google-re2", "{opts}", "{packages}"]
+
+[env.py311-hyperscan]
+extras = ["hyperscan"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=hyperscan", "{opts}", "{packages}"]
+
+[env.py311-re2]
+extras = ["re2"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=google-re2", "{opts}", "{packages}"]
+
+[env.py312-hyperscan]
+extras = ["hyperscan"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=hyperscan", "{opts}", "{packages}"]
+
+[env.py312-re2]
+extras = ["re2"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=google-re2", "{opts}", "{packages}"]
+
+[env.py313-hyperscan]
+extras = ["hyperscan"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=hyperscan", "{opts}", "{packages}"]
+
+[env.py313-re2]
+extras = ["re2"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=google-re2", "{opts}", "{packages}"]
+
+[env.py314-hyperscan]
+extras = ["hyperscan"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=hyperscan", "{opts}", "{packages}"]
+
+[env.py314-re2]
+extras = ["re2"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=google-re2", "{opts}", "{packages}"]
+
+## Compiling hyperscan fails on PyPy 3.9.
+#[env.pypy39-hyperscan]
+#extras = ["hyperscan"]
+
+[env.pypy310-hyperscan]
+# Compile hyperscan.
+extras = ["hyperscan"]
+
+[env.pypy311-hyperscan]
+# Compile hyperscan.
+extras = ["hyperscan"]

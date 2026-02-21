@@ -2,8 +2,6 @@
 # This justfile is used to manage development and distribution.
 #
 
-_default: help
-
 # Display available recipes.
 help:
 	@just --list
