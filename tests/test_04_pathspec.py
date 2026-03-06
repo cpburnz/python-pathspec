@@ -1041,3 +1041,13 @@ class PathSpecTest(unittest.TestCase):
 				includes = get_includes(results)
 				debug = debug_results(spec, results)
 				self.assertEqual(includes, set(), debug)
+
+	def test_11_repr(self):
+		"""
+		Test the path-spec debug representation.
+		"""
+		spec = PathSpec.from_lines('gitignore', ['*.py'], backend='simple')
+		self.assertEqual(
+			repr(spec),
+			"PathSpec(patterns=[GitIgnoreBasicPattern(pattern='*.py', include=True)], backend='simple')",
+		)

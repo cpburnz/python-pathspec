@@ -926,3 +926,11 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		pattern = GitIgnoreBasicPattern('[!]')
 		self.assertIs(pattern.include, True)
 		self.assertEqual(pattern.regex.pattern, f'^(?:.+/)?\\[!\\]{_DIR_OPT}')
+
+	def test_16_repr_str(self):
+		"""
+		Test debug and string representations.
+		"""
+		pattern = GitIgnoreBasicPattern('*.py')
+		self.assertEqual(repr(pattern), "GitIgnoreBasicPattern(pattern='*.py', include=True)")
+		self.assertEqual(str(pattern), '*.py')
