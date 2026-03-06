@@ -183,7 +183,7 @@ class RegexPattern(Pattern):
 		other.pattern = self.pattern
 		return other
 
-	def __eq__(self, other: RegexPattern) -> bool:
+	def __eq__(self, other: object) -> bool:
 		"""
 		Tests the equality of this regex pattern with *other* (:class:`RegexPattern`)
 		by comparing their :attr:`~Pattern.include` and :attr:`~RegexPattern.regex`
