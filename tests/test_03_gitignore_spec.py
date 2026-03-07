@@ -907,24 +907,53 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 		self.assertFalse(pattern.match_file(' foo'))
 		self.assertTrue(pattern.match_file('  foo'))
 
-	def test_15_issue_93_c_1(self):
+	def test_15_issue_93_c_1_valid(self):
 		"""
-		Test patterns with invalid range notation.
+		Test patterns with valid range notations.
 		"""
-		# TODO BUG: This test is a placeholder for the current behavior. Git behaves
-		# differently for this scenario.
-		# - See <https://github.com/cpburnz/python-pathspec/issues/93>.
-		pattern = GitIgnoreSpecPattern('[')
-		self.assertIs(pattern.include, True)
-		self.assertEqual(pattern.regex.pattern, f'^(?:.+/)?\\[{_DIR_MARK_OPT}')
+		for raw_pattern, regex in [
+			('[a-z]', f'^(?:.+/)?[a-z]{_DIR_MARK_OPT}'),
+			('a[a-z]', f'^(?:.+/)?a[a-z]{_DIR_MARK_OPT}'),
+		]:
+			with self.subTest(f"p={raw_pattern!r}"):
+				pattern = GitIgnoreSpecPattern(raw_pattern)
+				self.assertIs(pattern.include, True)
+				self.assertEqual(pattern.regex.pattern, regex)
 
-	def test_15_issue_93_c_2(self):
+	def test_15_issue_93_c_2_invalid(self):
 		"""
-		Test patterns with invalid range notation.
+		Test patterns with invalid range notations.
 		"""
-		# TODO BUG: This test is a placeholder for the current behavior. Git behaves
-		# differently for this scenario.
+		# TODO BUG: These tests need to pass.
 		# - See <https://github.com/cpburnz/python-pathspec/issues/93>.
-		pattern = GitIgnoreSpecPattern('[!]')
-		self.assertIs(pattern.include, True)
-		self.assertEqual(pattern.regex.pattern, f'^(?:.+/)?\\[!\\]{_DIR_MARK_OPT}')
+		for raw_pattern in [
+			'[!]',
+			'[z-a]',
+			'a[z-a]',
+		]:
+			with self.subTest(f"p={raw_pattern!r}"):
+				pattern = GitIgnoreSpecPattern(raw_pattern)
+				self.assertIs(pattern.include, None)
+				self.assertIs(pattern.regex.pattern, None)
+
+	def test_15_issue_93_c_3_unclosed(self):
+		"""
+		Test patterns with unclosed range notations.
+		"""
+		# TODO BUG: These tests need to pass.
+		# - See <https://github.com/cpburnz/python-pathspec/issues/93>.
+		for raw_pattern in [
+			'[!',
+			'[-',
+			'[a',
+			'[a-',
+			'[a-z',
+			'a[',
+			'a[-',
+			'a[a-',
+			'a[a-z',
+		]:
+			with self.subTest(f"p={raw_pattern!r}"):
+				pattern = GitIgnoreSpecPattern(raw_pattern)
+				self.assertIs(pattern.include, None)
+				self.assertIs(pattern.regex.pattern, None)
