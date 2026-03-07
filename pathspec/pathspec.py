@@ -98,6 +98,12 @@ class PathSpec(object):
 		contains the compiled patterns.
 		"""
 
+	def __repr__(self) -> str:
+		"""
+		Returns a debug representation of this path-spec.
+		"""
+		return f"{self.__class__.__name__}(patterns={self.patterns!r}, backend={self._backend_name!r})"
+
 	def __add__(self: Self, other: PathSpec) -> Self:
 		"""
 		Combines the :attr:`self.patterns <.PathSpec.patterns>` patterns from two

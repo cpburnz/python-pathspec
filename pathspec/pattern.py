@@ -158,6 +158,21 @@ class RegexPattern(Pattern):
 		expression for the pattern.
 		"""
 
+	def __repr__(self) -> str:
+		"""
+		Returns a debug representation of this regex pattern.
+		"""
+		return f"{self.__class__.__name__}(pattern={self.pattern!r}, include={self.include!r})"
+
+	def __str__(self) -> str:
+		"""
+		Returns a string representation of this regex pattern. Equivalent to uncompiled pattern.
+
+		The string representation is the uncompiled pattern if it is not
+		:data:`None`; otherwise, an empty string.
+		"""
+		return str(self.pattern or "")
+
 	def __copy__(self: RegexPatternSelf) -> RegexPatternSelf:
 		"""
 		Performa a shallow copy of the pattern.
