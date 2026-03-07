@@ -41,9 +41,14 @@ optional = [
 re2 = [
 	"google-re2 >=1.1",
 ]
+
+[dependency-groups]
 tests = [
 	"pytest >=9",
 	"typing-extensions >=4.15",
+]
+dev = [
+    "pytest",
 ]
 
 [project.urls]

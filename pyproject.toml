@@ -41,9 +41,14 @@ optional = [
 re2 = [
 	"google-re2 >=1.1",
 ]
-tests = [
-	"pytest >=9",
+
+[dependency-groups]
+benchmarks = [
+	"pytest >=9; python_version>='3.10'",
 	"typing-extensions >=4.15",
+]
+dev = [
+    "pytest",
 ]
 
 [project.urls]
