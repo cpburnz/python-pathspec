@@ -54,8 +54,11 @@ def generate_pyproject_toml() -> None:
 	# files for an editable install for some odd reason.
 	# - See <https://github.com/pypa/flit/issues/386>.
 
+	output: list[str] = []
+	output.append("# GENERATED FILE: Edit 'pyproject.in.toml' instead.\n")
+
 	print(f"Read: {PYPROJECT_IN_TOML}")
-	output = PYPROJECT_IN_TOML.read_text()
+	text = PYPROJECT_IN_TOML.read_text()
 
 	print(f"Read: {VERSION_PY}")
 	version_input = VERSION_PY.read_text()
@@ -64,10 +67,11 @@ def generate_pyproject_toml() -> None:
 	).group(1)
 
 	# Replace version.
-	output = output.replace("__VERSION__", version)
+	text = text.replace("__VERSION__", version)
+	output.append(text)
 
 	print(f"Write: {PYPROJECT_TOML}")
-	PYPROJECT_TOML.write_text(output)
+	PYPROJECT_TOML.write_text("".join(output))
 
 
 def generate_readme_dist() -> None:

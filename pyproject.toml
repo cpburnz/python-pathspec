@@ -1,3 +1,4 @@
+# GENERATED FILE: Edit 'pyproject.in.toml' instead.
 [build-system]
 build-backend = "flit_core.buildapi"
 requires = ["flit_core >=3.2,<5"]
@@ -43,12 +44,11 @@ re2 = [
 ]
 
 [dependency-groups]
-benchmarks = [
-	"pytest >=9; python_version>='3.10'",
-	"typing-extensions >=4.15",
-]
 dev = [
-    "pytest",
+	"pytest >=8",
+	"pytest-benchmark >=5",
+	"tomli; python_version<'3.11'",
+	"typing-extensions >=4.4",
 ]
 
 [project.urls]

@@ -1,4 +1,24 @@
 
+1.0.5 (TBD)
+-----------
+
+TODO: Review #104.
+TODO: Review #105.
+TODO: Tests for #106.
+
+Bug fixes:
+
+- `Pull #106`_: Fix escape() not escaping backslash characters.
+
+Improvements:
+
+- `Pull #110`_: Nicer debug print outs (and str for regex pattern).
+
+
+.. _`Pull #106`: https://github.com/cpburnz/python-pathspec/pull/106
+.. _`Pull #110`: https://github.com/cpburnz/python-pathspec/pull/110
+
+
 1.0.4 (2026-01-26)
 ------------------
 
