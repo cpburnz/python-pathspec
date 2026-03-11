@@ -928,13 +928,23 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 		# - See <https://github.com/cpburnz/python-pathspec/issues/93>.
 		for raw_pattern in [
 			'[!]',
-			'[z-a]',
-			'a[z-a]',
+			'a[!]',
 		]:
 			with self.subTest(f"p={raw_pattern!r}"):
 				pattern = GitIgnoreSpecPattern(raw_pattern)
 				self.assertIs(pattern.include, None)
-				self.assertIs(pattern.regex.pattern, None)
+				self.assertIs(pattern.regex, None)
+
+		# The `re` module fails to compile these.
+		# - NOTE: Technically, these should result in null patterns rather than
+		#   exceptions to fully replicate Git's behavior.
+		for raw_pattern in [
+			'[z-a]',
+			'a[z-a]',
+		]:
+			with self.subTest(f"p={raw_pattern!r}"):
+				with self.assertRaises(re.PatternError):
+					GitIgnoreSpecPattern(raw_pattern)
 
 	def test_15_issue_93_c_3_unclosed(self):
 		"""
@@ -956,4 +966,4 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 			with self.subTest(f"p={raw_pattern!r}"):
 				pattern = GitIgnoreSpecPattern(raw_pattern)
 				self.assertIs(pattern.include, None)
-				self.assertIs(pattern.regex.pattern, None)
+				self.assertIs(pattern.regex, None)

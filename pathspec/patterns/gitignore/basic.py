@@ -293,7 +293,7 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 
 				else:
 					# Match segment glob pattern.
-					out_parts.append(cls._translate_segment_glob(seg))
+					out_parts.append(cls._translate_segment_glob(seg, 'literal'))
 
 				if i == end:
 					if seg == '*':

@@ -19,7 +19,8 @@ from pathspec._typing import (
 from .base import (
 	GitIgnorePatternError,
 	_BYTES_ENCODING,
-	_GitIgnoreBasePattern)
+	_GitIgnoreBasePattern,
+	_RangeError)
 
 _DIR_MARK = 'ps_d'
 """
@@ -80,7 +81,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		elif len(pattern_segs) == 1 or (len(pattern_segs) == 2 and not pattern_segs[1]):
 			# A single segment pattern with or without a trailing slash ('/') will
 			# match any descendant path. This is equivalent to "**/{pattern}". Prepend
-			# double-asterisk segment to make pattern relative to root.
+			# a double-asterisk segment to make the pattern relative to root.
 			if pattern_segs[0] != '**':
 				pattern_segs.insert(0, '**')
 
@@ -98,8 +99,8 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		if not pattern_segs[-1]:
 			# A pattern ending with a slash ('/') will match all descendant paths if
 			# it is a directory but not if it is a regular file. This is equivalent to
-			# "{pattern}/**". Set empty last segment to a double-asterisk to include
-			# all descendants.
+			# "{pattern}/**". Set the empty last segment to a double-asterisk to
+			# include all descendants.
 			pattern_segs[-1] = '**'
 
 		# EDGE CASE: Collapse duplicate double-asterisk sequences (i.e., '**/**').
@@ -210,8 +211,8 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 		if pattern_str.startswith('!'):
 			# A pattern starting with an exclamation mark ('!') negates the pattern
-			# (exclude instead of include). Escape the exclamation mark with a back
-			# slash to match a literal exclamation mark (i.e., '\!').
+			# (exclude instead of include). Escape the exclamation mark with a
+			# backslash to match a literal exclamation mark (i.e., '\!').
 			include = False
 			# Remove leading exclamation mark.
 			pattern_str = pattern_str[1:]
@@ -243,6 +244,9 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			# Build regular expression from pattern.
 			try:
 				regex_parts = cls.__translate_segments(is_dir_pattern, pattern_segs)
+			except _RangeError:
+				# EDGE CASE: Git discards patterns with range notation errors.
+				return (None, None)
 			except ValueError as e:
 				raise GitIgnorePatternError((
 					f"Invalid git pattern: {original_pattern!r}"
@@ -278,6 +282,8 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 		*pattern_segs* (:class:`list` of :class:`str`) contains the pattern
 		segments.
+
+		Raises :class:`_RangeError` if invalid range notation is found.
 
 		Returns the regular expression parts (:class:`list` of :class:`str`).
 		"""
@@ -322,7 +328,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 				else:
 					# Match segment glob pattern.
-					out_parts.append(cls._translate_segment_glob(seg))
+					out_parts.append(cls._translate_segment_glob(seg, 'raise'))
 
 				if i == end:
 					# A pattern ending without a slash ('/') will match a file or a

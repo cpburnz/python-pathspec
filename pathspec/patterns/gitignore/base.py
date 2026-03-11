@@ -4,10 +4,14 @@ This module provides common classes for the gitignore patterns.
 
 import re
 
+from typing import (
+	Literal)
+
 from pathspec.pattern import (
 	RegexPattern)
 from pathspec._typing import (
-	AnyStr)  # Removed in 3.18.
+	AnyStr,  # Removed in 3.18.
+	assert_unreachable)
 
 _BYTES_ENCODING = 'latin1'
 """
@@ -55,13 +59,24 @@ class _GitIgnoreBasePattern(RegexPattern):
 			return out_string
 
 	@staticmethod
-	def _translate_segment_glob(pattern: str) -> str:
+	def _translate_segment_glob(
+		pattern: str,
+		range_error: Literal['literal', 'raise'],
+	) -> str:
 		"""
 		Translates the glob pattern to a regular expression. This is used in the
 		constructor to translate a path segment glob pattern to its corresponding
 		regular expression.
 
 		*pattern* (:class:`str`) is the glob pattern.
+
+		*range_error* (:class:`int`) is how to handle invalid range notation in the
+		pattern:
+
+		-	:data:`"literal"`: Invalid notation will be treated as a literal string.
+
+		-	:data:`"raise"`: Invalid notation will cause a :class:`_RangeError` to be
+			raised.
 
 		Returns the regular expression (:class:`str`).
 		"""
@@ -96,9 +111,9 @@ class _GitIgnoreBasePattern(RegexPattern):
 				regex += '[^/]'
 
 			elif char == '[':
-				# Bracket expression wildcard. Except for the beginning exclamation
-				# mark, the whole bracket expression can be used directly as regex, but
-				# we have to find where the expression ends.
+				# Bracket expression (range notation) wildcard. Except for the beginning
+				# exclamation mark, the whole bracket expression can be used directly as
+				# regex, but we have to find where the expression ends.
 				# - "[][!]" matches ']', '[' and '!'.
 				# - "[]-]" matches ']' and '-'.
 				# - "[!]a-]" matches any character except ']', 'a' and '-'.
@@ -152,9 +167,19 @@ class _GitIgnoreBasePattern(RegexPattern):
 					i = j
 
 				else:
-					# Failed to find closing bracket, treat opening bracket as a bracket
-					# literal instead of as an expression.
-					regex += '\\['
+					# Failed to find closing bracket.
+					if range_error == 'literal':
+						# Treat opening bracket as a bracket literal instead of as an
+						# expression.
+						regex += '\\['
+					elif range_error == 'raise':
+						# Treat invalid range notation as an error.
+						raise _RangeError((
+							f"Invalid range notation={pattern[i:j]!r} found in pattern="
+							f"{pattern!r}."
+						))
+					else:
+						assert_unreachable(f"{range_error=!r} is invalid.")
 
 			else:
 				# Regular character, escape it for regex.
@@ -172,5 +197,13 @@ class GitIgnorePatternError(ValueError):
 	"""
 	The :class:`GitIgnorePatternError` class indicates an invalid gitignore
 	pattern.
+	"""
+	pass
+
+
+class _RangeError(GitIgnorePatternError):
+	"""
+	The :class:`_RangeError` class indicates an invalid range notation was found
+	in a gitignore pattern.
 	"""
 	pass
