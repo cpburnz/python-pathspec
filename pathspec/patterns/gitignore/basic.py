@@ -293,6 +293,8 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 
 				else:
 					# Match segment glob pattern.
+					# - EDGE CASE: The gitignore docs defer to *fnmatch(3)* which treats
+					#   invalid range notation as a literal.
 					out_parts.append(cls._translate_segment_glob(seg, 'literal'))
 
 				if i == end:

@@ -907,10 +907,14 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 
 	def test_15_issue_93_c_1_valid(self):
 		"""
-		Test patterns with valid range notations.
+		Test patterns with valid range notation.
 		"""
 		for raw_pattern, regex in [
+			('[!a-z]', f'^(?:.+/)?[^a-z]{_DIR_OPT}'),
+			('[^a-z]', f'^(?:.+/)?[^a-z]{_DIR_OPT}'),
 			('[a-z]', f'^(?:.+/)?[a-z]{_DIR_OPT}'),
+			('a[!a-z]', f'^(?:.+/)?a[^a-z]{_DIR_OPT}'),
+			('a[^a-z]', f'^(?:.+/)?a[^a-z]{_DIR_OPT}'),
 			('a[a-z]', f'^(?:.+/)?a[a-z]{_DIR_OPT}'),
 		]:
 			with self.subTest(f"p={raw_pattern!r}"):
@@ -920,22 +924,21 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 
 	def test_15_issue_93_c_2_invalid(self):
 		"""
-		Test patterns with invalid range notations.
+		Test patterns with invalid range notation.
 		"""
-		# TODO BUG: These tests need to pass.
-		# - See <https://github.com/cpburnz/python-pathspec/issues/93>.
-		for raw_pattern in [
-			'[!]',
-			'a[!]',
+		# The basic pattern treats invalid range notation as a literal.
+		for raw_pattern, regex in [
+			('[!]', f'^(?:.+/)?\\[!\\]{_DIR_OPT}'),
+			('[^]', f'^(?:.+/)?\\[\\^\\]{_DIR_OPT}'),
+			('a[!]', f'^(?:.+/)?a\\[!\\]{_DIR_OPT}'),
+			('a[^]', f'^(?:.+/)?a\\[\\^\\]{_DIR_OPT}'),
 		]:
 			with self.subTest(f"p={raw_pattern!r}"):
 				pattern = GitIgnoreBasicPattern(raw_pattern)
-				self.assertIs(pattern.include, None)
-				self.assertIs(pattern.regex, None)
+				self.assertIs(pattern.include, True)
+				self.assertEqual(pattern.regex.pattern, regex)
 
 		# The `re` module fails to compile these.
-		# - NOTE: Technically, these should result in null patterns rather than
-		#   exceptions to fully replicate Git's behavior.
 		for raw_pattern in [
 			'[z-a]',
 			'a[z-a]',
@@ -946,25 +949,29 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 
 	def test_15_issue_93_c_3_unclosed(self):
 		"""
-		Test patterns with unclosed range notations.
+		Test patterns with unclosed range notation.
 		"""
 		# TODO BUG: These tests need to pass.
 		# - See <https://github.com/cpburnz/python-pathspec/issues/93>.
-		for raw_pattern in [
-			'[!',
-			'[-',
-			'[a',
-			'[a-',
-			'[a-z',
-			'a[',
-			'a[-',
-			'a[a-',
-			'a[a-z',
+		for raw_pattern, regex in [
+			('[!', f'^(?:.+/)?\\[!{_DIR_OPT}'),
+			('[', f'^(?:.+/)?\\[{_DIR_OPT}'),
+			('[-', f'^(?:.+/)?\\[\\-{_DIR_OPT}'),
+			('[^', f'^(?:.+/)?\\[\\^{_DIR_OPT}'),
+			('[a', f'^(?:.+/)?\\[a{_DIR_OPT}'),
+			('[a-', f'^(?:.+/)?\\[a\\-{_DIR_OPT}'),
+			('[a-z', f'^(?:.+/)?\\[a\\-z{_DIR_OPT}'),
+			('a[!', f'^(?:.+/)?a\\[!{_DIR_OPT}'),
+			('a[', f'^(?:.+/)?a\\[{_DIR_OPT}'),
+			('a[-', f'^(?:.+/)?a\\[\\-{_DIR_OPT}'),
+			('a[^', f'^(?:.+/)?a\\[\\^{_DIR_OPT}'),
+			('a[a-', f'^(?:.+/)?a\\[a\\-{_DIR_OPT}'),
+			('a[a-z', f'^(?:.+/)?a\\[a\\-z{_DIR_OPT}'),
 		]:
 			with self.subTest(f"p={raw_pattern!r}"):
 				pattern = GitIgnoreBasicPattern(raw_pattern)
-				self.assertIs(pattern.include, None)
-				self.assertIs(pattern.regex, None)
+				self.assertIs(pattern.include, True)
+				self.assertEqual(pattern.regex.pattern, regex)
 
 	def test_16_repr_str(self):
 		"""

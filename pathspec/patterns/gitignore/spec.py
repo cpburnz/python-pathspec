@@ -2,8 +2,9 @@
 This module provides :class:`GitIgnoreSpecPattern` which implements Git's
 `gitignore`_ patterns, and handles edge-cases where Git's behavior differs from
 what's documented. Git allows including files from excluded directories which
-appears to contradict the documentation. This is used by
-:class:`~pathspec.gitignore.GitIgnoreSpec` to fully replicate Git's handling.
+appears to contradict the documentation. Git discards patterns with invalid
+range notation. This is used by :class:`~pathspec.gitignore.GitIgnoreSpec` to
+fully replicate Git's handling.
 
 .. _`gitignore`: https://git-scm.com/docs/gitignore
 """
@@ -245,7 +246,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			try:
 				regex_parts = cls.__translate_segments(is_dir_pattern, pattern_segs)
 			except _RangeError:
-				# EDGE CASE: Git discards patterns with range notation errors.
+				# EDGE CASE: Git discards patterns with invalid range notation.
 				return (None, None)
 			except ValueError as e:
 				raise GitIgnorePatternError((
@@ -328,6 +329,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 				else:
 					# Match segment glob pattern.
+					# - EDGE CASE: Git discards patterns with invalid range notation.
 					out_parts.append(cls._translate_segment_glob(seg, 'raise'))
 
 				if i == end:

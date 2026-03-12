@@ -909,10 +909,14 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 
 	def test_15_issue_93_c_1_valid(self):
 		"""
-		Test patterns with valid range notations.
+		Test patterns with valid range notation.
 		"""
 		for raw_pattern, regex in [
+			('[!a-z]', f'^(?:.+/)?[^a-z]{_DIR_MARK_OPT}'),
+			('[^a-z]', f'^(?:.+/)?[^a-z]{_DIR_MARK_OPT}'),
 			('[a-z]', f'^(?:.+/)?[a-z]{_DIR_MARK_OPT}'),
+			('a[!a-z]', f'^(?:.+/)?a[^a-z]{_DIR_MARK_OPT}'),
+			('a[^a-z]', f'^(?:.+/)?a[^a-z]{_DIR_MARK_OPT}'),
 			('a[a-z]', f'^(?:.+/)?a[a-z]{_DIR_MARK_OPT}'),
 		]:
 			with self.subTest(f"p={raw_pattern!r}"):
@@ -922,13 +926,14 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 
 	def test_15_issue_93_c_2_invalid(self):
 		"""
-		Test patterns with invalid range notations.
+		Test patterns with invalid range notation.
 		"""
-		# TODO BUG: These tests need to pass.
-		# - See <https://github.com/cpburnz/python-pathspec/issues/93>.
+		# The spec pattern discards patterns with invalid range notation.
 		for raw_pattern in [
 			'[!]',
+			'[^]',
 			'a[!]',
+			'a[^]',
 		]:
 			with self.subTest(f"p={raw_pattern!r}"):
 				pattern = GitIgnoreSpecPattern(raw_pattern)
@@ -948,18 +953,20 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 
 	def test_15_issue_93_c_3_unclosed(self):
 		"""
-		Test patterns with unclosed range notations.
+		Test patterns with unclosed range notation.
 		"""
-		# TODO BUG: These tests need to pass.
-		# - See <https://github.com/cpburnz/python-pathspec/issues/93>.
 		for raw_pattern in [
 			'[!',
+			'[',
 			'[-',
+			'[^',
 			'[a',
 			'[a-',
 			'[a-z',
+			'a[!',
 			'a[',
 			'a[-',
+			'a[^',
 			'a[a-',
 			'a[a-z',
 		]:

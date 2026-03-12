@@ -2,12 +2,11 @@
 1.0.5 (TBD)
 -----------
 
-TODO: Review #104.
-TODO: Review #105.
 TODO: Tests for #106.
 
 Bug fixes:
 
+- `Issue #93`_: Git discards invalid range notation. `GitIgnoreSpecPattern` now discards patterns with invalid range notation like Git.
 - `Pull #106`_: Fix escape() not escaping backslash characters.
 
 Improvements:
@@ -21,6 +20,8 @@ Improvements:
 
 1.0.4 (2026-01-26)
 ------------------
+
+Bug fixes:
 
 - `Issue #103`_: Using re2 fails if pyre2 is also installed.
 
