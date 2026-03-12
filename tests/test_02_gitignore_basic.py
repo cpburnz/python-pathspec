@@ -4,6 +4,10 @@ This script tests :class:`.GitIgnoreBasicPattern`.
 
 import re
 import unittest
+try:
+	from re import PatternError as re_PatternError  # Added in 3.13.
+except ImportError:
+	from re import error as re_PatternError
 
 from pathspec.patterns.gitignore.base import (
 	GitIgnorePatternError,
@@ -944,7 +948,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 			'a[z-a]',
 		]:
 			with self.subTest(f"p={raw_pattern!r}"):
-				with self.assertRaises(re.PatternError):
+				with self.assertRaises(re_PatternError):
 					GitIgnoreBasicPattern(raw_pattern)
 
 	def test_15_issue_93_c_3_unclosed(self):
