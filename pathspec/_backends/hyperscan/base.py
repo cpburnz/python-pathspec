@@ -15,7 +15,7 @@ try:
 	hyperscan_error = None
 except ModuleNotFoundError as e:
 	hyperscan = None
-	hyperscan_error = e
+	hyperscan_error = e.with_traceback(None)
 
 hyperscan_error: Optional[ModuleNotFoundError]
 """
