@@ -18,7 +18,7 @@ try:
 	re2_error = None
 except ModuleNotFoundError as e:
 	re2 = None
-	re2_error = e
+	re2_error = e.with_traceback(None)
 	RE2_OPTIONS = None
 else:
 	# Both the `google-re2` and `pyre2` libraries use the `re2` namespace.
@@ -28,7 +28,7 @@ else:
 		RE2_OPTIONS.log_errors = False
 		RE2_OPTIONS.never_capture = True
 	except Exception as e:
-		re2_error = e
+		re2_error = e.with_traceback(None)
 		RE2_OPTIONS = None
 
 RE2_OPTIONS: re2.Options
