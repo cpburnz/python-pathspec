@@ -65,5 +65,6 @@ __credits__ = [
 	"Dmytro Kostochko <https://github.com/Alerion>",
 	"Kadir Can Ozden <https://github.com/bysiber>",
 	"Henry Schreiner <https://github.com/henryiii>",
+	"Yilei <https://github.com/yilei>",
 ]
 __license__ = "MPL 2.0"
