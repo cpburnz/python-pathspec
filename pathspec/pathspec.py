@@ -13,10 +13,13 @@ from itertools import (
 	zip_longest)
 from typing import (
 	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
+	Generic,
+	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
 	TypeVar,
 	Union,  # Replaced by `X | Y` in 3.10.
-	cast)
+	cast,
+	overload)
 
 Self = TypeVar("Self", bound='PathSpec')
 """
@@ -32,19 +35,22 @@ from pathspec._backends.agg import (
 	make_pathspec_backend)
 from pathspec.pattern import (
 	Pattern)
+from pathspec.patterns.gitignore.basic import (
+	GitIgnoreBasicPattern)
 from pathspec._typing import (
 	AnyStr,  # Removed in 3.18.
 	deprecated)  # Added in 3.13.
 from pathspec.util import (
 	CheckResult,
 	StrPath,
+	TPattern,
 	TStrPath,
 	TreeEntry,
 	_is_iterable,
 	normalize_file)
 
 
-class PathSpec(object):
+class PathSpec(Generic[TPattern]):
 	"""
 	The :class:`PathSpec` class is a wrapper around a list of compiled
 	:class:`.Pattern` instances.
@@ -52,10 +58,10 @@ class PathSpec(object):
 
 	def __init__(
 		self,
-		patterns: Union[Sequence[Pattern], Iterable[Pattern]],
+		patterns: Union[Sequence[TPattern], Iterable[TPattern]],
 		*,
 		backend: Union[BackendNamesHint, str, None] = None,
-		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], _Backend]] = None,
+		_test_backend_factory: Optional[Callable[[Sequence[TPattern]], _Backend]] = None,
 	) -> None:
 		"""
 		Initializes the :class:`.PathSpec` instance.
@@ -92,7 +98,7 @@ class PathSpec(object):
 		*_backend_name* (:class:`str`) is the name of backend to use.
 		"""
 
-		self.patterns: Sequence[Pattern] = patterns
+		self.patterns: Sequence[TPattern] = patterns
 		"""
 		*patterns* (:class:`~collections.abc.Sequence` of :class:`.Pattern`)
 		contains the compiled patterns.
@@ -224,6 +230,42 @@ class PathSpec(object):
 		"""
 		files = util.iter_tree_files(root, on_error=on_error, follow_links=follow_links)
 		yield from self.check_files(files)
+
+	@overload
+	@classmethod
+	def from_lines(
+		cls: type[PathSpec],
+		pattern_factory: Literal['gitignore'],
+		lines: Iterable[AnyStr],
+		*,
+		backend: Union[BackendNamesHint, str, None] = None,
+		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], _Backend]] = None,
+	) -> PathSpec[GitIgnoreBasicPattern]:
+		...
+
+	@overload
+	@classmethod
+	def from_lines(
+		cls: type[PathSpec],
+		pattern_factory: Callable[[AnyStr], TPattern],
+		lines: Iterable[AnyStr],
+		*,
+		backend: Union[BackendNamesHint, str, None] = None,
+		_test_backend_factory: Optional[Callable[[Sequence[TPattern]], _Backend]] = None,
+	) -> PathSpec[TPattern]:
+		...
+
+	@overload
+	@classmethod
+	def from_lines(
+		cls: type[PathSpec],
+		pattern_factory: Union[str, Callable[[AnyStr], Pattern]],
+		lines: Iterable[AnyStr],
+		*,
+		backend: Union[BackendNamesHint, str, None] = None,
+		_test_backend_factory: Optional[Callable[[Sequence[Pattern]], _Backend]] = None,
+	) -> PathSpec[Pattern]:
+		...
 
 	@classmethod
 	def from_lines(

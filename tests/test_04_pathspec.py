@@ -19,7 +19,9 @@ from pathlib import (
 	Path)
 from typing import (
 	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
-	Optional)  # Replaced by `X | None` in 3.10.
+	Literal,
+	Optional,  # Replaced by `X | None` in 3.10.
+	overload)
 from unittest import (
 	SkipTest)
 
@@ -38,6 +40,8 @@ from pathspec.pattern import (
 	Pattern)
 from pathspec.patterns.gitignore.base import (
 	GitIgnorePatternError)
+from pathspec.patterns.gitignore.basic import (
+	GitIgnoreBasicPattern)
 from pathspec._typing import (
 	AnyStr)  # Removed in 3.18.
 from pathspec.util import (
@@ -88,6 +92,22 @@ class PathSpecTest(unittest.TestCase):
 		Create the specified files.
 		"""
 		return make_files(self.temp_dir, files)
+
+	@overload
+	def parameterize_from_lines(
+		self,
+		pattern_factory: Literal['gitignore'],
+		lines: Iterable[AnyStr],
+	) -> Iterator[Callable[[], AbstractContextManager[PathSpec[GitIgnoreBasicPattern]]]]:
+		...
+
+	@overload
+	def parameterize_from_lines(
+		self,
+		pattern_factory: str,
+		lines: Iterable[AnyStr],
+	) -> Iterator[Callable[[], AbstractContextManager[PathSpec[Pattern]]]]:
+		...
 
 	def parameterize_from_lines(
 		self,

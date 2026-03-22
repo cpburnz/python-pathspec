@@ -45,7 +45,7 @@ recommendation.
 """
 
 
-class GitIgnoreSpec(PathSpec):
+class GitIgnoreSpec(PathSpec[GitIgnoreSpecPattern]):
 	"""
 	The :class:`GitIgnoreSpec` class extends :class:`.PathSpec` to replicate
 	*gitignore* behavior. This is uses :class:`.GitIgnoreSpecPattern` to fully

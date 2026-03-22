@@ -30,6 +30,12 @@ from ._typing import (
 
 StrPath = Union[str, os.PathLike[str]]
 
+TPattern = TypeVar('TPattern', bound=Pattern)
+"""
+Type variable for :class:`.Pattern`. This is used by :class:`pathspec.pathspec.PathSpec`
+to specialize the type of patterns.
+"""
+
 TStrPath = TypeVar("TStrPath", bound=StrPath)
 """
 Type variable for :class:`str` or :class:`os.PathLike`.
