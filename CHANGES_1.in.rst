@@ -2,8 +2,6 @@
 1.0.5 (TBD)
 -----------
 
-TODO: Tests for #106.
-
 Bug fixes:
 
 - `Issue #93`_: Git discards invalid range notation. `GitIgnoreSpecPattern` now discards patterns with invalid range notation like Git.
@@ -11,10 +9,12 @@ Bug fixes:
 
 Improvements:
 
+- `Issue #108`_: Specialize pattern type for `PathSpec` as `PathSpec[PatternType]` for better debugging of `PathSpec().patterns`.
 - `Pull #110`_: Nicer debug print outs (and str for regex pattern).
 
 
 .. _`Pull #106`: https://github.com/cpburnz/python-pathspec/pull/106
+.. _`Issue #108`: https://github.com/cpburnz/python-pathspec/issue/108
 .. _`Pull #110`: https://github.com/cpburnz/python-pathspec/pull/110
 
 
