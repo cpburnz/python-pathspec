@@ -9,7 +9,7 @@ Bug fixes:
 
 Improvements:
 
-- `Issue #108`_: Specialize pattern type for `PathSpec` as `PathSpec[PatternType]` for better debugging of `PathSpec().patterns`.
+- `Issue #108`_: Specialize pattern type for `PathSpec` as `PathSpec[TPattern]` for better debugging of `PathSpec().patterns`.
 - `Pull #110`_: Nicer debug print outs (and str for regex pattern).
 
 
