@@ -31,8 +31,7 @@ jobs:
 
       - uses: ironsh/iron-proxy-action@67ae2cdb5cc549c5cb94e76235953f4a9fcb183c  # v0.1.3 from 2026-04-07.
         with:
-          egress-rules: .github/egress-rules.yaml
-          warn: 'true'
+          egress-rules: .github/egress-build-rules.yaml
 
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0 from 2026-01-21.
