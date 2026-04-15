@@ -73,3 +73,7 @@ include = [
 exclude = [
 	"doc/build/",
 ]
+
+[tool.pyright]
+# This is for CI.
+typeCheckingMode = "strict"

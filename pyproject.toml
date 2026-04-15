@@ -52,9 +52,10 @@ dev = [
 ]
 
 [project.urls]
-"Source Code" = "https://github.com/cpburnz/python-pathspec"
+"Change Log" = "https://python-path-specification.readthedocs.io/en/latest/changes.html"
 "Documentation" = "https://python-path-specification.readthedocs.io/en/latest/index.html"
 "Issue Tracker" = "https://github.com/cpburnz/python-pathspec/issues"
+"Source Code" = "https://github.com/cpburnz/python-pathspec"
 
 [tool.flit.sdist]
 include = [
@@ -73,3 +74,7 @@ include = [
 exclude = [
 	"doc/build/",
 ]
+
+[tool.pyright]
+# This is for CI.
+typeCheckingMode = "strict"
