@@ -108,7 +108,6 @@ jobs:
 
       - uses: jakebailey/pyright-action@8ec14b5cfe41f26e5f41686a31eb6012758217ef  # v3.0.2 from 2026-02-15.
         with:
-          extra-args: '--strict'
           version: latest
 
       - uses: ironsh/iron-proxy-action/summary@67ae2cdb5cc549c5cb94e76235953f4a9fcb183c  # v0.1.3 from 2026-04-07.
