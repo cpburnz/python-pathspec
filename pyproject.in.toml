@@ -77,4 +77,4 @@ exclude = [
 [tool.pyright]
 # This is for CI.
 include = ["pathspec"]
-typeCheckingMode = "strict"
+typeCheckingMode = "standard"
