@@ -30,7 +30,7 @@ license = {text = "MPL 2.0"}
 name = "pathspec"
 readme = "README-dist.rst"
 requires-python = ">=3.9"
-version = "1.0.4"
+version = "1.1.0"
 
 [project.optional-dependencies]
 hyperscan = [
@@ -52,9 +52,10 @@ dev = [
 ]
 
 [project.urls]
-"Source Code" = "https://github.com/cpburnz/python-pathspec"
+"Change Log" = "https://python-path-specification.readthedocs.io/en/latest/changes.html"
 "Documentation" = "https://python-path-specification.readthedocs.io/en/latest/index.html"
 "Issue Tracker" = "https://github.com/cpburnz/python-pathspec/issues"
+"Source Code" = "https://github.com/cpburnz/python-pathspec"
 
 [tool.flit.sdist]
 include = [

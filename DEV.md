@@ -2,11 +2,6 @@
 Development Notes
 =================
 
-TODO
-----
-
-- Release v1.0.0.
-
 
 Python Versions
 ---------------
