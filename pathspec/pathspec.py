@@ -246,7 +246,7 @@ class PathSpec(Generic[TPattern]):
 	@overload
 	@classmethod
 	def from_lines(
-		cls: type[PathSpec],
+		cls: type[PathSpec[TPattern]],
 		pattern_factory: Callable[[AnyStr], TPattern],
 		lines: Iterable[AnyStr],
 		*,
