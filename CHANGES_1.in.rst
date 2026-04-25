@@ -1,6 +1,6 @@
 
-1.0.5 (TBD)
------------
+1.1.0 (2026-04-22)
+------------------
 
 Bug fixes:
 
@@ -14,7 +14,7 @@ Improvements:
 
 
 .. _`Pull #106`: https://github.com/cpburnz/python-pathspec/pull/106
-.. _`Issue #108`: https://github.com/cpburnz/python-pathspec/issue/108
+.. _`Issue #108`: https://github.com/cpburnz/python-pathspec/issues/108
 .. _`Pull #110`: https://github.com/cpburnz/python-pathspec/pull/110
 
 

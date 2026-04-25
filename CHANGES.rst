@@ -2,8 +2,29 @@ Change History
 ==============
 
 
+1.1.0 (2026-04-22)
+------------------
+
+Bug fixes:
+
+- `Issue #93`_: Git discards invalid range notation. `GitIgnoreSpecPattern` now discards patterns with invalid range notation like Git.
+- `Pull #106`_: Fix escape() not escaping backslash characters.
+
+Improvements:
+
+- `Issue #108`_: Specialize pattern type for `PathSpec` as `PathSpec[TPattern]` for better debugging of `PathSpec().patterns`.
+- `Pull #110`_: Nicer debug print outs (and str for regex pattern).
+
+
+.. _`Pull #106`: https://github.com/cpburnz/python-pathspec/pull/106
+.. _`Issue #108`: https://github.com/cpburnz/python-pathspec/issues/108
+.. _`Pull #110`: https://github.com/cpburnz/python-pathspec/pull/110
+
+
 1.0.4 (2026-01-26)
 ------------------
+
+Bug fixes:
 
 - `Issue #103`_: Using re2 fails if pyre2 is also installed.
 
