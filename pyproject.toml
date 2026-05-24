@@ -26,6 +26,8 @@ classifiers = [
 	"Topic :: Utilities",
 ]
 description = "Utility library for gitignore style pattern matching of file paths."
+# TODO: Once fully relicensed, use:
+#license = {text = "MIT OR MPL-2.0"}
 license = {text = "MPL 2.0"}
 name = "pathspec"
 readme = "README-dist.rst"
@@ -66,7 +68,7 @@ include = [
 	"*.py",
 	"*.rst",
 	"*.toml",
-	"LICENSE",
+	"LICENSE-*",
 	"benchmarks/",
 	"doc/",
 	"tests/",

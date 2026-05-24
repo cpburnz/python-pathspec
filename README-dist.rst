@@ -145,8 +145,7 @@ the files to keep, and exclude files like *.gitignore*, you need to set
 License
 -------
 
-*pathspec* is licensed under the `Mozilla Public License Version 2.0`_. See
-`LICENSE`_ or the `FAQ`_ for more information.
+*pathspec* is currently licensed under the `Mozilla Public License Version 2.0`_. See `LICENSING.md`_, `LICENSE-MPL-2.0`_ or the `FAQ`_ for more information.
 
 In summary, you may use *pathspec* with any closed or open source project
 without affecting the license of the larger work so long as you:
@@ -156,7 +155,8 @@ without affecting the license of the larger work so long as you:
 - and release any custom changes made to *pathspec*.
 
 .. _`Mozilla Public License Version 2.0`: http://www.mozilla.org/MPL/2.0
-.. _`LICENSE`: LICENSE
+.. _`LICENSE-MPL-2.0`: LICENSE-MPL-2.0
+.. _`LICENSING.md`: LICENSING.md
 .. _`FAQ`: http://www.mozilla.org/MPL/2.0/FAQ.html
 
 
@@ -225,6 +225,17 @@ a `Ruby gem`_.
 
 Change History
 ==============
+
+
+1.2.0 (TBD)
+-----------
+
+Major changes:
+
+- TODO `Issue #116`_: Change license from MPL-2.0 to dual MIT and MPL-2.0.
+
+
+.. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
 
 
 1.1.1 (2026-04-26)

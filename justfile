@@ -137,7 +137,7 @@ _venv_pypy_update:
 ################################################################################
 
 _dist_build: _dist_prebuild
-	find ./dist -type f -delete
+	if [ -d ./dist ]; then find ./dist -type f -delete; fi
 	{{cpy_run}} python -m build
 
 _dist_prebuild:

@@ -1,4 +1,15 @@
 
+1.2.0 (TBD)
+-----------
+
+Major changes:
+
+- TODO `Issue #116`_: Change license from MPL-2.0 to dual MIT and MPL-2.0.
+
+
+.. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
+
+
 1.1.1 (2026-04-26)
 ------------------
 
