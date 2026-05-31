@@ -936,16 +936,9 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 		for raw_pattern in [
 			'[!]',
 			'[^]',
+			'[z-a]',
 			'a[!]',
 			'a[^]',
-		]:
-			with self.subTest(f"p={raw_pattern!r}"):
-				pattern = GitIgnoreSpecPattern(raw_pattern)
-				self.assertIs(pattern.include, None)
-				self.assertIs(pattern.regex, None)
-
-		for raw_pattern in [
-			'[z-a]',
 			'a[z-a]',
 		]:
 			with self.subTest(f"p={raw_pattern!r}"):

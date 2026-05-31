@@ -6,8 +6,13 @@ Major changes:
 
 - TODO `Issue #116`_: Change license from MPL-2.0 to dual MIT and MPL-2.0.
 
+Bug fixes:
+
+- `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
+
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
+.. _`Pull #123`: https://github.com/cpburnz/python-pathspec/pull/123
 
 
 1.1.1 (2026-04-26)
