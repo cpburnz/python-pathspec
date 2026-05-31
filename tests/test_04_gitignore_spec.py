@@ -944,16 +944,14 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 				self.assertIs(pattern.include, None)
 				self.assertIs(pattern.regex, None)
 
-		# The `re` module fails to compile these.
-		# - NOTE: Technically, these should result in null patterns rather than
-		#   exceptions to fully replicate Git's behavior.
 		for raw_pattern in [
 			'[z-a]',
 			'a[z-a]',
 		]:
 			with self.subTest(f"p={raw_pattern!r}"):
-				with self.assertRaises(re_PatternError):
-					GitIgnoreSpecPattern(raw_pattern)
+				pattern = GitIgnoreSpecPattern(raw_pattern)
+				self.assertIs(pattern.include, None)
+				self.assertIs(pattern.regex, None)
 
 	def test_15_issue_93_c_3_unclosed(self):
 		"""

@@ -161,6 +161,15 @@ class _GitIgnoreBasePattern(RegexPattern):
 					# as literal slashes by regex as defined by POSIX.
 					expr += pattern[i:j].replace('\\', '\\\\')
 
+					if range_error == 'raise':
+						try:
+							re.compile(expr)
+						except re.error as e:
+							raise _RangeError((
+								f"Invalid range notation={pattern[i:j]!r} found in "
+								f"pattern={pattern!r}."
+							)) from e
+
 					# Add regex bracket expression to regex result.
 					regex += expr
 
