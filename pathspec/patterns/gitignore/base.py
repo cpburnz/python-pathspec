@@ -18,6 +18,58 @@ _BYTES_ENCODING = 'latin1'
 The encoding to use when parsing a byte string pattern.
 """
 
+_POSIX_CHAR_CLASSES = {
+	'alnum': '0-9A-Za-z',
+	'alpha': 'A-Za-z',
+	'blank': ' \\t',
+	'cntrl': '\\x00-\\x1f\\x7f',
+	'digit': '0-9',
+	'graph': '\\x21-\\x7e',
+	'lower': 'a-z',
+	'print': '\\x20-\\x7e',
+	'punct': '\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e',
+	'space': ' \\t\\n\\x0b\\f\\r',
+	'upper': 'A-Z',
+	'xdigit': '0-9A-Fa-f',
+}
+"""
+The ASCII ranges equivalent to each POSIX character class, matching Git's
+``wildmatch`` (which evaluates them in the C locale). Python's ``re`` has no
+POSIX class syntax, so ``[:alpha:]`` etc. must be expanded to these ranges.
+"""
+
+
+def _translate_bracket_body(body: str) -> str:
+	"""
+	Translate the interior of a glob bracket expression (the characters between
+	``[`` and its closing ``]``, with the ``]`` included) to the body of a
+	regular-expression bracket expression.
+
+	Backslashes are escaped so they are treated as literal slashes by regex (as
+	POSIX defines), and any POSIX character classes (``[:alpha:]`` etc.) are
+	expanded to their equivalent ranges, because Python's ``re`` does not
+	understand POSIX class syntax and would otherwise mis-parse them.
+
+	*body* (:class:`str`) is the bracket interior including the trailing ``]``.
+
+	Returns the regex bracket body (:class:`str`).
+	"""
+	out = []
+	i, end = 0, len(body)
+	while i < end:
+		if body[i] == '[' and body[i+1:i+2] == ':':
+			class_end = body.find(':]', i + 2)
+			if class_end != -1:
+				name = body[i+2:class_end]
+				if name in _POSIX_CHAR_CLASSES:
+					out.append(_POSIX_CHAR_CLASSES[name])
+					i = class_end + 2
+					continue
+		char = body[i]
+		out.append('\\\\' if char == '\\' else char)
+		i += 1
+	return ''.join(out)
+
 
 class _GitIgnoreBasePattern(RegexPattern):
 	"""
@@ -130,8 +182,17 @@ class _GitIgnoreBasePattern(RegexPattern):
 					j += 1
 
 				# Find closing bracket. Stop once we reach the end or find it.
+				# A POSIX character class ("[:alpha:]" etc.) is skipped as a unit
+				# so the ']' that closes the class is not mistaken for the ']'
+				# that closes the whole bracket expression.
 				while j < end and pattern[j] != ']':
-					j += 1
+					if pattern[j] == '[' and pattern[j+1:j+2] == ':':
+						class_end = pattern.find(':]', j + 2)
+						if class_end == -1:
+							break
+						j = class_end + 2
+					else:
+						j += 1
 
 				if j < end:
 					# Found end of bracket expression. Increment j to be one past the
@@ -158,8 +219,10 @@ class _GitIgnoreBasePattern(RegexPattern):
 						i += 1
 
 					# Build regex bracket expression. Escape slashes so they are treated
-					# as literal slashes by regex as defined by POSIX.
-					expr += pattern[i:j].replace('\\', '\\\\')
+					# as literal slashes by regex as defined by POSIX, and expand any
+					# POSIX character classes ("[:alpha:]" etc.), which Python's `re`
+					# does not understand, to equivalent ranges (matching Git).
+					expr += _translate_bracket_body(pattern[i:j])
 
 					if range_error == 'raise':
 						try:

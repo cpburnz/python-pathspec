@@ -926,6 +926,33 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 				self.assertIs(pattern.include, True)
 				self.assertEqual(pattern.regex.pattern, regex)
 
+	def test_15_posix_character_class(self):
+		"""
+		Test POSIX character classes ("[:alpha:]" etc.) inside bracket
+		expressions, which Git's *wildmatch* supports.
+		"""
+		for raw_pattern, regex in [
+			('[[:digit:]]', f'^(?:.+/)?[0-9]{_DIR_OPT}'),
+			('[[:alpha:]]', f'^(?:.+/)?[A-Za-z]{_DIR_OPT}'),
+			('[![:digit:]]', f'^(?:.+/)?[^0-9]{_DIR_OPT}'),
+			('[^[:digit:]]', f'^(?:.+/)?[^0-9]{_DIR_OPT}'),
+			('[[:alnum:]_]', f'^(?:.+/)?[0-9A-Za-z_]{_DIR_OPT}'),
+			('a[[:digit:]]', f'^(?:.+/)?a[0-9]{_DIR_OPT}'),
+			('[[:alpha:][:digit:]]', f'^(?:.+/)?[A-Za-z0-9]{_DIR_OPT}'),
+		]:
+			with self.subTest(f"p={raw_pattern!r}"):
+				pattern = GitIgnoreBasicPattern(raw_pattern)
+				self.assertIs(pattern.include, True)
+				self.assertEqual(pattern.regex.pattern, regex)
+
+		# The class must actually match like Git.
+		digit = GitIgnoreBasicPattern('[[:digit:]].txt')
+		self.assertTrue(digit.match_file('1.txt'))
+		self.assertFalse(digit.match_file('a.txt'))
+		not_digit = GitIgnoreBasicPattern('[![:digit:]].txt')
+		self.assertFalse(not_digit.match_file('1.txt'))
+		self.assertTrue(not_digit.match_file('a.txt'))
+
 	def test_15_issue_93_c_2_invalid(self):
 		"""
 		Test patterns with invalid range notation.
