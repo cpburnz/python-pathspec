@@ -14,8 +14,10 @@ from pathspec.patterns.gitignore.base import (
 	_BYTES_ENCODING)
 from pathspec.patterns.gitignore.spec import (
 	GitIgnoreSpecPattern,
+	_DIR_MARK,
 	_DIR_MARK_CG,
-	_DIR_MARK_OPT)
+	_DIR_MARK_OPT,
+	_MATCH_ALL)
 from pathspec.patterns.gitwildmatch import (
 	GitWildMatchPattern)
 from pathspec.util import (
@@ -275,7 +277,7 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 		"""
 		regex, include = GitIgnoreSpecPattern.pattern_to_regex('**')
 		self.assertTrue(include)
-		self.assertEqual(regex, '.')
+		self.assertEqual(regex, _MATCH_ALL)
 
 		pattern = GitIgnoreSpecPattern(re.compile(regex), include)
 		results = set(filter(pattern.match_file, [
@@ -332,7 +334,7 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 		"""
 		regex, include = GitIgnoreSpecPattern.pattern_to_regex('**')
 		self.assertTrue(include)
-		self.assertEqual(regex, '.')
+		self.assertEqual(regex, _MATCH_ALL)
 
 		equiv_regex, include = GitIgnoreSpecPattern.pattern_to_regex('**/**')
 		self.assertTrue(include)
@@ -753,7 +755,23 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 		"""
 		regex, include = GitIgnoreSpecPattern.pattern_to_regex('*')
 		self.assertTrue(include)
-		self.assertEqual(regex, '.')
+		self.assertEqual(regex, _MATCH_ALL)
+
+	def test_12_asterisk_1b_regex_marks_directories(self):
+		"""
+		Test that the relative asterisk path pattern captures the directory marker.
+
+		Without the marker, "*" outranks a later directory-only pattern (e.g.
+		"!*/") and :class:`.GitIgnoreSpec` reports a directory as ignored where Git
+		does not.
+		"""
+		regex, include = GitIgnoreSpecPattern.pattern_to_regex('*')
+		self.assertTrue(include)
+
+		compiled = re.compile(regex)
+		self.assertIsNotNone(compiled.search('dirA/').group(_DIR_MARK))
+		self.assertIsNone(compiled.search('fileA').group(_DIR_MARK))
+		self.assertIsNone(compiled.search('dirA/fileB').group(_DIR_MARK))
 
 	def test_12_asterisk_2_regex_equivalent(self):
 		"""
