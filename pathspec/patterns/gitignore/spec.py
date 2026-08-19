@@ -39,6 +39,14 @@ _DIR_MARK_OPT = f'(?:{_DIR_MARK_CG}|$)'
 This regular expression matches the optional directory marker and sub-path.
 """
 
+_MATCH_ALL = f'^(?:.+/)?[^/]+{_DIR_MARK_OPT}'
+"""
+This regular expression matches every path. It is the expansion of the patterns
+"*" and "**" (i.e., "**/{any name}"), and it has to capture the directory marker
+like any other pattern so that :class:`.GitIgnoreSpec` can tell a directory
+match from a file match.
+"""
+
 
 class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 	"""
@@ -121,7 +129,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 				return (None, _DIR_MARK_CG)
 			else:
 				# The pattern "**" will match every path. Special case this pattern.
-				return (None, '.')
+				return (None, _MATCH_ALL)
 
 		elif (
 			seg_count == 2
@@ -130,7 +138,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		):
 			# The pattern "*" will be normalized to "**/*" and will match every
 			# path. Special case this pattern for efficiency.
-			return (None, '.')
+			return (None, _MATCH_ALL)
 
 		elif (
 			seg_count == 3
