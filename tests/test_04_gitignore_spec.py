@@ -969,3 +969,114 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 				pattern = GitIgnoreSpecPattern(raw_pattern)
 				self.assertIs(pattern.include, None)
 				self.assertIs(pattern.regex, None)
+
+	def test_16_posix_class_a_regex(self):
+		"""
+		Test that each POSIX bracket character class is translated to the ASCII
+		range that git's wildmatch uses. Git implements these classes with its
+		own locale-independent ASCII functions, so they are NOT the Unicode-aware
+		equivalents (``\\w``, ``\\d``, ``\\s``).
+		"""
+		for raw_pattern, expr in [
+			('[[:alnum:]]', '[0-9A-Za-z]'),
+			('[[:alpha:]]', '[A-Za-z]'),
+			('[[:blank:]]', '[\\t ]'),
+			('[[:cntrl:]]', '[\\x00-\\x1f\\x7f]'),
+			('[[:digit:]]', '[0-9]'),
+			('[[:graph:]]', '[\\x21-\\x7e]'),
+			('[[:lower:]]', '[a-z]'),
+			('[[:print:]]', '[\\x20-\\x7e]'),
+			('[[:punct:]]', '[!-/:-@\\[-`{-~]'),
+			('[[:space:]]', '[\\t\\n\\r ]'),
+			('[[:upper:]]', '[A-Z]'),
+			('[[:xdigit:]]', '[0-9A-Fa-f]'),
+		]:
+			with self.subTest(f"p={raw_pattern!r}"):
+				pattern = GitIgnoreSpecPattern(raw_pattern)
+				self.assertIs(pattern.include, True)
+				self.assertEqual(
+					pattern.regex.pattern, f'^(?:.+/)?{expr}{_DIR_MARK_OPT}',
+				)
+
+	def test_16_posix_class_b_match(self):
+		"""
+		Test that each POSIX bracket character class matches the same characters
+		as git (spot checks matching git's ``check-ignore``).
+		"""
+		matches = {
+			'[[:alnum:]]': (['a', 'Z', '5'], ['_', '-', '.']),
+			'[[:alpha:]]': (['a', 'Z'], ['5', '_']),
+			'[[:blank:]]': ([' ', '\t'], ['\n', 'a']),
+			'[[:digit:]]': (['0', '9'], ['a', '/']),
+			'[[:graph:]]': (['a', '!', '~'], [' ']),
+			'[[:lower:]]': (['a', 'z'], ['A', '5']),
+			'[[:print:]]': (['a', ' ', '~'], ['\t']),
+			'[[:punct:]]': (['!', '.', '~', '@'], ['a', '5', ' ']),
+			'[[:space:]]': ([' ', '\t', '\n', '\r'], ['a', '\x0b', '\x0c']),
+			'[[:upper:]]': (['A', 'Z'], ['a', '5']),
+			'[[:xdigit:]]': (['0', '9', 'a', 'F'], ['g', 'G', '_']),
+		}
+		for raw_pattern, (positives, negatives) in matches.items():
+			pattern = GitIgnoreSpecPattern(raw_pattern)
+			for path in positives:
+				with self.subTest(f"p={raw_pattern!r} match {path!r}"):
+					self.assertTrue(pattern.match_file(path))
+			for path in negatives:
+				with self.subTest(f"p={raw_pattern!r} no-match {path!r}"):
+					self.assertFalse(pattern.match_file(path))
+
+	def test_16_posix_class_c_composed(self):
+		"""
+		Test that POSIX classes compose with other bracket members, ranges, and
+		bracket negation, as git allows.
+		"""
+		for raw_pattern, positives, negatives in [
+			('[[:digit:]a-f_]', ['5', 'c', '_'], ['g', 'z']),
+			('[[:alpha:]0-9]', ['a', 'Z', '5'], ['_', '.']),
+			('[[:upper:][:digit:]]', ['A', '5'], ['a', '_']),
+			('[![:digit:]]', ['a', '_'], ['5']),
+			('*.[[:alpha:]]', ['f.c'], ['f.5']),
+			('[[:alnum:]_].py', ['_.py', 'a.py'], ['-.py']),
+		]:
+			pattern = GitIgnoreSpecPattern(raw_pattern)
+			for path in positives:
+				with self.subTest(f"p={raw_pattern!r} match {path!r}"):
+					self.assertTrue(pattern.match_file(path))
+			for path in negatives:
+				with self.subTest(f"p={raw_pattern!r} no-match {path!r}"):
+					self.assertFalse(pattern.match_file(path))
+
+	def test_16_posix_class_d_ascii_only(self):
+		"""
+		Test that the classes stay ASCII-only, matching git rather than Python's
+		Unicode-aware regex. Non-ASCII digits/letters/spaces must NOT match.
+		"""
+		for raw_pattern, path in [
+			('[[:digit:]]', '٠'),  # Arabic-Indic digit zero.
+			('[[:digit:]]', '²'),  # Superscript two.
+			('[[:alpha:]]', 'é'),  # Latin small e with acute.
+			('[[:alpha:]]', 'Ω'),  # Greek capital omega.
+			('[[:upper:]]', 'À'),  # Latin capital A with grave.
+			('[[:alnum:]]', 'é'),  # Latin small e with acute.
+			('[[:space:]]', '\xa0'),  # No-break space.
+		]:
+			with self.subTest(f"p={raw_pattern!r} no-match U+{ord(path):04X}"):
+				pattern = GitIgnoreSpecPattern(raw_pattern)
+				self.assertFalse(pattern.match_file(path))
+
+	def test_16_posix_class_e_invalid(self):
+		"""
+		Test that an unknown or negated POSIX class name is discarded, matching
+		git's treatment of it as a malformed pattern.
+		"""
+		for raw_pattern in [
+			'[[:bogus:]]',
+			'[[:Alpha:]]',
+			'[[:^alpha:]]',
+			'[[::]]',
+			'a[[:nope:]]',
+		]:
+			with self.subTest(f"p={raw_pattern!r}"):
+				pattern = GitIgnoreSpecPattern(raw_pattern)
+				self.assertIs(pattern.include, None)
+				self.assertIs(pattern.regex, None)

@@ -18,6 +18,58 @@ _BYTES_ENCODING = 'latin1'
 The encoding to use when parsing a byte string pattern.
 """
 
+_POSIX_CLASS_TO_REGEX = {
+	# Git's wildmatch implements POSIX bracket character classes using its own
+	# ASCII (locale-independent) ``is*`` functions, so each class maps to an
+	# explicit ASCII set. These are NOT the Unicode-aware equivalents (``\w``,
+	# ``\d``, ``\s``); using those would over-match non-ASCII characters that
+	# git never matches.
+	'alnum': '0-9A-Za-z',
+	'alpha': 'A-Za-z',
+	'blank': '\\t ',
+	'cntrl': '\\x00-\\x1f\\x7f',
+	'digit': '0-9',
+	'graph': '\\x21-\\x7e',
+	'lower': 'a-z',
+	'print': '\\x20-\\x7e',
+	'punct': '!-/:-@\\[-`{-~',
+	'space': '\\t\\n\\r ',
+	'upper': 'A-Z',
+	'xdigit': '0-9A-Fa-f',
+}
+"""
+Maps each POSIX bracket character class name to the ASCII regex range that
+reproduces git's wildmatch behavior.
+"""
+
+_POSIX_CLASS_REGEX = re.compile(r'\[:(\^?)([^:\]]*):\]')
+"""
+Matches a POSIX bracket character class token such as ``[:alpha:]`` inside a
+bracket expression. Group 1 captures a leading caret (unsupported by git);
+group 2 captures the class name.
+"""
+
+
+class _InvalidPosixClass(Exception):
+	"""
+	Raised internally when a bracket expression contains an unknown or negated
+	POSIX character class name. Git treats such a pattern as malformed.
+	"""
+	pass
+
+
+def _translate_posix_class(match: 're.Match') -> str:
+	"""
+	Translate a single POSIX character class token to its ASCII regex range.
+	Raises :class:`_InvalidPosixClass` for a negated (``[:^name:]``) or unknown
+	class name, matching git's treatment of it as a malformed pattern.
+	"""
+	negated, name = match.group(1), match.group(2)
+	class_regex = _POSIX_CLASS_TO_REGEX.get(name)
+	if negated or class_regex is None:
+		raise _InvalidPosixClass()
+	return class_regex
+
 
 class _GitIgnoreBasePattern(RegexPattern):
 	"""
@@ -118,6 +170,7 @@ class _GitIgnoreBasePattern(RegexPattern):
 				# - "[][!]" matches ']', '[' and '!'.
 				# - "[]-]" matches ']' and '-'.
 				# - "[!]a-]" matches any character except ']', 'a' and '-'.
+				bracket_start = i - 1
 				j = i
 
 				# Pass bracket expression negation.
@@ -131,7 +184,17 @@ class _GitIgnoreBasePattern(RegexPattern):
 
 				# Find closing bracket. Stop once we reach the end or find it.
 				while j < end and pattern[j] != ']':
-					j += 1
+					if pattern[j] == '[' and j + 1 < end and pattern[j + 1] == ':':
+						# Skip over a POSIX character class token ("[:name:]") so its
+						# internal closing bracket is not mistaken for the end of the
+						# whole bracket expression.
+						close = pattern.find(':]', j + 2)
+						if close == -1:
+							j = end
+							break
+						j = close + 2
+					else:
+						j += 1
 
 				if j < end:
 					# Found end of bracket expression. Increment j to be one past the
@@ -159,7 +222,29 @@ class _GitIgnoreBasePattern(RegexPattern):
 
 					# Build regex bracket expression. Escape slashes so they are treated
 					# as literal slashes by regex as defined by POSIX.
-					expr += pattern[i:j].replace('\\', '\\\\')
+					body = pattern[i:j].replace('\\', '\\\\')
+
+					# Translate POSIX character classes (e.g. "[:alpha:]") into their
+					# ASCII regex equivalents. Git's wildmatch supports these but
+					# Python's `re` does not, so passing them through verbatim builds a
+					# broken regex that silently mismatches (and warns about a nested
+					# set).
+					try:
+						body = _POSIX_CLASS_REGEX.sub(_translate_posix_class, body)
+					except _InvalidPosixClass:
+						# Git treats an unknown or negated class name as a malformed
+						# pattern that matches nothing.
+						if range_error == 'raise':
+							raise _RangeError((
+								f"Invalid character class found in pattern={pattern!r}."
+							))
+						else:
+							# Treat the whole bracket expression as a literal.
+							regex += re.escape(pattern[bracket_start:j])
+							i = j
+							continue
+
+					expr += body
 
 					if range_error == 'raise':
 						try:

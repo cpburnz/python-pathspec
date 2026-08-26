@@ -12,10 +12,12 @@ Major changes:
 Bug fixes:
 
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
+- `Pull #128`_: Support POSIX character classes (e.g. `[[:alpha:]]`) in gitignore bracket expressions.
 
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
 .. _`Pull #123`: https://github.com/cpburnz/python-pathspec/pull/123
+.. _`Pull #128`: https://github.com/cpburnz/python-pathspec/pull/128
 
 
 1.1.1 (2026-04-26)
