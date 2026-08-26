@@ -6,6 +6,14 @@ Major changes:
 
 - TODO `Issue #116`_: Change license from MPL-2.0 to dual MIT and MPL-2.0.
 
+API changes:
+
+- TODO: Deprecated: `pathspec.util.RecursionError` is now an alias for `pathspec.util.RecursivePathError`. Python has had a built-in named `RecursionError` since 3.4.
+
+New features:
+
+- `Issue #126`_: `.iter_tree_files()` / `.iter_tree_entries()` methods now have an *subdir* parameter to allow traversing only part of the tree.
+
 Bug fixes:
 
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
@@ -13,6 +21,7 @@ Bug fixes:
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
 .. _`Pull #123`: https://github.com/cpburnz/python-pathspec/pull/123
+.. _`Issue #126`: https://github.com/cpburnz/python-pathspec/issues/126
 
 
 1.1.1 (2026-04-26)

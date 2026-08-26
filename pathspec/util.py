@@ -196,11 +196,32 @@ def _filter_check_patterns(
 	]
 
 
+def _get_sub_path_safe(root: str, sub_dir: StrPath) -> str:
+	"""
+	Get the sub-directory path relative to the root directory. This ensures the
+	root path cannot be escaped.
+
+	*root* (:class:`str`) is the root directory.
+
+	*sub_dir* (:class:`str` or :class:`os.PathLike`) is the sub-directory path.
+	This path can be relative or absolute.
+
+	Returns the sub-directory path relative to the root directory (:class:`str`).
+	"""
+	sub_abs = os.path.normpath(os.path.join(root, sub_dir))
+	if sub_abs == root:
+		return ''
+	elif sub_abs.startswith(root + os.sep):
+		return os.path.relpath(sub_abs, root)
+	else:
+		raise ValueError(f"{sub_dir=!r} must be relative to {root=!r}.")
+
+
 def _is_iterable(value: Any) -> bool:
 	"""
 	Check whether the value is an iterable (excludes strings).
 
-	*value* is the value to check,
+	*value* is the value to check.
 
 	Returns whether *value* is an iterable (:class:`bool`).
 	"""
@@ -222,6 +243,7 @@ def iter_tree_entries(
 	root: StrPath,
 	on_error: Optional[Callable[[OSError], None]] = None,
 	follow_links: Optional[bool] = None,
+	subdir: Optional[StrPath] = None,
 ) -> Iterator['TreeEntry']:
 	"""
 	Walks the specified directory for all files and directories.
@@ -237,6 +259,11 @@ def iter_tree_entries(
 	symbolic links that resolve to directories. Default is :data:`None` for
 	:data:`True`.
 
+	*subdir* (:class:`str`, :class:`os.PathLike`, or :data:`None`) is a sub
+	directory of *root* to constrain searching to. If a relative path, it is
+	treated as relative to *root*. If an absolute path, it must be a descendant of
+	*root*. Default is :data:`None` to search the entire *root* directory tree.
+
 	Raises :exc:`.RecursionError` if recursion is detected.
 
 	Returns an :class:`~collections.abc.Iterator` yielding each file or directory
@@ -248,7 +275,15 @@ def iter_tree_entries(
 	if follow_links is None:
 		follow_links = True
 
-	yield from _iter_tree_entries_next(os.path.abspath(root), '', {}, on_error, follow_links)
+	root_abs = os.path.abspath(root)
+
+	# Ensure sub_dir does not escape root.
+	if subdir is not None:
+		dir_rel = _get_sub_path_safe(root_abs, subdir)
+	else:
+		dir_rel = ''
+
+	yield from _iter_tree_entries_next(root_abs, dir_rel, {}, on_error, follow_links)
 
 
 def _iter_tree_entries_next(
@@ -330,10 +365,12 @@ def _iter_tree_entries_next(
 	del memo[dir_real]
 
 
+# TODO: Add tests for subdir.
 def iter_tree_files(
 	root: StrPath,
 	on_error: Optional[Callable[[OSError], None]] = None,
 	follow_links: Optional[bool] = None,
+	subdir: Optional[StrPath] = None,
 ) -> Iterator[str]:
 	"""
 	Walks the specified directory for all files.
@@ -350,6 +387,11 @@ def iter_tree_files(
 	symbolic links that resolve to directories. Default is :data:`None` for
 	:data:`True`.
 
+	*subdir* (:class:`str`, :class:`os.PathLike`, or :data:`None`) is a sub
+	directory of *root* to constrain searching to. If a relative path, it is
+	treated as relative to *root*. If an absolute path, it must be a descendant of
+	*root*. Default is :data:`None` to search the entire *root* directory tree.
+
 	Raises :exc:`.RecursionError` if recursion is detected.
 
 	Returns an :class:`~collections.abc.Iterator` yielding the path to each file
@@ -361,7 +403,15 @@ def iter_tree_files(
 	if follow_links is None:
 		follow_links = True
 
-	yield from _iter_tree_files_next(os.path.abspath(root), '', {}, on_error, follow_links)
+	root_abs = os.path.abspath(root)
+
+	# Ensure subdir does not escape root.
+	if subdir is not None:
+		dir_rel = _get_sub_path_safe(root_abs, subdir)
+	else:
+		dir_rel = ''
+
+	yield from _iter_tree_files_next(root_abs, dir_rel, {}, on_error, follow_links)
 
 
 def _iter_tree_files_next(
@@ -648,6 +698,8 @@ class AlreadyRegisteredError(Exception):
 		return self.args[1]
 
 
+# TODO: Rename to RecursivePathError because RecursionError is a built-in
+# exception as of Python 3.5. Keep RecursionError as a deprecated alias.
 class RecursionError(Exception):
 	"""
 	The :exc:`RecursionError` exception is raised when recursion is detected.
