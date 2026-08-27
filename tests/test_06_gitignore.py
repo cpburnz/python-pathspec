@@ -689,3 +689,129 @@ class GitIgnoreSpecTest(unittest.TestCase):
 				includes = get_includes(results)
 				debug = debug_results(spec, results)
 				self.assertEqual(includes, set(), debug)
+
+	def test_10_issue_132_a(self):
+		"""
+		Test issue 132, scenario A.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			'build',
+			'!ignore.log',
+		]):
+			with sub_test() as spec:
+				# Confirmed results with git (v2.55.0).
+				files = {
+					'build/ignore.log',   # 1:build
+				}
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+				self.assertEqual(ignores, {
+					'build/ignore.log',
+				}, debug)
+				self.assertEqual(files - ignores, set(), debug)
+
+	def test_10_issue_132_b(self):
+		"""
+		Test issue 132, scenario B.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			'build/*',
+			'!keep.log',
+		]):
+			with sub_test() as spec:
+				# Confirmed results with git (v2.55.0).
+				files = {
+					'build/keep.log',   # 2:!keep.log
+				}
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+				self.assertEqual(ignores, set(), debug)
+				self.assertEqual(files - ignores, {
+					'build/keep.log',
+				}, debug)
+
+	def test_10_issue_132_c(self):
+		"""
+		Test issue 132, scenario C.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			'build/**',
+			'!keep.log',
+		]):
+			with sub_test() as spec:
+				# Confirmed results with git (v2.55.0).
+				files = {
+					'build/keep.log',   # 2:!keep.log
+				}
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+				self.assertEqual(ignores, set(), debug)
+				self.assertEqual(files - ignores, {
+					'build/keep.log',
+				}, debug)
+
+	def test_10_issue_132_d(self):
+		"""
+		Test issue 132, scenario D.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			'build',
+			'!build/ignore.log',
+		]):
+			with sub_test() as spec:
+				# Confirmed results with git (v2.55.0).
+				files = {
+					'build/ignore.log',   # 1:build
+				}
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+				self.assertEqual(ignores, {
+					'build/ignore.log',
+				}, debug)
+				self.assertEqual(files - ignores, set(), debug)
+
+	def test_10_issue_132_e(self):
+		"""
+		Test issue 132, scenario E.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			'build/*',
+			'!build/keep.log',
+		]):
+			with sub_test() as spec:
+				# Confirmed results with git (v2.55.0).
+				files = {
+					'build/keep.log',   # 2:!build/keep.log
+				}
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+				self.assertEqual(ignores, set(), debug)
+				self.assertEqual(files - ignores, {
+					'build/keep.log',
+				}, debug)
+
+	def test_10_issue_132_f(self):
+		"""
+		Test issue 132, scenario F.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			'build/**',
+			'!build/keep.log',
+		]):
+			with sub_test() as spec:
+				# Confirmed results with git (v2.55.0).
+				files = {
+					'build/keep.log',   # 2:!build/keep.log
+				}
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+				self.assertEqual(ignores, set(), debug)
+				self.assertEqual(files - ignores, {
+					'build/keep.log',
+				}, debug)
