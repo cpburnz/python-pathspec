@@ -69,5 +69,6 @@ __credits__ = [
 	"Julie Jones <https://github.com/julie777>",
 	"Guillermo Garcia <https://github.com/Gares95>",
 	"Eesh Saxena <https://github.com/eeshsaxena>",
+	"Midas <https://github.com/KaizenShogun>",
 ]
 __license__ = "MPL 2.0"

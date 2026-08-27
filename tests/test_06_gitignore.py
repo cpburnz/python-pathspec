@@ -224,17 +224,18 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			with sub_test() as spec:
 				# Confirmed results with git check-ignore (v2.55.0).
 				dirs = {
-					'sub/',
-					'sub/d/',
+					'sub/',    # 2:!*/
+					'sub/d/',  # 2:!*/
 				}
 				self.assertEqual({_dir for _dir in dirs if spec.match_file(_dir)}, set())
 
+				# Confirmed results with git check-ignore (v2.55.0).
 				files = {
-					'a.py',
-					'a.txt',
-					'sub/b.py',
-					'sub/b.txt',
-					'sub/d/c.py',
+					'a.py',        # 3:!*.py
+					'a.txt',       # 1:*
+					'sub/b.py',    # 3:!*.py
+					'sub/b.txt',   # 1:*
+					'sub/d/c.py',  # 3:!*.py
 				}
 
 				results = list(spec.check_files(files))
