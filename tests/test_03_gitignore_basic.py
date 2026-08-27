@@ -955,8 +955,6 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		"""
 		Test patterns with unclosed range notation.
 		"""
-		# TODO BUG: These tests need to pass.
-		# - See <https://github.com/cpburnz/python-pathspec/issues/93>.
 		for raw_pattern, regex in [
 			('[!', f'^(?:.+/)?\\[!{_DIR_OPT}'),
 			('[', f'^(?:.+/)?\\[{_DIR_OPT}'),

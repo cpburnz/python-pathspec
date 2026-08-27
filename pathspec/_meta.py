@@ -66,6 +66,8 @@ __credits__ = [
 	"Kadir Can Ozden <https://github.com/bysiber>",
 	"Henry Schreiner <https://github.com/henryiii>",
 	"Yilei <https://github.com/yilei>",
+	"Julie Jones <https://github.com/julie777>",
 	"Guillermo Garcia <https://github.com/Gares95>",
+	"Eesh Saxena <https://github.com/eeshsaxena>",
 ]
 __license__ = "MPL 2.0"
