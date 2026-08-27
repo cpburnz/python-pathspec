@@ -205,6 +205,48 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					'test2/b.bin',
 				}, debug)
 
+	def test_02_dir_reinclusion_whitelist(self):
+		"""
+		Test that a directory re-included by a directory-only pattern is not
+		reported as ignored.
+
+		The whitelist idiom ("*" ignores everything, "!*/" keeps descending into
+		directories, "!*.py" keeps the files of interest) only works if asking
+		about the directory answers what Git answers. A consumer asks about the
+		directory precisely to decide whether to descend, so reporting "sub/" as
+		ignored silently drops every file below it.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			'*',
+			'!*/',
+			'!*.py',
+		]):
+			with sub_test() as spec:
+				# Confirmed results with git check-ignore (v2.55.0).
+				dirs = {
+					'sub/',    # 2:!*/
+					'sub/d/',  # 2:!*/
+				}
+				self.assertEqual({_dir for _dir in dirs if spec.match_file(_dir)}, set())
+
+				# Confirmed results with git check-ignore (v2.55.0).
+				files = {
+					'a.py',        # 3:!*.py
+					'a.txt',       # 1:*
+					'sub/b.py',    # 3:!*.py
+					'sub/b.txt',   # 1:*
+					'sub/d/c.py',  # 3:!*.py
+				}
+
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+
+				self.assertEqual(ignores, {
+					'a.txt',
+					'sub/b.txt',
+				}, debug)
+
 	def test_02_file_exclusions(self):
 		"""
 		Test file exclusions.
