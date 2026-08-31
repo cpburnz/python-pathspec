@@ -621,6 +621,18 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 		result = GitIgnoreSpecPattern.escape(fname)
 		self.assertEqual(result, escaped)
 
+	def test_08_escape_trailing_space(self):
+		"""
+		Test that escaping a filename with a trailing space keeps the space, so
+		the escaped pattern still matches the file. Git strips unescaped trailing
+		spaces from a pattern.
+		"""
+		for fname in ['foo ', 'trailing  ', ' ']:
+			escaped = GitIgnoreSpecPattern.escape(fname)
+			self.assertTrue(escaped.endswith('\\ '), (fname, escaped))
+			pattern = GitIgnoreSpecPattern(escaped)
+			self.assertEqual(set(filter(pattern.match_file, [fname])), {fname}, (fname, escaped))
+
 	def test_09_single_escape_fail(self):
 		"""
 		Test an escape on a line by itself.
