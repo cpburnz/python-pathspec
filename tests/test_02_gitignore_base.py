@@ -20,7 +20,7 @@ class GitIgnoreBasePatternTest(unittest.TestCase):
 		Test escaping binary strings.
 		"""
 		byte_to_escaped = {__b: b'\\' + __b for __b in (
-			__c.encode(_BYTES_ENCODING) for __c in '\\[]!*#?'
+			__c.encode(_BYTES_ENCODING) for __c in '\\[]!*#? '
 		)}
 		for char_ord in range(256):
 			char_byte = chr(char_ord).encode(_BYTES_ENCODING)
@@ -32,7 +32,7 @@ class GitIgnoreBasePatternTest(unittest.TestCase):
 		"""
 		Test escaping unicode strings.
 		"""
-		char_to_escaped = {__c: f"\\{__c}" for __c in '\\[]!*#?'}
+		char_to_escaped = {__c: f"\\{__c}" for __c in '\\[]!*#? '}
 		for char_ord in range(128):
 			char = chr(char_ord)
 			escape_val = _GitIgnoreBasePattern.escape(char)

@@ -105,6 +105,14 @@ class _GitIgnoreBasePattern(RegexPattern):
 		# Reference: https://git-scm.com/docs/gitignore#_pattern_format
 		out_string = ''.join((f"\\{x}" if x in '\\[]!*#?' else x) for x in string)
 
+		# EDGE CASE: Git strips trailing spaces from a pattern unless they are
+		# escaped with a backslash. Escape them so an escaped filename that ends
+		# with a space still matches that file.
+		stripped = out_string.rstrip(' ')
+		trailing = len(out_string) - len(stripped)
+		if trailing:
+			out_string = stripped + '\\ ' * trailing
+
 		if return_type is bytes:
 			out_bytes = out_string.encode(_BYTES_ENCODING)
 			return out_bytes  # type: ignore[return-value]
