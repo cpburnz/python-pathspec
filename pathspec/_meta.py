@@ -70,5 +70,6 @@ __credits__ = [
 	"Guillermo Garcia <https://github.com/Gares95>",
 	"Eesh Saxena <https://github.com/eeshsaxena>",
 	"Midas <https://github.com/KaizenShogun>",
+	"Cohen Karnell <https://github.com/ckarnell>",
 ]
 __license__ = "MPL 2.0"
