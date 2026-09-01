@@ -731,3 +731,17 @@ class GitIgnoreSpecTest(unittest.TestCase):
 				includes = get_includes(results)
 				debug = debug_results(spec, results)
 				self.assertEqual(includes, set(), debug)
+
+	def test_10_issue_134(self):
+		"""
+		Test a forward and reverse evaluation discrepancy.
+		"""
+		# WARNING: This will need to be modified when #129 is fixed.
+		for sub_test in self.parameterize_from_lines([
+			"!**/node_modules/**",
+			"/node_modules",
+		]):
+			with sub_test() as spec:
+				self.assertTrue(spec.match_file("node_modules"))  # Agrees with git.
+				self.assertFalse(spec.match_file("node_modules/"))  # BUG: Git says ignored.
+				self.assertFalse(spec.match_file("node_modules/leaf.txt"))  # BUG: Git says ignored.

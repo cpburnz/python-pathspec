@@ -85,6 +85,8 @@ class SimpleGiBackend(SimplePsBackend):
 					priority = 2
 
 				if is_reversed:
+					if include and dir_mark:
+						return (include, index)
 					if priority > out_priority:
 						out_include = include
 						out_index = index
