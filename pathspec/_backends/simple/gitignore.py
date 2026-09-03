@@ -64,41 +64,32 @@ class SimpleGiBackend(SimplePsBackend):
 		"""
 		is_reversed = self._is_reversed
 
-		out_include: Optional[bool] = None
-		out_index: Optional[int] = None
-		out_priority = 0
+		# Resolve the ancestor directory and the file separately: a file negation
+		# only applies while no ancestor directory is excluded.
+		dir_include: Optional[bool] = None
+		dir_index: Optional[int] = None
+		file_include: Optional[bool] = None
+		file_index: Optional[int] = None
+
 		for index, pattern in self._patterns:
 			if (
 				(include := pattern.include) is not None
 				and (match := pattern.match_file(file)) is not None
 			):
 				# Pattern matched.
-
-				# Check for directory marker.
-				dir_mark = match.match.groupdict().get(_DIR_MARK)
-
-				if dir_mark:
+				if match.match.groupdict().get(_DIR_MARK):
 					# Pattern matched by a directory pattern.
-					priority = 1
-				else:
+					if dir_include is None or not is_reversed:
+						dir_include = include
+						dir_index = index
+				elif file_include is None or not is_reversed:
 					# Pattern matched by a file pattern.
-					priority = 2
+					file_include = include
+					file_index = index
 
-				if is_reversed:
-					if priority > out_priority:
-						out_include = include
-						out_index = index
-						out_priority = priority
-				else:
-					# Forward.
-					if (include and dir_mark) or priority >= out_priority:
-						out_include = include
-						out_index = index
-						out_priority = priority
-
-				if is_reversed and priority == 2:
-					# Patterns are being checked in reverse order. The first pattern that
-					# matches with priority 2 takes precedence.
-					break
-
-		return (out_include, out_index)
+		if dir_include:
+			return (dir_include, dir_index)
+		elif file_include is not None:
+			return (file_include, file_index)
+		else:
+			return (dir_include, dir_index)

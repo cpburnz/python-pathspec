@@ -731,3 +731,79 @@ class GitIgnoreSpecTest(unittest.TestCase):
 				includes = get_includes(results)
 				debug = debug_results(spec, results)
 				self.assertEqual(includes, set(), debug)
+
+	def test_10_issue_129_a(self):
+		"""
+		Test issue 129, a file negation under an excluded directory.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			"build",
+			"!keep.log",
+		]):
+			with sub_test() as spec:
+				# Confirmed results with git (v2.54.0).
+				files = {
+					"build/keep.log",  # 1:build
+					"keep.log",        # -:!keep.log
+				}
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+				self.assertEqual(ignores, {
+					"build/keep.log",
+				}, debug)
+				self.assertEqual(files - ignores, {
+					"keep.log",
+				}, debug)
+
+	def test_10_issue_129_b(self):
+		"""
+		Test issue 129, a file negation naming the excluded directory, and a
+		grandparent.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			"build",
+			"!build/keep.log",
+			"a",
+			"!a/b/keep.log",
+		]):
+			with sub_test() as spec:
+				# Confirmed results with git (v2.54.0).
+				files = {
+					"build/keep.log",  # 1:build
+					"a/b/keep.log",    # 3:a
+				}
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+				self.assertEqual(ignores, files, debug)
+
+	def test_10_issue_129_c(self):
+		"""
+		Test issue 129, re-inclusion that must keep working: the directory itself is
+		not excluded, or its exclusion is undone before the file negation.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			"build/*",
+			"!build/keep.log",
+			"log",
+			"!log/",
+			"!log/keep.log",
+		]):
+			with sub_test() as spec:
+				# Confirmed results with git (v2.54.0).
+				files = {
+					"build/keep.log",  # -:!build/keep.log
+					"build/drop.log",  # 1:build/*
+					"log/keep.log",    # -:!log/keep.log
+				}
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+				self.assertEqual(ignores, {
+					"build/drop.log",
+				}, debug)
+				self.assertEqual(files - ignores, {
+					"build/keep.log",
+					"log/keep.log",
+				}, debug)
