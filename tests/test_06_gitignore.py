@@ -883,3 +883,27 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					"build/keep.log",
 					"log/keep.log",
 				}, debug)
+
+	def test_11_issue_134(self):
+		"""
+		Test a forward and reverse evaluation discrepancy.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			"!**/node_modules/**",
+			"/node_modules",
+		]):
+			with sub_test() as spec:
+				# Confirmed results with git (v2.55.0).
+				files = {
+					"node_modules",           # 2:/node_modules
+					"node_modules/",          # 2:/node_modules
+					"node_modules/leaf.txt",  # 2:/node_modules
+				}
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+				self.assertEqual(ignores, {
+					"node_modules",
+					"node_modules/",
+					"node_modules/leaf.txt",
+				}, debug)
