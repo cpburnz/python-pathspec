@@ -147,34 +147,35 @@ class Re2GiBackend(Re2PsBackend):
 		if not match_ids:
 			return (None, None)
 
-		out_include: Optional[bool] = None
-		out_index: int = -1
-		out_priority = -1
+		# Resolve the ancestor directory and the file separately: a file negation
+		# only applies while no ancestor directory is excluded.
+		dir_include: Optional[bool] = None
+		dir_index: int = -1
+		file_include: Optional[bool] = None
+		file_index: int = -1
 
 		regex_data = self._regex_data
 		for regex_id in match_ids:
 			regex_dat = regex_data[regex_id]
 
-			is_dir_pattern = regex_dat.is_dir_pattern
-			if is_dir_pattern:
-				# Pattern matched by a directory pattern.
-				priority = 1
-			else:
-				# Pattern matched by a file pattern.
-				priority = 2
-
 			# WARNING: According to the documentation on `RE2::Set::Match()`, there is
 			# no guarantee matches will be produced in order!
 			include = regex_dat.include
 			index = regex_dat.index
-			if (
-				(include and is_dir_pattern and index > out_index)
-				or (priority == out_priority and index > out_index)
-				or priority > out_priority
-			):
-				out_include = include
-				out_index = index
-				out_priority = priority
+			if regex_dat.is_dir_pattern:
+				# Pattern matched by a directory pattern.
+				if index > dir_index:
+					dir_include = include
+					dir_index = index
+			elif index > file_index:
+				# Pattern matched by a file pattern.
+				file_include = include
+				file_index = index
 
-		assert out_index != -1, (out_index, out_include, out_priority)
-		return (out_include, out_index)
+		assert dir_index != -1 or file_index != -1, (dir_index, file_index)
+		if dir_include:
+			return (dir_include, dir_index)
+		elif file_include is not None:
+			return (file_include, file_index)
+		else:
+			return (dir_include, dir_index)

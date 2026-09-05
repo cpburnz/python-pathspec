@@ -45,7 +45,7 @@ class HyperscanGiBackend(HyperscanPsBackend):
 	"""
 
 	# Change type hint.
-	_out: tuple[Optional[bool], int, int]  # type: ignore[assignment]
+	_out: tuple[Optional[bool], int, Optional[bool], int]  # type: ignore[assignment]
 
 	def __init__(
 		self,
@@ -62,15 +62,17 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		"""
 		super().__init__(patterns, _debug_exprs=_debug_exprs, _test_sort=_test_sort)
 
-		self._out = (None, -1, 0)
+		self._out = (None, -1, None, -1)
 		"""
 		*_out* (:class:`tuple`) stores the current match:
 
-		-	*0* (:class:`bool` or :data:`None`) is the match include.
+		-	*0* (:class:`bool` or :data:`None`) is the directory match include.
 
-		-	*1* (:class:`int`) is the match index.
+		-	*1* (:class:`int`) is the directory match index.
 
-		-	*2* (:class:`int`) is the match priority.
+		-	*2* (:class:`bool` or :data:`None`) is the file match include.
+
+		-	*3* (:class:`int`) is the file match index.
 		"""
 
 	@override
@@ -199,15 +201,18 @@ class HyperscanGiBackend(HyperscanPsBackend):
 			# match.
 			return (None, None)
 
-		self._out = (None, -1, 0)
+		self._out = (None, -1, None, -1)
 		db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
 
-		out_index: Optional[int]
-		out_include, out_index = self._out[:2]
-		if out_index == -1:
-			out_index = None
+		dir_include, dir_index, file_include, file_index = self._out
+		if dir_include:
+			out_include, out_index = dir_include, dir_index
+		elif file_include is not None:
+			out_include, out_index = file_include, file_index
+		else:
+			out_include, out_index = dir_include, dir_index
 
-		return (out_include, out_index)
+		return (out_include, out_index if out_index != -1 else None)
 
 	@override
 	def __on_match(
@@ -226,25 +231,18 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		"""
 		expr_dat = self._expr_data[expr_id]
 
-		is_dir_pattern = expr_dat.is_dir_pattern
-		if is_dir_pattern:
-			# Pattern matched by a directory pattern.
-			priority = 1
-		else:
-			# Pattern matched by a file pattern.
-			priority = 2
-
 		# WARNING: Hyperscan does not guarantee matches will be produced in order!
+		# Resolve the ancestor directory and the file separately: a file negation
+		# only applies while no ancestor directory is excluded.
 		include = expr_dat.include
 		index = expr_dat.index
-		prev_index = self._out[1]
-		prev_priority = self._out[2]
-		if (
-			(include and is_dir_pattern and index > prev_index)
-			or (priority == prev_priority and index > prev_index)
-			or priority > prev_priority
-		):
-			out_tup = (include, expr_dat.index, priority)
-			self._out = out_tup  # type: ignore
+		dir_include, dir_index, file_include, file_index = self._out
+		if expr_dat.is_dir_pattern:
+			# Pattern matched by a directory pattern.
+			if index > dir_index:
+				self._out = (include, index, file_include, file_index)  # type: ignore
+		elif index > file_index:
+			# Pattern matched by a file pattern.
+			self._out = (dir_include, dir_index, include, index)  # type: ignore
 
 		return None
