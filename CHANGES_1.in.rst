@@ -20,6 +20,7 @@ Bug fixes:
 - `Pull #128`_: Support POSIX character classes (e.g. `[[:alpha:]]`) in gitignore bracket expressions.
 - `Issue #129`_ / `Pull #132`_: Fix GitIgnoreSpec re-including files under an excluded directory
 - `Pull #133`_: Capture the directory marker in the `*/**` regex shortcut so `!*/` can re-include directories.
+- `Issue #134`_: GitIgnoreSpec: reverse and forward evaluation disagree.
 - `Pull #135`_: Escape trailing spaces in `GitIgnoreSpecPattern.escape()`.
 
 
@@ -30,6 +31,7 @@ Bug fixes:
 .. _`Issue #129`: https://github.com/cpburnz/python-pathspec/issues/129
 .. _`Pull #132`: https://github.com/cpburnz/python-pathspec/pull/132
 .. _`Pull #133`: https://github.com/cpburnz/python-pathspec/pull/133
+.. _`Issue #134`: https://github.com/cpburnz/python-pathspec/issues/134
 .. _`Pull #135`: https://github.com/cpburnz/python-pathspec/pull/135
 
 
