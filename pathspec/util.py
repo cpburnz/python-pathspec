@@ -209,9 +209,9 @@ def _get_sub_path_safe(root: str, sub_dir: StrPath) -> str:
 	Returns the sub-directory path relative to the root directory (:class:`str`).
 	"""
 	sub_abs = os.path.normpath(os.path.join(root, sub_dir))
-	if sub_abs == root:
+	if os.path.normcase(sub_abs) == os.path.normcase(root):
 		return ''
-	elif sub_abs.startswith(root + os.sep):
+	elif os.path.commonpath((root, sub_abs)) == root:
 		return os.path.relpath(sub_abs, root)
 	else:
 		raise ValueError(f"{sub_dir=!r} must be relative to {root=!r}.")
