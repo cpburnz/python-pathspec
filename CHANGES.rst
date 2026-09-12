@@ -19,6 +19,7 @@ New features:
 
 Bug fixes:
 
+- Fixed subtree traversal from filesystem roots and equivalent Windows paths with different casing.
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
 - `Pull #128`_: Support POSIX character classes (e.g. `[[:alpha:]]`) in gitignore bracket expressions.
 - `Issue #129`_ / `Pull #132`_: Fix GitIgnoreSpec re-including files under an excluded directory

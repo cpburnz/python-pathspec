@@ -218,6 +218,39 @@ class IterTreeTest(unittest.TestCase):
 			'Dir/Inner/f',
 		])))
 
+	def test_subdir_from_filesystem_root(self):
+		"""Traverse only the requested subtree when the root ends in a separator."""
+		self.make_files(['a.txt'])
+		root = Path(self.temp_dir).anchor
+		expected = {os.path.relpath(os.path.join(self.temp_dir, 'a.txt'), root)}
+		for subdir in (self.temp_dir, os.path.relpath(self.temp_dir, root)):
+			with self.subTest(subdir=subdir):
+				self.assertEqual(set(iter_tree_files(root, subdir=subdir)), expected)
+				self.assertEqual(
+					get_paths_from_entries(iter_tree_entries(root, subdir=subdir)), expected)
+
+	def test_subdir_same_root(self):
+		"""Both an absolute root and a dot select the root itself."""
+		self.make_files(['a.txt'])
+		for subdir in ('.', self.temp_dir):
+			with self.subTest(subdir=subdir):
+				self.assertEqual(set(iter_tree_files(self.temp_dir, subdir=subdir)), {'a.txt'})
+
+	def test_subdir_rejects_outside_root(self):
+		"""Reject parents and sibling paths sharing the root's string prefix."""
+		for subdir in ('..', os.path.join('..', 'other'), str(self.temp_dir) + '-other'):
+			for traverse in (iter_tree_files, iter_tree_entries):
+				with self.subTest(subdir=subdir, traverse=traverse):
+					with self.assertRaises(ValueError):
+						list(traverse(self.temp_dir, subdir=subdir))
+
+	@unittest.skipUnless(os.path.normcase('A') == os.path.normcase('a'), 'Case-sensitive paths')
+	def test_subdir_case_insensitive_root(self):
+		"""Accept equivalent root paths with different casing on Windows."""
+		self.make_files(['a.txt'])
+		root = str(self.temp_dir).swapcase()
+		self.assertEqual(set(iter_tree_files(root, subdir=self.temp_dir)), {'a.txt'})
+
 	def test_02_link_1_check_symlink(self):
 		"""
 		Tests whether links can be created.
