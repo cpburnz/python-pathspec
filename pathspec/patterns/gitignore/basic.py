@@ -21,6 +21,38 @@ from .base import (
 	_GitIgnoreBasePattern)
 
 
+def _trim_trailing_spaces(pattern: str) -> str:
+	"""
+	Remove the trailing spaces which are not escaped with a backslash
+	(r'\'). This emulates the *trim_trailing_spaces()* function in Git's
+	*dir.c*.
+
+	*pattern* (:class:`str`) is the gitignore pattern.
+
+	Returns the pattern with unescaped trailing spaces removed (:class:`str`).
+	A space is escaped only if it is preceded by an odd number of consecutive
+	backslashes. E.g., 'foo\\ ' has an escaped space, but 'foo\\\\ ' (an escaped
+	backslash followed by a space) does not.
+	"""
+	if pattern.endswith('\\ '):
+		# The pattern ends with a backslash followed by a space. The space is
+		# only escaped if it is preceded by an odd number of consecutive
+		# backslashes. With an even number, the backslashes escape each other
+		# and the trailing space is unescaped (Git strips it).
+		i = len(pattern) - 2
+		run = 0
+		while i >= 0 and pattern[i] == '\\':
+			run += 1
+			i -= 1
+
+		if run % 2 == 1:
+			# The trailing space is escaped. Keep the pattern as-is.
+			return pattern
+
+	# The trailing spaces (if any) are not escaped. Strip them.
+	return pattern.rstrip()
+
+
 class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 	"""
 	The :class:`GitIgnoreBasicPattern` class represents a compiled gitignore
@@ -156,14 +188,12 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 		original_pattern = pattern_str
 		del pattern
 
-		if pattern_str.endswith('\\ '):
-			# EDGE CASE: Spaces can be escaped with backslash. If a pattern that ends
-			# with a backslash is followed by a space, do not strip from the left.
-			pass
-		else:
-			# EDGE CASE: Leading spaces should be kept (only trailing spaces should be
-			# removed).
-			pattern_str = pattern_str.rstrip()
+		# EDGE CASE: Trailing spaces are stripped unless they are escaped with a
+		# backslash ('\'). A space is only escaped if it is preceded by an odd
+		# number of consecutive backslashes; an escaped backslash ('\\') itself
+		# does not escape the space that follows it. Determine the longest run of
+		# unescaped trailing spaces, and strip only those. See _trim_trailing_spaces().
+		pattern_str = _trim_trailing_spaces(pattern_str)
 
 		regex: Optional[str]
 		include: Optional[bool]
