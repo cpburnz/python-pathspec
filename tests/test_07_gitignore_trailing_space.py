@@ -101,8 +101,10 @@ class TrailingSpaceAfterEscapedBackslashTest(unittest.TestCase):
 		Tests the behavior through the PathSpec interface.
 		"""
 		spec = PathSpec.from_lines('gitignore', [f'foo{BS * 2} '])
-		self.assertIs(spec.match_file(f'foo{BS}'), True)
-		self.assertIs(spec.match_file(f'foo{BS} '), False)
+		# These POSIX-style paths contain literal backslashes. Keep Windows
+		# from normalizing those characters into directory separators.
+		self.assertIs(spec.match_file(f'foo{BS}', separators=('/',)), True)
+		self.assertIs(spec.match_file(f'foo{BS} ', separators=('/',)), False)
 
 		spec = PathSpec.from_lines('gitignore', [f'foo{BS} '])
 		self.assertIs(spec.match_file('foo '), True)
