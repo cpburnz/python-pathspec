@@ -616,11 +616,15 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		result = GitIgnoreBasicPattern.escape(fname)
 		self.assertEqual(result, escaped)
 
-	def test_09_single_escape_fail(self):
+	def test_09_single_backslash(self):
 		"""
-		Test an escape on a line by itself.
+		Test that a lone backslash is an invalid pattern that never matches. Git
+		treats invalid gitignore patterns as null patterns instead of rejecting the
+		entire set of patterns.
 		"""
-		self._check_invalid_pattern('\\')
+		pattern = GitIgnoreBasicPattern('\\')
+		self.assertIs(pattern.include, None)
+		self.assertIs(pattern.regex, None)
 
 	def test_09_single_exclamation_mark_fail(self):
 		"""
@@ -983,6 +987,21 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		pattern = GitIgnoreBasicPattern('*.py')
 		self.assertEqual(repr(pattern), "GitIgnoreBasicPattern(pattern='*.py', include=True)")
 		self.assertEqual(str(pattern), '*.py')
+
+	def test_17_trailing_backslash(self):
+		"""
+		Test that a pattern ending in one unmatched backslash is invalid, while
+		two trailing backslashes encode one literal backslash.
+		"""
+		for raw_pattern in ['fileA\\', 'fileA\\\n']:
+			with self.subTest(f"p={raw_pattern!r}"):
+				pattern = GitIgnoreBasicPattern(raw_pattern)
+				self.assertIs(pattern.include, None)
+				self.assertIs(pattern.regex, None)
+
+		pattern = GitIgnoreBasicPattern('fileA\\\\')
+		self.assertIs(pattern.include, True)
+		self.assertIsNotNone(pattern.match_file('fileA\\'))
 
 	def test_globstars_match_newlines(self):
 		for pattern, path in [

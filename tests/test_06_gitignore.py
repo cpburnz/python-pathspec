@@ -955,3 +955,20 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			for sub_test in self.parameterize_from_lines([pattern]):
 				with sub_test() as spec:
 					self.assertTrue(spec.match_file(path))
+
+	def test_14_trailing_backslash(self):
+		"""
+		Test that an invalid trailing-backslash pattern does not prevent a later
+		valid pattern from being used.
+		"""
+		spec = GitIgnoreSpec.from_lines([
+			'fileA\\',
+			'*.log',
+		], backend='simple')
+
+		self.assertIs(spec.patterns[0].include, None)
+		self.assertIs(spec.patterns[0].regex, None)
+		self.assertIs(spec.match_file('fileA'), False)
+		self.assertIs(spec.match_file('fileA\\'), False)
+		self.assertIs(spec.match_file('fileA.log'), True)
+		self.assertIs(spec.match_file('fileA.txt'), False)
