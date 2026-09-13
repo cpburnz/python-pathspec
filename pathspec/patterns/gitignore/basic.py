@@ -179,6 +179,14 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 			# a literal hash (i.e., '\#').
 			return (None, None)
 
+		elif original_pattern.rstrip('\r\n').endswith('\\'):
+			pattern_line = original_pattern.rstrip('\r\n')
+			trailing_backslashes = len(pattern_line) - len(pattern_line.rstrip('\\'))
+			if trailing_backslashes % 2:
+				# A pattern ending with an unmatched backslash is invalid and never
+				# matches.
+				return (None, None)
+
 		if pattern_str.startswith('!'):
 			# A pattern starting with an exclamation mark ('!') negates the pattern
 			# (exclude instead of include). Escape the exclamation mark with a back

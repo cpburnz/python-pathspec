@@ -213,6 +213,14 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			# a literal hash (i.e., '\#').
 			return (None, None)
 
+		elif original_pattern.rstrip('\r\n').endswith('\\'):
+			pattern_line = original_pattern.rstrip('\r\n')
+			trailing_backslashes = len(pattern_line) - len(pattern_line.rstrip('\\'))
+			if trailing_backslashes % 2:
+				# A pattern ending with an unmatched backslash is invalid and never
+				# matches.
+				return (None, None)
+
 		elif pattern_str == '/':
 			# EDGE CASE: According to `git check-ignore` (v2.4.1), a single '/' does
 			# not match any file.
