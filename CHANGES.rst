@@ -27,6 +27,7 @@ Bug fixes:
 - `Pull #135`_: Escape trailing spaces in `GitIgnoreSpecPattern.escape()`.
 - `Issue #137`_ / `Pull #138`_: Patterns ending in `/**` no longer match their bare parent directory, preserving traversal to re-included children.
 - `Pull #139`_: Match newline characters in paths with `*` and `**`.
+- `Issue #137`_: The excluded directory rule no longer applies to an ancestor directory which the spec itself re-includes.
 
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
