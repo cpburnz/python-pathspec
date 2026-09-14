@@ -78,18 +78,54 @@ class SimpleGiBackend(SimplePsBackend):
 			):
 				# Pattern matched.
 				if match.match.groupdict().get(_DIR_MARK):
-					# Pattern matched by a directory pattern.
-					if dir_include is None or not is_reversed:
+					# A pattern can match both a strict ancestor of the file and the
+					# file itself, and the engine only ever hands back the leftmost
+					# match. Ask for every directory separator it can match.
+					is_ancestor = is_self = False
+					assert pattern.regex is not None, pattern
+					for dir_match in pattern.regex.finditer(file):
+						if dir_match.groupdict().get(_DIR_MARK) is None:
+							continue
+						elif dir_match.end(_DIR_MARK) < len(file):
+							is_ancestor = True
+						else:
+							is_self = True
+
+					if is_ancestor and (dir_include is None or not is_reversed):
 						dir_include = include
 						dir_index = index
+
+					if is_self and (file_include is None or not is_reversed):
+						file_include = include
+						file_index = index
 				elif file_include is None or not is_reversed:
 					# Pattern matched by a file pattern.
 					file_include = include
 					file_index = index
 
-		if dir_include:
+		if dir_include and self._ancestor_excluded(file):
 			return (dir_include, dir_index)
 		elif file_include is not None:
 			return (file_include, file_index)
+		elif dir_include:
+			# An ancestor matched an exclude pattern, but the spec as a whole
+			# re-includes that ancestor, so the rule does not apply.
+			return (None, None)
 		else:
 			return (dir_include, dir_index)
+
+	def _ancestor_excluded(self, file: str) -> bool:
+		"""
+		Whether any strict ancestor directory of *file* is excluded. Git stops
+		descending at the first excluded directory, so the ancestors are asked
+		outermost first, each as a directory query (trailing slash included).
+		"""
+		index = file.find('/')
+		while index != -1 and index + 1 < len(file):
+			ancestor_include, _ancestor_index = self.match_file(file[:index + 1])
+			if ancestor_include:
+				return True
+			index = file.find('/', index + 1)
+
+		return False
+

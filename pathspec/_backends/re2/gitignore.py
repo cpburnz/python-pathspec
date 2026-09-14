@@ -97,14 +97,17 @@ class Re2GiBackend(Re2PsBackend):
 					# Found directory marker.
 					if regex_str.endswith(_DIR_MARK_OPT):
 						# Regex has optional directory marker. Split regex into directory
-						# and file variants.
+						# and file variants. The directory variant must require a child
+						# segment: without one the query *is* that directory, which is a
+						# direct match and not an excluded ancestor.
 						base_regex = regex_str[:-len(_DIR_MARK_OPT)]
-						use_regexes.append((f'{base_regex}/', True))
-						use_regexes.append((f'{base_regex}$', False))
+						use_regexes.append((f'{base_regex}/(?s:.)', True))
+						use_regexes.append((f'{base_regex}/?$', False))
 					else:
 						# Remove capture group.
 						base_regex = regex_str.replace(_DIR_MARK_CG, '/')
-						use_regexes.append((base_regex, True))
+						use_regexes.append((f'{base_regex}(?s:.)', True))
+						use_regexes.append((f'{base_regex}$', False))
 
 			if not use_regexes:
 				# No special case for regex.
@@ -173,9 +176,29 @@ class Re2GiBackend(Re2PsBackend):
 				file_index = index
 
 		assert dir_index != -1 or file_index != -1, (dir_index, file_index)
-		if dir_include:
+		if dir_include and self._ancestor_excluded(file):
 			return (dir_include, dir_index)
 		elif file_include is not None:
 			return (file_include, file_index)
+		elif dir_include:
+			# An ancestor matched an exclude pattern, but the spec as a whole
+			# re-includes that ancestor, so the rule does not apply.
+			return (None, None)
 		else:
 			return (dir_include, dir_index)
+
+	def _ancestor_excluded(self, file: str) -> bool:
+		"""
+		Whether any strict ancestor directory of *file* is excluded. Git stops
+		descending at the first excluded directory, so the ancestors are asked
+		outermost first, each as a directory query (trailing slash included).
+		"""
+		index = file.find('/')
+		while index != -1 and index + 1 < len(file):
+			ancestor_include, _ancestor_index = self.match_file(file[:index + 1])
+			if ancestor_include:
+				return True
+			index = file.find('/', index + 1)
+
+		return False
+
