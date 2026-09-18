@@ -296,6 +296,30 @@ class _GitIgnoreBasePattern(RegexPattern):
 		return regex
 
 
+
+def trim_trailing_spaces(pattern: str) -> str:
+	"""
+	Remove trailing spaces that are not escaped with a backslash.
+
+	This matches Git's *trim_trailing_spaces()* in *dir.c*: a trailing space is
+	kept only when preceded by an odd number of consecutive backslashes. Extra
+	unescaped spaces after an escaped space are still stripped, and an even
+	backslash run does not escape the following space.
+	"""
+	while pattern.endswith(' '):
+		# Count consecutive backslashes immediately before this trailing space.
+		i = len(pattern) - 2
+		run = 0
+		while i >= 0 and pattern[i] == '\\':
+			run += 1
+			i -= 1
+		if run % 2 == 1:
+			# Odd run → the space is escaped; stop trimming.
+			break
+		pattern = pattern[:-1]
+	return pattern
+
+
 class GitIgnorePatternError(ValueError):
 	"""
 	The :class:`GitIgnorePatternError` class indicates an invalid gitignore

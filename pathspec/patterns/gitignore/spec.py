@@ -21,7 +21,8 @@ from .base import (
 	GitIgnorePatternError,
 	_BYTES_ENCODING,
 	_GitIgnoreBasePattern,
-	_RangeError)
+	_RangeError,
+	trim_trailing_spaces)
 
 _DIR_MARK = 'ps_d'
 """
@@ -190,14 +191,10 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		original_pattern = pattern_str
 		del pattern
 
-		if pattern_str.endswith('\\ '):
-			# EDGE CASE: Spaces can be escaped with backslash. If a pattern that ends
-			# with a backslash is followed by a space, do not strip from the left.
-			pass
-		else:
-			# EDGE CASE: Leading spaces should be kept (only trailing spaces should be
-			# removed). Git does not remove leading spaces.
-			pattern_str = pattern_str.rstrip()
+		# EDGE CASE: Trailing spaces are stripped unless escaped with a backslash.
+		# A space is escaped only when preceded by an odd number of consecutive
+		# backslashes (Git dir.c trim_trailing_spaces). Leading spaces are kept.
+		pattern_str = trim_trailing_spaces(pattern_str)
 
 		regex: Optional[str]
 		include: Optional[bool]
