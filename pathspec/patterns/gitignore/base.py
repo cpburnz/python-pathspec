@@ -68,7 +68,6 @@ def _strip_trailing_ws(pattern: str) -> str:
 	Returns the modified pattern (:class:`str`).
 	"""
 	i = len(pattern) - 1
-
 	if i == -1 or not pattern[i].isspace():
 		# Fast path: pattern does not end with whitespace. Nothing to strip.
 		return pattern
@@ -85,7 +84,6 @@ def _strip_trailing_ws(pattern: str) -> str:
 		i -= 1
 
 	bs_count = last_ws - i - 1
-
 	if bs_count % 2 == 1:
 		# Odd count, first whitespace character is escaped, strip the rest.
 		last_ws += 1
