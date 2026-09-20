@@ -58,6 +58,42 @@ class _InvalidPosixClass(Exception):
 	pass
 
 
+def _strip_trailing_ws(pattern: str) -> str:
+	"""
+	Strip trailing whitespace from the pattern while considering that whitespace
+	can be escaped.
+
+	*pattern* (:class:`str`) is the pattern.
+
+	Returns the modified pattern (:class:`str`).
+	"""
+	i = len(pattern) - 1
+
+	if i == -1 or not pattern[i].isspace():
+		# Fast path: pattern does not end with whitespace. Nothing to strip.
+		return pattern
+
+	# Scan past whitespace.
+	i -= 1
+	while i >= 0 and pattern[i].isspace():
+		i -= 1
+
+	last_ws = i + 1
+
+	# Count backslashes.
+	while i >= 0 and pattern[i] == '\\':
+		i -= 1
+
+	bs_count = last_ws - i - 1
+
+	if bs_count % 2 == 1:
+		# Odd count, first whitespace character is escaped, strip the rest.
+		last_ws += 1
+
+	# Strip trailing whitespace.
+	return pattern[:last_ws]
+
+
 def _translate_posix_class(match: 're.Match') -> str:
 	"""
 	Translate a single POSIX character class token to its ASCII regex range.

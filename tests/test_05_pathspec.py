@@ -427,17 +427,6 @@ class PathSpecTest(unittest.TestCase):
 					'abc ',
 				}, debug)
 
-	def test_01_empty_path_2(self):
-		"""
-		Tests that patterns that end with an escaped space will be treated properly.
-		"""
-		with self.assertRaises(GitIgnorePatternError):
-			# An escape with double spaces is invalid. Disallow it. Better to be
-			# safe than sorry.
-			PathSpec.from_lines('gitignore', [
-				'\\  ',
-			], backend='simple')
-
 	def test_01_match_file_1_include(self):
 		"""
 		Test matching a single file that is included.

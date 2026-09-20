@@ -18,7 +18,8 @@ from pathspec._typing import (
 from .base import (
 	GitIgnorePatternError,
 	_BYTES_ENCODING,
-	_GitIgnoreBasePattern)
+	_GitIgnoreBasePattern,
+	_strip_trailing_ws)
 
 
 class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
@@ -156,14 +157,8 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 		original_pattern = pattern_str
 		del pattern
 
-		if pattern_str.endswith('\\ '):
-			# EDGE CASE: Spaces can be escaped with backslash. If a pattern that ends
-			# with a backslash is followed by a space, do not strip from the left.
-			pass
-		else:
-			# EDGE CASE: Leading spaces should be kept (only trailing spaces should be
-			# removed).
-			pattern_str = pattern_str.rstrip()
+		# Strip trailing whitespace.
+		pattern_str = _strip_trailing_ws(pattern_str)
 
 		regex: Optional[str]
 		include: Optional[bool]
