@@ -27,6 +27,7 @@ Bug fixes:
 - `Pull #135`_: Escape trailing spaces in `GitIgnoreSpecPattern.escape()`.
 - `Issue #137`_ / `Pull #138`_: Patterns ending in `/**` no longer match their bare parent directory, preserving traversal to re-included children.
 - `Pull #139`_: Match newline characters in paths with `*` and `**`.
+- `Pull #142`_: Fix trailing-space trimming after escaped backslashes.
 
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
@@ -41,6 +42,7 @@ Bug fixes:
 .. _`Issue #137`: https://github.com/cpburnz/python-pathspec/issues/137
 .. _`Pull #138`: https://github.com/cpburnz/python-pathspec/pull/138
 .. _`Pull #139`: https://github.com/cpburnz/python-pathspec/pull/139
+.. _`Pull #142`: https://github.com/cpburnz/python-pathspec/pull/142
 
 
 1.1.1 (2026-04-26)
