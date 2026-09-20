@@ -277,7 +277,7 @@ def iter_tree_entries(
 
 	root_abs = os.path.abspath(root)
 
-	# Ensure sub_dir does not escape root.
+	# Ensure subdir does not escape root.
 	if subdir is not None:
 		dir_rel = _get_sub_path_safe(root_abs, subdir)
 	else:
