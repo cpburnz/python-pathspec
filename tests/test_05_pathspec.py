@@ -402,19 +402,21 @@ class PathSpecTest(unittest.TestCase):
 					'./src/test2/c/c.txt',
 				}, debug)
 
-	def test_01_empty_path_1(self):
+	def test_01_escaped_path_1(self):
 		"""
 		Tests that patterns that end with an escaped space will be treated properly.
 		"""
 		for sub_test in self.parameterize_from_lines('gitignore', [
 			'\\ ',
 			'abc\\ ',
+			'foo\\\\\\\\  ',
 		]):
 			with sub_test() as spec:
 				files = {
 					' ',
 					'  ',
 					'abc ',
+					'foo\\\\',
 					'somefile',
 				}
 
@@ -425,6 +427,7 @@ class PathSpecTest(unittest.TestCase):
 				self.assertEqual(includes, {
 					' ',
 					'abc ',
+					'foo\\\\',
 				}, debug)
 
 	def test_01_match_file_1_include(self):
