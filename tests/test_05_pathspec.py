@@ -1145,3 +1145,20 @@ class PathSpecTest(unittest.TestCase):
 			repr(spec),
 			"PathSpec(patterns=[GitIgnoreBasicPattern(pattern='*.py', include=True)], backend='simple')",
 		)
+
+	def test_12_trailing_backslash(self):
+		"""
+		Test that an invalid trailing-backslash pattern does not prevent a later
+		valid pattern from being used.
+		"""
+		spec = PathSpec.from_lines('gitignore', [
+			'fileA\\',
+			'*.log',
+		], backend='simple')
+
+		self.assertIs(spec.patterns[0].include, None)
+		self.assertIs(spec.patterns[0].regex, None)
+		self.assertIs(spec.match_file('fileA'), False)
+		self.assertIs(spec.match_file('fileA\\'), False)
+		self.assertIs(spec.match_file('fileA.log'), True)
+		self.assertIs(spec.match_file('fileA.txt'), False)
