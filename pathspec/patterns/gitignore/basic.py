@@ -133,6 +133,14 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 		"""
 		Convert the pattern into a regular expression.
 
+		Raises :class:`~pathspec.patterns.gitignore.base.GitIgnorePatternError`
+		for invalid patterns, including a bare ``!`` (also when followed by
+		unescaped trailing spaces) or an unmatched trailing backslash. Unlike
+		blank lines and comments, these inputs do not return ``(None, None)``.
+		Git accepts these lines without a diagnostic, so callers reading ignore
+		files must be prepared to handle this exception even when Git accepts
+		the file.
+
 		*pattern* (:class:`str` or :class:`bytes`) is the pattern to convert into a
 		regular expression.
 
