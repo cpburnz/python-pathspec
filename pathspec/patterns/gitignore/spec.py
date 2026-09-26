@@ -231,12 +231,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		regex: Optional[str]
 		include: Optional[bool]
 
-		if not pattern_str:
-			# A blank pattern is a null-operation (neither includes nor excludes
-			# files).
-			return (None, None)
-
-		elif pattern_str.startswith('#'):
+		if pattern_str.startswith('#'):
 			# A pattern starting with a hash ('#') serves as a comment (neither
 			# includes nor excludes files). Escape the hash with a backslash to match
 			# a literal hash (i.e., '\#').
@@ -256,6 +251,11 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			pattern_str = pattern_str[1:]
 		else:
 			include = True
+
+		if not pattern_str:
+			# A blank pattern is a null-operation (neither includes nor excludes
+			# files).
+			return (None, None)
 
 		# Split pattern into segments.
 		orig_segs = pattern_str.split('/')

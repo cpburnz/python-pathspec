@@ -645,8 +645,9 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 		"""
 		for errors in ('literal', 'null', 'raise'):
 			with self.subTest(errors):
-				with self.assertRaises(GitIgnorePatternError):
-					_pattern = GitIgnoreSpecPattern('!', errors=errors)
+				pattern = GitIgnoreSpecPattern('!', errors=errors)
+				self.assertIsNone(pattern.include)
+				self.assertIsNone(pattern.regex)
 
 	def test_10_escape_asterisk_end(self):
 		"""
