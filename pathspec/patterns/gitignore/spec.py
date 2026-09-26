@@ -10,6 +10,7 @@ fully replicate Git's handling.
 """
 
 from typing import (
+	Literal,
 	Optional)  # Replaced by `X | None` in 3.10.
 
 from pathspec._typing import (
@@ -21,7 +22,9 @@ from .base import (
 	GitIgnorePatternError,
 	_BYTES_ENCODING,
 	_GitIgnoreBasePattern,
-	_RangeError,
+	_PosixClassError,
+	_RangeNotationError,
+	_TrailingBackslashError,
 	_strip_trailing_ws)
 
 _DIR_MARK = 'ps_d'
@@ -75,6 +78,8 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 		*pattern_segs* (:class:`list` of :class:`str`) contains the pattern
 		segments. This may be modified in place.
+
+		Raises :exc:`ValueError` if the pattern normalizes to nothing.
 
 		Returns a :class:`tuple` containing either:
 
@@ -163,6 +168,8 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 	def pattern_to_regex(
 		cls,
 		pattern: AnyStr,
+		*,
+		errors: Optional[Literal['literal', 'null', 'raise']] = None,
 	) -> tuple[Optional[AnyStr], Optional[bool]]:
 		"""
 		Convert the pattern into a regular expression.
@@ -170,14 +177,28 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		*pattern* (:class:`str` or :class:`bytes`) is the pattern to convert into a
 		regular expression.
 
+		*errors* (:class:`str` :data:`None`) is how to handle invalid notation in
+		the pattern. Default is :data:`None` for :data:`'null'` because that is the
+		behavior of Git.
+
+		-	:data:`'literal'`: Most invalid notation will be treated as a literal
+			string instead of resulting in a null-operation.
+
+		-	:data:`'null'`: Invalid notation will result in a null-operation.
+
+		-	:data:`'raise'`: Invalid notation will raise a :exc:`GitIgnorePatternError`.
+
+		Raises :exc:`GitIgnorePatternError` if the pattern fails to process,
+		regardless of the value of *errors*.
+
 		Returns a :class:`tuple` containing:
 
-			-	*pattern* (:class:`str`, :class:`bytes` or :data:`None`) is the
-				uncompiled regular expression.
+		-	*pattern* (:class:`str`, :class:`bytes` or :data:`None`) is the uncompiled
+			regular expression.
 
-			-	*include* (:class:`bool` or :data:`None`) is whether matched files
-				should be included (:data:`True`), excluded (:data:`False`), or is a
-				null-operation (:data:`None`).
+		-	*include* (:class:`bool` or :data:`None`) is whether matched files should
+			be included (:data:`True`), excluded (:data:`False`), or is a
+			null-operation (:data:`None`).
 		"""
 		if isinstance(pattern, str):
 			pattern_str = pattern
@@ -190,6 +211,19 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 		original_pattern = pattern_str
 		del pattern
+
+		if errors is None:
+			errors = 'null'
+		elif errors not in ('literal', 'null', 'raise'):
+			raise ValueError(f"{errors=!r} is not a valid value.")
+
+		seg_errors: Literal['literal', 'raise']
+		if errors == 'null':
+			seg_errors = 'raise'
+		elif errors in ('literal', 'raise'):
+			seg_errors = errors
+		else:
+			assert_unreachable(f"Failed to map {errors=!r} to seg_errors.")
 
 		# Strip trailing whitespace.
 		pattern_str = _strip_trailing_ws(pattern_str)
@@ -247,14 +281,25 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		elif pattern_segs is not None:
 			# Build regular expression from pattern.
 			try:
-				regex_parts = cls.__translate_segments(is_dir_pattern, pattern_segs)
-			except _RangeError:
-				# EDGE CASE: Git discards patterns with invalid range notation.
-				return (None, None)
-			except ValueError as e:
-				raise GitIgnorePatternError((
-					f"Invalid git pattern: {original_pattern!r}"
-				)) from e  # GitIgnorePatternError
+				regex_parts = cls.__translate_segments(
+					seg_errors, is_dir_pattern, pattern_segs,
+				)
+			except (_PosixClassError, _RangeNotationError) as e:
+				if errors == 'raise':
+					raise GitIgnorePatternError((
+						f"Invalid git pattern: {original_pattern!r}"
+					)) from e  # GitIgnorePatternError
+				else:
+					return (None, None)
+			except _TrailingBackslashError as e:
+				# EDGE CASE: The gitignore docs say a trailing backlash is invalid and
+				# never matches.
+				if errors == 'raise':
+					raise GitIgnorePatternError((
+						f"Invalid git pattern: {original_pattern!r}"
+					)) from e  # GitIgnorePatternError
+				else:
+					return (None, None)
 
 			regex = ''.join(regex_parts)
 
@@ -276,11 +321,19 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 	@classmethod
 	def __translate_segments(
 		cls,
+		errors: Literal['literal', 'raise'],
 		is_dir_pattern: bool,
 		pattern_segs: list[str],
 	) -> list[str]:
 		"""
 		Translate the pattern segments to regular expressions.
+
+		*errors* (:class:`str`) is how to handle invalid pattern notation in the
+		pattern:
+
+		-	:data:`'literal'`: Invalid notation will be treated as a literal string.
+
+		-	:data:`'raise'`: Invalid notation will raise an exception.
 
 		*is_dir_pattern* (:class:`bool`) is whether the pattern is a directory
 		pattern (i.e., ends with a slash '/').
@@ -288,7 +341,14 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		*pattern_segs* (:class:`list` of :class:`str`) contains the pattern
 		segments.
 
-		Raises :class:`_RangeError` if invalid range notation is found.
+		Raises :exc:`_PosixClassError` when an invalid POXIS class is found and
+		*errors* is :data:`'literal'`.
+
+		Raises :exc:`_RangeNotationError` when an invalid range notation is found
+		and *errors* is :data:`'literal'`.
+
+		Raises :exc:`_TrailingBackslashError` when a trailing backslash is found at
+		the end of the pattern, regardless of the value of *errors*.
 
 		Returns the regular expression parts (:class:`list` of :class:`str`).
 		"""
@@ -334,7 +394,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 				else:
 					# Match segment glob pattern.
 					# - EDGE CASE: Git discards patterns with invalid range notation.
-					out_parts.append(cls._translate_segment_glob(seg, 'raise'))
+					out_parts.append(cls._translate_segment_glob(seg, errors))
 
 				if i == end:
 					# A pattern ending without a slash ('/') will match a file or a

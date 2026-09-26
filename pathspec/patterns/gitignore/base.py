@@ -3,15 +3,15 @@ This module provides common classes for the gitignore patterns.
 """
 
 import re
-
 from typing import (
-	Literal)
+	Literal,
+	Optional,  # Replaced by `X | None` in 3.10.
+	Union)  # Replaced by `X | Y` in 3.10.
 
 from pathspec.pattern import (
 	RegexPattern)
 from pathspec._typing import (
-	AnyStr,  # Removed in 3.18.
-	assert_unreachable)
+	AnyStr)  # Removed in 3.18.
 
 _BYTES_ENCODING = 'latin1'
 """
@@ -22,8 +22,8 @@ _POSIX_CLASS_TO_REGEX = {
 	# Git's wildmatch implements POSIX bracket character classes using its own
 	# ASCII (locale-independent) ``is*`` functions, so each class maps to an
 	# explicit ASCII set. These are NOT the Unicode-aware equivalents (``\w``,
-	# ``\d``, ``\s``); using those would over-match non-ASCII characters that
-	# git never matches.
+	# ``\d``, ``\s``); using those would over-match non-ASCII characters that git
+	# never matches.
 	'alnum': '0-9A-Za-z',
 	'alpha': 'A-Za-z',
 	'blank': '\\t ',
@@ -48,14 +48,6 @@ Matches a POSIX bracket character class token such as ``[:alpha:]`` inside a
 bracket expression. Group 1 captures a leading caret (unsupported by git);
 group 2 captures the class name.
 """
-
-
-class _InvalidPosixClass(Exception):
-	"""
-	Raised internally when a bracket expression contains an unknown or negated
-	POSIX character class name. Git treats such a pattern as malformed.
-	"""
-	pass
 
 
 def _strip_trailing_ws(pattern: str) -> str:
@@ -95,13 +87,17 @@ def _strip_trailing_ws(pattern: str) -> str:
 def _translate_posix_class(match: 're.Match') -> str:
 	"""
 	Translate a single POSIX character class token to its ASCII regex range.
-	Raises :class:`_InvalidPosixClass` for a negated (``[:^name:]``) or unknown
+	Raises :class:`_PosixClassError` for a negated (``[:^name:]``) or unknown
 	class name, matching git's treatment of it as a malformed pattern.
 	"""
-	negated, name = match.group(1), match.group(2)
+	negated, name = match.group(1, 2)
 	class_regex = _POSIX_CLASS_TO_REGEX.get(name)
 	if negated or class_regex is None:
-		raise _InvalidPosixClass()
+		raise _PosixClassError((
+			f"Invalid character class={match.group(0)!r} found in pattern="
+			f"{match.string!r}."
+		))  # _PosixClassError
+
 	return class_regex
 
 
@@ -116,6 +112,37 @@ class _GitIgnoreBasePattern(RegexPattern):
 
 	# Keep the dict-less class hierarchy.
 	__slots__ = ()
+
+	def __init__(
+		self,
+		pattern: Union[AnyStr, re.Pattern, None],
+		include: Optional[bool] = None,
+		*,
+		errors: Optional[Literal['literal', 'null', 'raise']] = None,
+	) -> None:
+		"""
+		Initializes the :class:`_GitIgnoreBasePattern` instance.
+
+		*pattern* (:class:`str`, :class:`bytes`, :class:`re.Pattern`, or
+		:data:`None`) is the pattern to compile into a regular expression.
+
+		*include* (:class:`bool` or :data:`None`) must be :data:`None` unless
+		*pattern* is a precompiled regular expression (:class:`re.Pattern`) in which
+		case it is whether matched files should be included (:data:`True`), excluded
+		(:data:`False`), or is a null operation (:data:`None`).
+
+		*errors* (:class:`str` :data:`None`) is how to handle invalid notation in
+		the pattern. Default is :data:`None` for :data:`'null'` because that is the
+		behavior of Git.
+
+		-	:data:`'literal'`: Most invalid notation will be treated as a literal
+			string instead of resulting in a null-operation.
+
+		-	:data:`'null'`: Invalid notation will result in a null-operation.
+
+		-	:data:`'raise'`: Invalid notation will raise a :exc:`GitIgnorePatternError`.
+		"""
+		super().__init__(pattern, include, errors=errors)
 
 	@staticmethod
 	def escape(s: AnyStr) -> AnyStr:
@@ -156,7 +183,7 @@ class _GitIgnoreBasePattern(RegexPattern):
 	@staticmethod
 	def _translate_segment_glob(
 		pattern: str,
-		range_error: Literal['literal', 'raise'],
+		errors: Literal['literal', 'raise'],
 	) -> str:
 		"""
 		Translates the glob pattern to a regular expression. This is used in the
@@ -165,13 +192,21 @@ class _GitIgnoreBasePattern(RegexPattern):
 
 		*pattern* (:class:`str`) is the glob pattern.
 
-		*range_error* (:class:`int`) is how to handle invalid range notation in the
+		*errors* (:class:`str`) is how to handle invalid pattern notation in the
 		pattern:
 
-		-	:data:`"literal"`: Invalid notation will be treated as a literal string.
+		-	:data:`'literal'`: Invalid notation will be treated as a literal string.
 
-		-	:data:`"raise"`: Invalid notation will cause a :class:`_RangeError` to be
-			raised.
+		-	:data:`'raise'`: Invalid notation will raise an exception.
+
+		Raises :exc:`_PosixClassError` when an invalid POXIS class is found and
+		*errors* is :data:`'raise'`.
+
+		Raises :exc:`_RangeNotationError` when an invalid range notation is found
+		and *errors* is :data:`'raise'`.
+
+		Raises :exc:`_TrailingBackslashError` when a trailing backslash is found at
+		the end of the pattern, regardless of the value of *errors*.
 
 		Returns the regular expression (:class:`str`).
 		"""
@@ -228,8 +263,8 @@ class _GitIgnoreBasePattern(RegexPattern):
 				while j < end and pattern[j] != ']':
 					if pattern[j] == '[' and j + 1 < end and pattern[j + 1] == ':':
 						# Skip over a POSIX character class token ("[:name:]") so its
-						# internal closing bracket is not mistaken for the end of the
-						# whole bracket expression.
+						# internal closing bracket is not mistaken for the end of the whole
+						# bracket expression.
 						close = pattern.find(':]', j + 2)
 						if close == -1:
 							j = end
@@ -267,19 +302,17 @@ class _GitIgnoreBasePattern(RegexPattern):
 					body = pattern[i:j].replace('\\', '\\\\')
 
 					# Translate POSIX character classes (e.g. "[:alpha:]") into their
-					# ASCII regex equivalents. Git's wildmatch supports these but
+					# ASCII regex equivalents. Git's wildmatch supports these, but
 					# Python's `re` does not, so passing them through verbatim builds a
 					# broken regex that silently mismatches (and warns about a nested
 					# set).
 					try:
 						body = _POSIX_CLASS_REGEX.sub(_translate_posix_class, body)
-					except _InvalidPosixClass:
-						# Git treats an unknown or negated class name as a malformed
-						# pattern that matches nothing.
-						if range_error == 'raise':
-							raise _RangeError((
-								f"Invalid character class found in pattern={pattern!r}."
-							))
+					except _PosixClassError:
+						if errors == 'raise':
+							# EDGE CASE: Git discards patterns with an invalid range notation
+							# or an invalid POSIX class.
+							raise
 						else:
 							# Treat the whole bracket expression as a literal.
 							regex += re.escape(pattern[bracket_start:j])
@@ -288,11 +321,11 @@ class _GitIgnoreBasePattern(RegexPattern):
 
 					expr += body
 
-					if range_error == 'raise':
+					if errors == 'raise':
 						try:
 							re.compile(expr)
-						except re.error as e:
-							raise _RangeError((
+						except re.error as e:  # Renamed to `re.PatternError` in 3.13.
+							raise _RangeNotationError((
 								f"Invalid range notation={pattern[i:j]!r} found in "
 								f"pattern={pattern!r}."
 							)) from e
@@ -305,27 +338,24 @@ class _GitIgnoreBasePattern(RegexPattern):
 
 				else:
 					# Failed to find closing bracket.
-					if range_error == 'literal':
+					if errors == 'raise':
+						# Treat invalid range notation as an error.
+						raise _RangeNotationError((
+							f"Invalid range notation={pattern[i:j]!r} found in {pattern=!r}."
+						))
+					else:
 						# Treat opening bracket as a bracket literal instead of as an
 						# expression.
 						regex += '\\['
-					elif range_error == 'raise':
-						# Treat invalid range notation as an error.
-						raise _RangeError((
-							f"Invalid range notation={pattern[i:j]!r} found in pattern="
-							f"{pattern!r}."
-						))
-					else:
-						assert_unreachable(f"{range_error=!r} is invalid.")
 
 			else:
 				# Regular character, escape it for regex.
 				regex += re.escape(char)
 
 		if escape:
-			raise ValueError((
-				f"Escape character found with no next character to escape: {pattern!r}"
-			))  # ValueError
+			# Trailing backslash found. According to the gitignore docs, this "is an
+			# invalid pattern that never matches".
+			raise _TrailingBackslashError()
 
 		return regex
 
@@ -338,9 +368,25 @@ class GitIgnorePatternError(ValueError):
 	pass
 
 
-class _RangeError(GitIgnorePatternError):
+class _PosixClassError(GitIgnorePatternError):
 	"""
-	The :class:`_RangeError` class indicates an invalid range notation was found
-	in a gitignore pattern.
+	Raised internally when a bracket expression contains an unknown or negated
+	POSIX character class name. Git treats such a pattern as malformed.
+	"""
+	pass
+
+
+class _RangeNotationError(GitIgnorePatternError):
+	"""
+	Raised internally when an invalid range notation was found in a gitignore
+	pattern.
+	"""
+	pass
+
+
+class _TrailingBackslashError(GitIgnorePatternError):
+	"""
+	Raised internally when a trailing backslash is found at the end of a gitignore
+	pattern.
 	"""
 	pass

@@ -29,11 +29,6 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 	implementation.
 	"""
 
-	def _check_invalid_pattern(self, git_ignore_pattern: str) -> None:
-		expected_message_pattern = re.escape(git_ignore_pattern)
-		with self.assertRaisesRegex(GitIgnorePatternError, expected_message_pattern):
-			GitIgnoreBasicPattern(git_ignore_pattern)
-
 	def test_00_empty(self):
 		"""
 		Tests an empty pattern.
@@ -616,17 +611,28 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		result = GitIgnoreBasicPattern.escape(fname)
 		self.assertEqual(result, escaped)
 
-	def test_09_single_escape_fail(self):
+	def test_09_single_backslash_fail(self):
 		"""
-		Test an escape on a line by itself.
+		Test a backslash on a line by itself.
 		"""
-		self._check_invalid_pattern('\\')
+		for errors in ('literal', 'null'):
+			with self.subTest(errors):
+				pattern = GitIgnoreBasicPattern('\\', errors=errors)
+				self.assertIsNone(pattern.include)
+				self.assertIsNone(pattern.regex)
+
+		with self.subTest('raise'):
+			with self.assertRaises(GitIgnorePatternError):
+				_pattern = GitIgnoreBasicPattern('\\', errors='raise')
 
 	def test_09_single_exclamation_mark_fail(self):
 		"""
-		Test an escape on a line by itself.
+		Test an exclamation mark on a line by itself.
 		"""
-		self._check_invalid_pattern('!')
+		for errors in ('literal', 'null', 'raise'):
+			with self.subTest(errors):
+				with self.assertRaises(GitIgnorePatternError):
+					_pattern = GitIgnoreBasicPattern('!', errors=errors)
 
 	def test_10_escape_asterisk_end(self):
 		"""
