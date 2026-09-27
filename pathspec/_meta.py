@@ -75,5 +75,6 @@ __credits__ = [
 	"Jack Walker <https://github.com/jackwalkerlabs>",
 	"Ryan Chou <https://github.com/ryanchou1994>",
 	"Cristian Ramirez <https://github.com/Str0k>",
+	"SergiPantoja <https://github.com/SergiPantoja>",
 ]
 __license__ = "MPL 2.0"

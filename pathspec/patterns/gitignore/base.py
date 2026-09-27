@@ -136,7 +136,8 @@ class _GitIgnoreBasePattern(RegexPattern):
 		behavior of Git.
 
 		-	:data:`'literal'`: Most invalid notation will be treated as a literal
-			string instead of resulting in a null-operation.
+			string. In cases where the gitignore documentation clearly states the
+			pattern should never match, a null-operation will be returned.
 
 		-	:data:`'null'`: Invalid notation will result in a null-operation.
 
