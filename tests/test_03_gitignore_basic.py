@@ -616,12 +616,12 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		Test a backslash on a line by itself.
 		"""
 		for errors in ('literal', 'null'):
-			with self.subTest(errors):
+			with self.subTest(f"{errors=}"):
 				pattern = GitIgnoreBasicPattern('\\', errors=errors)
 				self.assertIsNone(pattern.include)
 				self.assertIsNone(pattern.regex)
 
-		with self.subTest('raise'):
+		with self.subTest('errors=raise'):
 			with self.assertRaises(GitIgnorePatternError):
 				_pattern = GitIgnoreBasicPattern('\\', errors='raise')
 
@@ -630,7 +630,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		Test an exclamation mark on a line by itself.
 		"""
 		for errors in ('literal', 'null', 'raise'):
-			with self.subTest(errors):
+			with self.subTest(f"{errors=}"):
 				pattern = GitIgnoreBasicPattern('!', errors=errors)
 				self.assertIsNone(pattern.include)
 				self.assertIsNone(pattern.regex)
