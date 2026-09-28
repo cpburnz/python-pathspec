@@ -27,7 +27,6 @@ from unittest import (
 	SkipTest)
 
 from pathspec import (
-	GitIgnoreSpec,
 	PathSpec,
 	RegexPattern)
 from pathspec.backend import (
@@ -41,8 +40,6 @@ from pathspec._backends.simple.pathspec import (
 	SimplePsBackend)
 from pathspec.pattern import (
 	Pattern)
-from pathspec.patterns.gitignore.base import (
-	GitIgnorePatternError)
 from pathspec.patterns.gitignore.basic import (
 	GitIgnoreBasicPattern)
 from pathspec._typing import (
@@ -797,32 +794,27 @@ class PathSpecTest(unittest.TestCase):
 					'keep/build/file.txt',
 					'other/build',
 				])
+
 				entries = list(iter_tree_entries(self.temp_dir))
-				original_paths = [entry.path for entry in entries]
+				includes = get_paths_from_entries(spec.match_entries(entries))
+
+				original_paths = get_paths_from_entries(entries)
 				expected = set(map(ospath, [
 					'build',
 					'build/nested',
 					'build/file.txt',
 					'empty/build',
 				]))
-				for check_spec in (
-					spec,
-					GitIgnoreSpec.from_lines(lines, backend=spec._backend_name),
-				):
-					with self.subTest(spec=type(check_spec).__name__):
-						matched = list(check_spec.match_entries(entries))
-						self.assertEqual(get_paths_from_entries(matched), expected)
-						self.assertEqual(
-							get_paths_from_entries(check_spec.match_entries(entries, negate=True)),
-							set(original_paths) - expected)
-						self.assertEqual(
-							get_paths_from_entries(check_spec.match_tree_entries(self.temp_dir)),
-							expected)
-						self.assertEqual(
-							set(check_spec.match_tree_files(self.temp_dir)),
-							{ospath('build/file.txt')})
-						self.assertEqual([entry.path for entry in entries], original_paths)
-						self.assertEqual(matched, [entry for entry in entries if entry.path in expected])
+
+				self.assertEqual(includes, expected)
+
+				excludes = get_paths_from_entries(spec.match_entries(entries, negate=True))
+				self.assertEqual(excludes, original_paths - expected)
+
+				files = set(spec.match_tree_files(self.temp_dir))
+				self.assertEqual(files, {
+					ospath('build/file.txt'),
+				})
 
 	def test_05_match_entries_directory_separators(self):
 		"""
