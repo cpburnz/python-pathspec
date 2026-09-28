@@ -29,7 +29,7 @@ Bug fixes:
 - `Issue #137`_ / `Pull #138`_: Patterns ending in `/**` no longer match their bare parent directory, preserving traversal to re-included children.
 - `Pull #139`_: Match newline characters in paths with `*` and `**`.
 - `Pull #142`_: Fix trailing-space trimming after escaped backslashes.
-- `Issue #146`_: `pattern_to_regex raises on three lines git accepts (bare '!', '! ', lone '\').
+- `Issue #146`_: pattern_to_regex raises on three lines git accepts (bare '!', '! ', lone '\').
 
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116

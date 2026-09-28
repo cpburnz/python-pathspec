@@ -132,16 +132,16 @@ class _GitIgnoreBasePattern(RegexPattern):
 		(:data:`False`), or is a null operation (:data:`None`).
 
 		*errors* (:class:`str` :data:`None`) is how to handle invalid notation in
-		the pattern. Default is :data:`None` for :data:`'null'` because that is the
+		the pattern. Default is :data:`None` for ``'null'`` because that is the
 		behavior of Git.
 
-		-	:data:`'literal'`: Most invalid notation will be treated as a literal
-			string. In cases where the gitignore documentation clearly states the
-			pattern should never match, a null-operation will be returned.
+		-	``'literal'``: Most invalid notation will be treated as a literal string.
+			In cases where the gitignore documentation clearly states the pattern
+			should never match, a null-operation will be returned.
 
-		-	:data:`'null'`: Invalid notation will result in a null-operation.
+		-	``'null'``: Invalid notation will result in a null-operation.
 
-		-	:data:`'raise'`: Invalid notation will raise a :exc:`GitIgnorePatternError`.
+		-	``'raise'``: Invalid notation will raise a :exc:`GitIgnorePatternError`.
 		"""
 		super().__init__(pattern, include, errors=errors)
 
@@ -196,17 +196,17 @@ class _GitIgnoreBasePattern(RegexPattern):
 		*errors* (:class:`str`) is how to handle invalid pattern notation in the
 		pattern:
 
-		-	:data:`'literal'`: Invalid notation will be treated as a literal string.
+		-	``'literal'``: Invalid notation will be treated as a literal string.
 
-		-	:data:`'raise'`: Invalid notation will raise an exception.
+		-	``'raise'``: Invalid notation will raise an exception.
 
-		Raises :exc:`_PosixClassError` when an invalid POXIS class is found and
-		*errors* is :data:`'raise'`.
+		Raises :exc:`._PosixClassError` when an invalid POXIS class is found and
+		*errors* is ``'raise'``.
 
-		Raises :exc:`_RangeNotationError` when an invalid range notation is found
-		and *errors* is :data:`'raise'`.
+		Raises :exc:`._RangeNotationError` when an invalid range notation is found
+		and *errors* is ``'raise'``.
 
-		Raises :exc:`_TrailingBackslashError` when a trailing backslash is found at
+		Raises :exc:`._TrailingBackslashError` when a trailing backslash is found at
 		the end of the pattern, regardless of the value of *errors*.
 
 		Returns the regular expression (:class:`str`).

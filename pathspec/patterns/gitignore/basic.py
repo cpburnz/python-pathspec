@@ -145,18 +145,18 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 		regular expression.
 
 		*errors* (:class:`str` :data:`None`) is how to handle invalid notation in
-		the pattern. Default is :data:`None` for :data:`'literal'` because that is
+		the pattern. Default is :data:`None` for ``'literal'`` because that is
 		historic behavior of this library.
 
-		-	:data:`'literal'`: Most invalid notation will be treated as a literal
+		-	``'literal'``: Most invalid notation will be treated as a literal
 			string. In cases where the gitignore documentation clearly states the
 			pattern should never match, a null-operation will be returned.
 
-		-	:data:`'null'`: Invalid notation will result in a null-operation.
+		-	``'null'``: Invalid notation will result in a null-operation.
 
-		-	:data:`'raise'`: Invalid notation will raise a :exc:`GitIgnorePatternError`.
+		-	``'raise'``: Invalid notation will raise a :exc:`.GitIgnorePatternError`.
 
-		Raises :exc:`GitIgnorePatternError` if the pattern fails to process,
+		Raises :exc:`.GitIgnorePatternError` if the pattern fails to process,
 		regardless of the value of *errors*.
 
 		Returns a :class:`tuple` containing:
@@ -304,9 +304,9 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 		*errors* (:class:`str`) is how to handle invalid pattern notation in the
 		pattern:
 
-		-	:data:`'literal'`: Invalid notation will be treated as a literal string.
+		-	``'literal'``: Invalid notation will be treated as a literal string.
 
-		-	:data:`'raise'`: Invalid notation will raise an exception.
+		-	``'raise'``: Invalid notation will raise an exception.
 
 		*is_dir_pattern* (:class:`bool`) is whether the original pattern ends
 		with a slash.
@@ -315,10 +315,10 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 		segments.
 
 		Raises :exc:`_PosixClassError` when an invalid POXIS class is found and
-		*errors* is :data:`'literal'`.
+		*errors* is ``'literal'``.
 
 		Raises :exc:`_RangeNotationError` when an invalid range notation is found
-		and *errors* is :data:`'literal'`.
+		and *errors* is ``'literal'``.
 
 		Raises :exc:`_TrailingBackslashError` when a trailing backslash is found at
 		the end of the pattern, regardless of the value of *errors*.
