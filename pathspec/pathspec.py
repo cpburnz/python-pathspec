@@ -359,6 +359,8 @@ class PathSpec(Generic[TPattern_co]):
 
 		*entries* (:class:`~collections.abc.Iterable` of :class:`.TreeEntry`)
 		contains the entries to be matched against :attr:`self.patterns <.PathSpec.patterns>`.
+		Directory entries are matched with a trailing path separator, without
+		changing their :attr:`~.TreeEntry.path` attributes.
 
 		*separators* (:class:`~collections.abc.Collection` of :class:`str`; or
 		:data:`None`) optionally contains the path separators to normalize. See
@@ -377,6 +379,8 @@ class PathSpec(Generic[TPattern_co]):
 
 		for entry in entries:
 			norm_file = normalize_file(entry.path, separators)
+			if entry.is_dir() and not norm_file.endswith('/'):
+				norm_file += '/'
 			include, _index = self._backend.match_file(norm_file)
 
 			if negate:

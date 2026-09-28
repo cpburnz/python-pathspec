@@ -3,6 +3,7 @@ This script tests :class:`.PathSpec`.
 """
 
 import os
+import re
 import shutil
 import tempfile
 import unittest
@@ -26,7 +27,9 @@ from unittest import (
 	SkipTest)
 
 from pathspec import (
-	PathSpec)
+	GitIgnoreSpec,
+	PathSpec,
+	RegexPattern)
 from pathspec.backend import (
 	BackendNamesHint,
 	_Backend)
@@ -772,6 +775,71 @@ class PathSpecTest(unittest.TestCase):
 					'Y/a.txt',
 					'Y/Z/c.txt',
 				])))
+
+	def test_05_match_entries_directories(self):
+		"""
+		Directory-only patterns match directory entries without changing paths.
+		"""
+		lines = ['build/', '!keep/build/']
+		for sub_test in self.parameterize_from_lines('gitignore', lines):
+			with sub_test() as spec:
+				self.make_dirs([
+					'build',
+					'build/nested',
+					'empty',
+					'empty/build',
+					'keep',
+					'keep/build',
+					'other',
+				])
+				self.make_files([
+					'build/file.txt',
+					'keep/build/file.txt',
+					'other/build',
+				])
+				entries = list(iter_tree_entries(self.temp_dir))
+				original_paths = [entry.path for entry in entries]
+				expected = set(map(ospath, [
+					'build',
+					'build/nested',
+					'build/file.txt',
+					'empty/build',
+				]))
+				for check_spec in (
+					spec,
+					GitIgnoreSpec.from_lines(lines, backend=spec._backend_name),
+				):
+					with self.subTest(spec=type(check_spec).__name__):
+						matched = list(check_spec.match_entries(entries))
+						self.assertEqual(get_paths_from_entries(matched), expected)
+						self.assertEqual(
+							get_paths_from_entries(check_spec.match_entries(entries, negate=True)),
+							set(original_paths) - expected)
+						self.assertEqual(
+							get_paths_from_entries(check_spec.match_tree_entries(self.temp_dir)),
+							expected)
+						self.assertEqual(
+							set(check_spec.match_tree_files(self.temp_dir)),
+							{ospath('build/file.txt')})
+						self.assertEqual([entry.path for entry in entries], original_paths)
+						self.assertEqual(matched, [entry for entry in entries if entry.path in expected])
+
+	def test_05_match_entries_directory_separators(self):
+		"""
+		Append exactly one normalized separator to directory matching paths.
+		"""
+		self.make_dirs(['build'])
+		entry, = iter_tree_entries(self.temp_dir)
+		spec = PathSpec([RegexPattern(re.compile(r'^build/$'), include=True)], backend='simple')
+		for path, separators in (
+			('build', None),
+			('build/', None),
+			('build:', (':',)),
+		):
+			with self.subTest(path=path):
+				entry.path = path
+				self.assertEqual(list(spec.match_entries([entry], separators)), [entry])
+				self.assertEqual(entry.path, path)
 
 	def test_05_match_file(self):
 		"""
