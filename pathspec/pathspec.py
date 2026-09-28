@@ -381,6 +381,7 @@ class PathSpec(Generic[TPattern_co]):
 			norm_file = normalize_file(entry.path, separators)
 			if entry.is_dir() and not norm_file.endswith('/'):
 				norm_file += '/'
+
 			include, _index = self._backend.match_file(norm_file)
 
 			if negate:
