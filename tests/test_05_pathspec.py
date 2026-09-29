@@ -3,6 +3,7 @@ This script tests :class:`.PathSpec`.
 """
 
 import os
+import re
 import shutil
 import tempfile
 import unittest
@@ -26,7 +27,8 @@ from unittest import (
 	SkipTest)
 
 from pathspec import (
-	PathSpec)
+	PathSpec,
+	RegexPattern)
 from pathspec.backend import (
 	BackendNamesHint,
 	_Backend)
@@ -38,8 +40,6 @@ from pathspec._backends.simple.pathspec import (
 	SimplePsBackend)
 from pathspec.pattern import (
 	Pattern)
-from pathspec.patterns.gitignore.base import (
-	GitIgnorePatternError)
 from pathspec.patterns.gitignore.basic import (
 	GitIgnoreBasicPattern)
 from pathspec._typing import (
@@ -402,7 +402,7 @@ class PathSpecTest(unittest.TestCase):
 					'./src/test2/c/c.txt',
 				}, debug)
 
-	def test_01_empty_path_1(self):
+	def test_01_escaped_path_1(self):
 		"""
 		Tests that patterns that end with an escaped space will be treated properly.
 		"""
@@ -427,16 +427,29 @@ class PathSpecTest(unittest.TestCase):
 					'abc ',
 				}, debug)
 
-	def test_01_empty_path_2(self):
+	def test_01_escaped_path_2(self):
 		"""
 		Tests that patterns that end with an escaped space will be treated properly.
 		"""
-		with self.assertRaises(GitIgnorePatternError):
-			# An escape with double spaces is invalid. Disallow it. Better to be
-			# safe than sorry.
-			PathSpec.from_lines('gitignore', [
-				'\\  ',
-			], backend='simple')
+		for sub_test in self.parameterize_from_lines('gitignore', [
+			'even\\\\\\\\  ',
+			'odd\\\\\\ ',
+		]):
+			with sub_test() as spec:
+				files = {
+					'even\\\\',
+					'odd\\ ',
+				}
+
+				# Do not normalize Window's paths for this test.
+				results = list(spec.check_files(files, separators=['/']))
+				includes = get_includes(results)
+				debug = debug_results(spec, results)
+
+				self.assertEqual(includes, {
+					'even\\\\',
+					'odd\\ ',
+				}, debug)
 
 	def test_01_match_file_1_include(self):
 		"""
@@ -759,6 +772,66 @@ class PathSpecTest(unittest.TestCase):
 					'Y/a.txt',
 					'Y/Z/c.txt',
 				])))
+
+	def test_05_match_entries_directories(self):
+		"""
+		Directory-only patterns match directory entries without changing paths.
+		"""
+		lines = ['build/', '!keep/build/']
+		for sub_test in self.parameterize_from_lines('gitignore', lines):
+			with sub_test() as spec:
+				self.make_dirs([
+					'build',
+					'build/nested',
+					'empty',
+					'empty/build',
+					'keep',
+					'keep/build',
+					'other',
+				])
+				self.make_files([
+					'build/file.txt',
+					'keep/build/file.txt',
+					'other/build',
+				])
+
+				entries = list(iter_tree_entries(self.temp_dir))
+				includes = get_paths_from_entries(spec.match_entries(entries))
+
+				original_paths = get_paths_from_entries(entries)
+				expected = set(map(ospath, [
+					'build',
+					'build/nested',
+					'build/file.txt',
+					'empty/build',
+				]))
+
+				self.assertEqual(includes, expected)
+
+				excludes = get_paths_from_entries(spec.match_entries(entries, negate=True))
+				self.assertEqual(excludes, original_paths - expected)
+
+				files = set(spec.match_tree_files(self.temp_dir))
+				self.assertEqual(files, {
+					ospath('build/file.txt'),
+				})
+
+	def test_05_match_entries_directory_separators(self):
+		"""
+		Append exactly one normalized separator to directory matching paths.
+		"""
+		self.make_dirs(['build'])
+		entry, = iter_tree_entries(self.temp_dir)
+		spec = PathSpec([RegexPattern(re.compile(r'^build/$'), include=True)], backend='simple')
+		for path, separators in (
+			('build', None),
+			('build/', None),
+			('build:', (':',)),
+		):
+			with self.subTest(path=path):
+				entry.path = path
+				self.assertEqual(list(spec.match_entries([entry], separators)), [entry])
+				self.assertEqual(entry.path, path)
 
 	def test_05_match_file(self):
 		"""

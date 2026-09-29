@@ -103,6 +103,7 @@ class RegexPattern(Pattern):
 		self,
 		pattern: Union[AnyStr, re.Pattern, None],
 		include: Optional[bool] = None,
+		**kw,
 	) -> None:
 		"""
 		Initializes the :class:`RegexPattern` instance.
@@ -116,13 +117,16 @@ class RegexPattern(Pattern):
 		(:data:`False`), or is a null operation (:data:`None`).
 
 			.. note:: Subclasses do not need to support the *include* parameter.
+
+		`**kw* contains any additional keyword arguments to pass to
+		:meth:`self.pattern_to_regex <.RegexPattern.pattern_to_regex>`.
 		"""
 		regex: Optional[re.Pattern] = None
 		if isinstance(pattern, (str, bytes)):
 			assert include is None, (
 				f"{include=!r} must be null when {pattern=!r} is a string."
 			)
-			raw_regex, include = self.pattern_to_regex(pattern)
+			raw_regex, include = self.pattern_to_regex(pattern, **kw)
 			# NOTE: Make sure to allow a null regular expression to be
 			# returned for a null-operation.
 			if include is not None:
@@ -229,7 +233,7 @@ class RegexPattern(Pattern):
 		Returns a :class:`tuple` containing:
 
 			-	*pattern* (:class:`str`, :class:`bytes` or :data:`None`) is the
-				uncompiled regular expression .
+				uncompiled regular expression.
 
 			-	*include* (:class:`bool` or :data:`None`) is whether matched files
 				should be included (:data:`True`), excluded (:data:`False`), or is a

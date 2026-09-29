@@ -15,7 +15,8 @@ API changes:
 
 New features:
 
-- `Issue #126`_: `.iter_tree_files()` / `.iter_tree_entries()` methods now have an *subdir* parameter to allow traversing only part of the tree.
+- `Issue #126`_: `.iter_tree_files()` / `.iter_tree_entries()` methods now have a *subdir* parameter to allow traversing only part of the tree.
+- `GitIgnoreBasicPattern` and `GitIgnoreSpecPattern` now accept an `errors` argument to `__init__()` and `pattern_to_regex()` to control how invalid patterns are handled.
 
 Bug fixes:
 
@@ -26,8 +27,11 @@ Bug fixes:
 - `Issue #134`_: GitIgnoreSpec: reverse and forward evaluation disagree.
 - `Pull #135`_: Escape trailing spaces in `GitIgnoreSpecPattern.escape()`.
 - `Issue #137`_ / `Pull #138`_: Patterns ending in `/**` no longer match their bare parent directory, preserving traversal to re-included children.
-- `Pull #139`_: Match newline characters in paths with `*` and `**`.
 - `Issue #137`_: The excluded directory rule no longer applies to an ancestor directory which the spec itself re-includes.
+- `Pull #139`_: Match newline characters in paths with `*` and `**`.
+- `Pull #142`_: Fix trailing-space trimming after escaped backslashes.
+- `Issue #146`_: pattern_to_regex raises on three lines git accepts (bare '!', '! ', lone '\').
+- `Pull #147`_: Match directory entries with directory-only patterns. `PathSpec.match_entries()` and `.match_tree_entries()` will now match directory entries as directory paths (i.e., with a trailing `/`), instead of as file paths (no trailing `/`).
 
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
@@ -42,6 +46,9 @@ Bug fixes:
 .. _`Issue #137`: https://github.com/cpburnz/python-pathspec/issues/137
 .. _`Pull #138`: https://github.com/cpburnz/python-pathspec/pull/138
 .. _`Pull #139`: https://github.com/cpburnz/python-pathspec/pull/139
+.. _`Pull #142`: https://github.com/cpburnz/python-pathspec/pull/142
+.. _`Issue #146`: https://github.com/cpburnz/python-pathspec/issues/146
+.. _`Pull #147`: https://github.com/cpburnz/python-pathspec/pull/147
 
 
 1.1.1 (2026-04-26)

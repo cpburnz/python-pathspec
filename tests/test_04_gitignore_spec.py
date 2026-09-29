@@ -4,10 +4,6 @@ This script tests :class:`.GitIgnoreSpecPattern`.
 
 import re
 import unittest
-try:
-	from re import PatternError as re_PatternError  # Added in 3.13.
-except ImportError:
-	from re import error as re_PatternError
 
 from pathspec.patterns.gitignore.base import (
 	GitIgnorePatternError,
@@ -29,11 +25,6 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 	The :class:`GitIgnoreSpecPatternTest` class tests the :class:`GitIgnoreSpecPattern`
 	implementation.
 	"""
-
-	def _check_invalid_pattern(self, git_ignore_pattern):
-		expected_message_pattern = re.escape(repr(git_ignore_pattern))
-		with self.assertRaisesRegex(GitIgnorePatternError, expected_message_pattern):
-			GitIgnoreSpecPattern(git_ignore_pattern)
 
 	def test_00_empty(self):
 		"""
@@ -634,17 +625,29 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 			pattern = GitIgnoreSpecPattern(escaped)
 			self.assertEqual(set(filter(pattern.match_file, [fname])), {fname}, (fname, escaped))
 
-	def test_09_single_escape_fail(self):
+	def test_09_single_backslash_fail(self):
 		"""
-		Test an escape on a line by itself.
+		Test a backslash on a line by itself.
 		"""
-		self._check_invalid_pattern('\\')
+		for errors in ('literal', 'null'):
+			with self.subTest(f"{errors=}"):
+				pattern = GitIgnoreSpecPattern('\\', errors=errors)
+				self.assertIsNone(pattern.include)
+				self.assertIsNone(pattern.regex)
+
+		with self.subTest("errors=raise"):
+			with self.assertRaises(GitIgnorePatternError):
+				_pattern = GitIgnoreSpecPattern('\\', errors='raise')
 
 	def test_09_single_exclamation_mark_fail(self):
 		"""
-		Test an escape on a line by itself.
+		Test an exclamation mark on a line by itself.
 		"""
-		self._check_invalid_pattern('!')
+		for errors in ('literal', 'null', 'raise'):
+			with self.subTest(f"{errors=}"):
+				pattern = GitIgnoreSpecPattern('!', errors=errors)
+				self.assertIsNone(pattern.include)
+				self.assertIsNone(pattern.regex)
 
 	def test_10_escape_asterisk_end(self):
 		"""
