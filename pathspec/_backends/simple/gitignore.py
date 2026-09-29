@@ -62,6 +62,16 @@ class SimpleGiBackend(SimplePsBackend):
 		or :data:`None`), and the index of the last matched pattern (:class:`int` or
 		:data:`None`).
 		"""
+		return self._match(file, check_ancestors=True)
+
+	def _match(
+		self, file: str, check_ancestors: bool,
+	) -> tuple[Optional[bool], Optional[int]]:
+		"""
+		Implements :meth:`match_file`. *check_ancestors* (:class:`bool`) is
+		whether to ask if an ancestor directory of *file* is excluded; see
+		:meth:`_ancestor_excluded` for why it can be skipped.
+		"""
 		is_reversed = self._is_reversed
 
 		# Resolve the ancestor directory and the file separately: a file negation
@@ -79,14 +89,13 @@ class SimpleGiBackend(SimplePsBackend):
 				# Pattern matched.
 				if match.match.groupdict().get(_DIR_MARK):
 					# A pattern can match both a strict ancestor of the file and the
-					# file itself, and the engine only ever hands back the leftmost
-					# match. Ask for every directory separator it can match.
+					# file itself. For anchored patterns there is only one match, but
+					# `**/` compiles to the unanchored `(?P<ps_d>/)`: on "a/b/" it
+					# matches at "a/" and at "b/", and `match` only returns the first.
 					is_ancestor = is_self = False
 					assert pattern.regex is not None, pattern
 					for dir_match in pattern.regex.finditer(file):
-						if dir_match.groupdict().get(_DIR_MARK) is None:
-							continue
-						elif dir_match.end(_DIR_MARK) < len(file):
+						if dir_match.end(_DIR_MARK) < len(file):
 							is_ancestor = True
 						else:
 							is_self = True
@@ -103,7 +112,7 @@ class SimpleGiBackend(SimplePsBackend):
 					file_include = include
 					file_index = index
 
-		if dir_include and self._ancestor_excluded(file):
+		if dir_include and check_ancestors and self._ancestor_excluded(file):
 			return (dir_include, dir_index)
 		elif file_include is not None:
 			return (file_include, file_index)
@@ -119,10 +128,16 @@ class SimpleGiBackend(SimplePsBackend):
 		Whether any strict ancestor directory of *file* is excluded. Git stops
 		descending at the first excluded directory, so the ancestors are asked
 		outermost first, each as a directory query (trailing slash included).
+		By the time an ancestor is asked, every ancestor above it is known not to
+		be excluded, so it is matched without checking its own ancestors again;
+		otherwise each level re-asks all the levels above it and the work grows
+		exponentially with depth.
 		"""
 		index = file.find('/')
 		while index != -1 and index + 1 < len(file):
-			ancestor_include, _ancestor_index = self.match_file(file[:index + 1])
+			ancestor_include, _ancestor_index = self._match(
+				file[:index + 1], check_ancestors=False,
+			)
 			if ancestor_include:
 				return True
 			index = file.find('/', index + 1)

@@ -196,6 +196,16 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		or :data:`None`), and the index of the last matched pattern (:class:`int` or
 		:data:`None`).
 		"""
+		return self._match(file, check_ancestors=True)
+
+	def _match(
+		self, file: str, check_ancestors: bool,
+	) -> tuple[Optional[bool], Optional[int]]:
+		"""
+		Implements :meth:`match_file`. *check_ancestors* (:class:`bool`) is
+		whether to ask if an ancestor directory of *file* is excluded; see
+		:meth:`_ancestor_excluded` for why it can be skipped.
+		"""
 		# NOTICE: According to benchmarking, a method callback is 13% faster than
 		# using a closure here.
 		db = self._db
@@ -208,7 +218,7 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
 
 		dir_include, dir_index, file_include, file_index = self._out
-		if dir_include and self._ancestor_excluded(file):
+		if dir_include and check_ancestors and self._ancestor_excluded(file):
 			out_include, out_index = dir_include, dir_index
 		elif file_include is not None:
 			out_include, out_index = file_include, file_index
@@ -226,10 +236,16 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		Whether any strict ancestor directory of *file* is excluded. Git stops
 		descending at the first excluded directory, so the ancestors are asked
 		outermost first, each as a directory query (trailing slash included).
+		By the time an ancestor is asked, every ancestor above it is known not to
+		be excluded, so it is matched without checking its own ancestors again;
+		otherwise each level re-asks all the levels above it and the work grows
+		exponentially with depth.
 		"""
 		index = file.find('/')
 		while index != -1 and index + 1 < len(file):
-			ancestor_include, _ancestor_index = self.match_file(file[:index + 1])
+			ancestor_include, _ancestor_index = self._match(
+				file[:index + 1], check_ancestors=False,
+			)
 			if ancestor_include:
 				return True
 			index = file.find('/', index + 1)
