@@ -955,3 +955,35 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			for sub_test in self.parameterize_from_lines([pattern]):
 				with sub_test() as spec:
 					self.assertTrue(spec.match_file(path))
+
+	def test_14_issue_137_b(self):
+		"""
+		Test that the excluded ancestor rule does not fire on an ancestor which
+		the spec itself re-includes.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			".*",
+			"!**/node_modules/**",
+		]):
+			with sub_test() as spec:
+				# Confirmed results with git (v2.55.0). Asked two ways which
+				# agree on every row: "check-ignore -v" (which also prints a
+				# path whose deciding pattern is a negation, so the pattern
+				# column is what answers), and the consequence of "git add -A",
+				# which stages exactly the files that are not ignored.
+				files = {
+					".hidden",                                      # 1:.*
+					"vendor/keep.txt",                              # -
+					"vendor/.cache/y.txt",                          # 1:.*
+					"vendor/deps/npm/node_modules/keep.txt",        # 2:!**/node_modules/**
+					"vendor/deps/npm/node_modules/.bin/x.txt",      # 2:!**/node_modules/**
+					"vendor/deps/npm/node_modules/.bin/.hide.txt",  # 2:!**/node_modules/**
+					"node_modules/.bin/z.txt",                      # 2:!**/node_modules/**
+				}
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+				self.assertEqual(ignores, {
+					".hidden",
+					"vendor/.cache/y.txt",
+				}, debug)
