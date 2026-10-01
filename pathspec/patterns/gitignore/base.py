@@ -52,21 +52,21 @@ group 2 captures the class name.
 
 def _strip_trailing_ws(pattern: str) -> str:
 	"""
-	Strip trailing whitespace from the pattern while considering that whitespace
-	can be escaped.
+	Strip trailing spaces and line endings from the pattern while considering
+	that they can be escaped. Other whitespace is part of the filename.
 
 	*pattern* (:class:`str`) is the pattern.
 
 	Returns the modified pattern (:class:`str`).
 	"""
 	i = len(pattern) - 1
-	if i == -1 or not pattern[i].isspace():
-		# Fast path: pattern does not end with whitespace. Nothing to strip.
+	if i == -1 or pattern[i] not in ' \r\n':
+		# Fast path: pattern does not end with a space or line ending.
 		return pattern
 
-	# Scan past whitespace.
+	# Scan past spaces and line endings.
 	i -= 1
-	while i >= 0 and pattern[i].isspace():
+	while i >= 0 and pattern[i] in ' \r\n':
 		i -= 1
 
 	last_ws = i + 1
