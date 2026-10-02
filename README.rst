@@ -116,6 +116,13 @@ The "re2" backend uses the `google-re2`_ library (not to be confused with the
 be significantly faster than "simple", and 3 times faster than "hyperscan" at
 high pattern counts.
 
+When an active ``RegexPattern`` wraps a standard-library ``re.Pattern`` with
+compile flags that are not encoded in its expression (for example, ``re.compile('secret',
+re.IGNORECASE)``), "best" uses "simple" to preserve those flags. Explicitly
+selecting "re2" or "hyperscan" raises ``ValueError`` for these patterns; use
+``backend='simple'`` instead. Inline flags remain subject to the selected
+backend's regular expression syntax and semantics.
+
 See `benchmarks_backends.md`_ for comparisons between native Python regular
 expressions and the optional backends.
 

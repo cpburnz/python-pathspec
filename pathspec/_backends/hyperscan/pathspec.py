@@ -26,7 +26,8 @@ from pathspec._typing import (
 	override)  # Added in 3.12.
 
 from .._utils import (
-	enumerate_patterns)
+	enumerate_patterns,
+	has_regex_flags)
 
 from .base import (
 	hyperscan_error)
@@ -62,6 +63,9 @@ class HyperscanPsBackend(_Backend):
 
 		if patterns and not isinstance(patterns[0], RegexPattern):
 			raise TypeError(f"{patterns[0]=!r} must be a RegexPattern.")
+
+		if has_regex_flags(patterns):
+			raise ValueError("The hyperscan backend cannot preserve regex compile flags. Use backend='simple'.")
 
 		use_patterns = enumerate_patterns(
 			patterns, filter=True, reverse=False,
