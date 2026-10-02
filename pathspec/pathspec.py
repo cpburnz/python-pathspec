@@ -75,7 +75,11 @@ class PathSpec(Generic[TPattern_co]):
 		*backend* (:class:`str` or :data:`None`) is the pattern (regular expression)
 		matching backend to use. Default is :data:`None` for "best" to use the best
 		available backend. Priority of backends is: "re2", "hyperscan", "simple".
-		The "simple" backend is always available.
+		The "simple" backend is always available. "best" falls back to "simple"
+		for active :class:`re.Pattern` objects with compile flags not encoded in
+		the expression.
+		Explicitly selecting a native backend raises :exc:`ValueError` for those
+		patterns. Use ``backend='simple'`` to preserve their compile flags.
 		"""
 		if isinstance(patterns, Sequence):
 			use_patterns = patterns
@@ -141,8 +145,10 @@ class PathSpec(Generic[TPattern_co]):
 		(:class:`PathSpec`) to this instance.
 		"""
 		if isinstance(other, PathSpec):
-			self.patterns = [*self.patterns, *other.patterns]
-			self._backend = self._make_backend(self._backend_name, self.patterns)
+			use_patterns = [*self.patterns, *other.patterns]
+			use_backend = self._make_backend(self._backend_name, use_patterns)
+			self.patterns = use_patterns
+			self._backend = use_backend
 			return self
 		else:
 			return NotImplemented

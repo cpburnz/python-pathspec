@@ -18,6 +18,8 @@ from pathspec.pattern import (
 	Pattern,
 	RegexPattern)
 
+from ._utils import (
+	has_regex_flags)
 from .hyperscan.base import (
 	hyperscan_error)
 from .hyperscan.gitignore import (
@@ -65,6 +67,8 @@ def make_gitignore_backend(
 	"""
 	if name == 'best':
 		name = _BEST_BACKEND
+		if name != 'simple' and has_regex_flags(patterns):
+			name = 'simple'
 
 	if name == 'hyperscan':
 		return HyperscanGiBackend(cast(Sequence[RegexPattern], patterns))
@@ -93,6 +97,8 @@ def make_pathspec_backend(
 	"""
 	if name == 'best':
 		name = _BEST_BACKEND
+		if name != 'simple' and has_regex_flags(patterns):
+			name = 'simple'
 
 	if name == 'hyperscan':
 		return HyperscanPsBackend(cast(Sequence[RegexPattern], patterns))
