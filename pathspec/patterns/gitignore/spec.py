@@ -38,7 +38,7 @@ _DIR_MARK_CG = f'(?P<{_DIR_MARK}>/)'
 This regular expression matches the directory marker.
 """
 
-_DIR_MARK_OPT = f'(?:{_DIR_MARK_CG}|$)'
+_DIR_MARK_OPT = rf'(?:{_DIR_MARK_CG}|\Z)'
 """
 This regular expression matches the optional directory marker and sub-path.
 """

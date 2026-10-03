@@ -33,6 +33,8 @@ from ._base import (
 	HS_FLAGS,
 	HyperscanExprDat,
 	HyperscanExprDebug)
+from .._utils import (
+	translate_end_anchor)
 from .pathspec import (
 	HyperscanPsBackend)
 
@@ -134,7 +136,7 @@ class HyperscanGiBackend(HyperscanPsBackend):
 						# and file variants.
 						base_regex = regex_str[:-len(_DIR_MARK_OPT)]
 						use_regexes.append((f'{base_regex}/', True))
-						use_regexes.append((f'{base_regex}$', False))
+						use_regexes.append((rf'{base_regex}\z', False))
 					else:
 						# Remove capture group.
 						base_regex = regex_str.replace(_DIR_MARK_CG, '/')
@@ -145,6 +147,7 @@ class HyperscanGiBackend(HyperscanPsBackend):
 				use_regexes.append((regex, False))
 
 			for regex, is_dir_pattern in use_regexes:
+				regex = translate_end_anchor(regex)
 				if isinstance(regex, bytes):
 					regex_bytes = regex
 				else:

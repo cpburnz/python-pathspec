@@ -26,7 +26,8 @@ from pathspec._typing import (
 	override)  # Added in 3.12.
 
 from .._utils import (
-	enumerate_patterns)
+	enumerate_patterns,
+	translate_end_anchor)
 
 from .base import (
 	hyperscan_error)
@@ -152,7 +153,7 @@ class HyperscanPsBackend(_Backend):
 
 			# Encode regex.
 			assert isinstance(pattern, RegexPattern), pattern
-			regex = pattern.regex.pattern
+			regex = translate_end_anchor(pattern.regex.pattern)
 
 			if isinstance(regex, bytes):
 				regex_bytes = regex

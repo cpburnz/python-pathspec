@@ -374,13 +374,13 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 						# A pattern ending with an asterisk ('*') will match a file or
 						# directory (without matching descendant paths). E.g., "foo/*"
 						# matches "foo/test.json", "foo/bar/", but not "foo/bar/hello.c".
-						out_parts.append('/?$')
+						out_parts.append(r'/?\Z')
 
 					else:
 						# A pattern ending without a slash ('/') will match a file or a
 						# directory (with paths underneath it). E.g., "foo" matches "foo",
 						# "foo/bar", "foo/bar/baz", etc.
-						out_parts.append('(?:/|$)')
+						out_parts.append(r'(?:/|\Z)')
 
 				need_slash = True
 
