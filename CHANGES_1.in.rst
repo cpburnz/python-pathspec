@@ -17,6 +17,9 @@ New features:
 
 Bug fixes:
 
+- `Pull #152`_: Anchor gitignore filename matches at the actual end of the path, so a terminal
+  newline is not mistaken for the end of a filename.
+
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
 - `Pull #128`_: Support POSIX character classes (e.g. `[[:alpha:]]`) in gitignore bracket expressions.
 - `Issue #129`_ / `Pull #132`_: Fix GitIgnoreSpec re-including files under an excluded directory
@@ -167,6 +170,7 @@ Improvements:
 
 
 .. _`Issue #38`: https://github.com/cpburnz/python-pathspec/issues/38
+.. _`Pull #152`: https://github.com/cpburnz/python-pathspec/pull/152
 .. _`Issue #91`: https://github.com/cpburnz/python-pathspec/issues/91
 .. _`Issue #93`: https://github.com/cpburnz/python-pathspec/issues/93
 .. _`Issue #95`: https://github.com/cpburnz/python-pathspec/issues/95
