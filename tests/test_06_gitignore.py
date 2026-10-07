@@ -958,19 +958,15 @@ class GitIgnoreSpecTest(unittest.TestCase):
 
 	def test_14_issue_137_b(self):
 		"""
-		Test that the excluded ancestor rule does not fire on an ancestor which
-		the spec itself re-includes.
+		Test that the excluded ancestor rule does not fire on an ancestor which the
+		spec itself re-includes.
 		"""
 		for sub_test in self.parameterize_from_lines([
 			".*",
 			"!**/node_modules/**",
 		]):
 			with sub_test() as spec:
-				# Confirmed results with git (v2.55.0). Asked two ways which
-				# agree on every row: "check-ignore -v" (which also prints a
-				# path whose deciding pattern is a negation, so the pattern
-				# column is what answers), and the consequence of "git add -A",
-				# which stages exactly the files that are not ignored.
+				# Confirmed results with git (v2.55.0).
 				files = {
 					".hidden",                                      # 1:.*
 					"vendor/keep.txt",                              # -
