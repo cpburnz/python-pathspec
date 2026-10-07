@@ -3,7 +3,8 @@ This script tests :class:`.GitIgnoreSpecPattern`.
 """
 
 import re
-import unittest
+from unittest import (
+	TestCase)
 
 from pathspec.patterns.gitignore.base import (
 	GitIgnorePatternError,
@@ -20,9 +21,9 @@ from pathspec.util import (
 	lookup_pattern)
 
 
-class GitIgnoreSpecPatternTest(unittest.TestCase):
+class GitIgnoreSpecPatternTest(TestCase):
 	"""
-	The :class:`GitIgnoreSpecPatternTest` class tests the :class:`GitIgnoreSpecPattern`
+	The :class:`GitIgnoreSpecPatternTest` class tests the :class:`.GitIgnoreSpecPattern`
 	implementation.
 	"""
 
@@ -702,70 +703,7 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 		]))
 		self.assertEqual(results, {'#sign'})
 
-	def test_11_issue_19_directory_a(self):
-		"""
-		Test a directory discrepancy, scenario A.
-		"""
-		# NOTE: The result from GitIgnoreSpecPattern will differ from GitIgnoreSpec.
-		pattern = GitIgnoreSpecPattern('dirG/')
-		results = set(filter(pattern.match_file, [
-			'fileA',
-			'fileB',
-			'dirD/fileE',
-			'dirD/fileF',
-			'dirG/dirH/fileI',
-			'dirG/dirH/fileJ',
-			'dirG/fileO',
-		]))
-		self.assertEqual(results, {
-			'dirG/dirH/fileI',
-			'dirG/dirH/fileJ',
-			'dirG/fileO',
-		})
-
-	def test_11_issue_19_directory_b(self):
-		"""
-		Test a directory discrepancy, scenario B.
-		"""
-		# NOTE: The result from GitIgnoreSpecPattern will differ from GitIgnoreSpec.
-		pattern = GitIgnoreSpecPattern('dirG/*')
-		results = set(filter(pattern.match_file, [
-			'fileA',
-			'fileB',
-			'dirD/fileE',
-			'dirD/fileF',
-			'dirG/dirH/fileI',
-			'dirG/dirH/fileJ',
-			'dirG/fileO',
-		]))
-		self.assertEqual(results, {
-			'dirG/dirH/fileI',
-			'dirG/dirH/fileJ',
-			'dirG/fileO',
-		})
-
-	def test_11_issue_19_directory_c(self):
-		"""
-		Test a directory discrepancy, scenario C.
-		"""
-		# NOTE: The result from GitIgnoreSpecPattern will differ from GitIgnoreSpec.
-		pattern = GitIgnoreSpecPattern('dirG/**')
-		results = set(filter(pattern.match_file, [
-			'fileA',
-			'fileB',
-			'dirD/fileE',
-			'dirD/fileF',
-			'dirG/dirH/fileI',
-			'dirG/dirH/fileJ',
-			'dirG/fileO',
-		]))
-		self.assertEqual(results, {
-			'dirG/dirH/fileI',
-			'dirG/dirH/fileJ',
-			'dirG/fileO',
-		})
-
-	def test_12_asterisk_1_regex(self):
+	def test_11_asterisk_1_regex(self):
 		"""
 		Test a relative asterisk path pattern's regular expression.
 		"""
@@ -773,7 +711,7 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 		self.assertTrue(include)
 		self.assertEqual(regex, _MATCH_ALL)
 
-	def test_12_asterisk_1b_regex_marks_directories(self):
+	def test_11_asterisk_1b_regex_marks_directories(self):
 		"""
 		Test that the relative asterisk path pattern captures the directory marker.
 
@@ -789,7 +727,7 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 		self.assertIsNone(compiled.search('fileA').group(_DIR_MARK))
 		self.assertIsNone(compiled.search('dirA/fileB').group(_DIR_MARK))
 
-	def test_12_asterisk_2_regex_equivalent(self):
+	def test_11_asterisk_2_regex_equivalent(self):
 		"""
 		Test a path pattern equivalent to the relative asterisk using double
 		asterisk.
@@ -802,209 +740,21 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 
 		self.assertEqual(regex, equiv_regex)
 
-	def test_12_asterisk_3_child(self):
+	def test_11_asterisk_3_child(self):
 		"""
 		Test a relative asterisk path pattern matching a direct child path.
 		"""
 		pattern = GitIgnoreSpecPattern('*')
 		self.assertTrue(pattern.match_file('file.txt'))
 
-	def test_12_asterisk_4_descendant(self):
+	def test_11_asterisk_4_descendant(self):
 		"""
 		Test a relative asterisk path pattern matching a descendant path.
 		"""
 		pattern = GitIgnoreSpecPattern('*')
 		self.assertTrue(pattern.match_file('anydir/file.txt'))
 
-	def test_12_issue_62(self):
-		"""
-		Test including all files, scenario A.
-		"""
-		pattern = GitIgnoreSpecPattern('*')
-		results = set(filter(pattern.match_file, [
-			'file.txt',
-			'anydir/file.txt',
-		]))
-		self.assertEqual(results, {
-			'file.txt',
-			'anydir/file.txt',
-		})
-
-	def test_13_issue_77_1_negate_with_caret(self):
-		"""
-		Test negation using the caret symbol ("^").
-		"""
-		pattern = GitIgnoreSpecPattern('a[^gy]c')
-		results = set(filter(pattern.match_file, [
-			'agc',
-			'ayc',
-			'abc',
-			'adc',
-		]))
-		self.assertEqual(results, {
-			'abc',
-			'adc',
-		})
-
-	def test_13_issue_77_1_negate_with_exclamation_mark(self):
-		"""
-		Test negation using the exclamation mark ("!").
-		"""
-		pattern = GitIgnoreSpecPattern('a[!gy]c')
-		results = set(filter(pattern.match_file, [
-			'agc',
-			'ayc',
-			'abc',
-			'adc',
-		]))
-		self.assertEqual(results, {
-			'abc',
-			'adc',
-		})
-
-	def test_13_issue_77_2_regex(self):
-		"""
-		Test the resulting regex for regex bracket expression negation.
-		"""
-		regex, include = GitIgnoreSpecPattern.pattern_to_regex('a[^b]c')
-		self.assertTrue(include)
-
-		equiv_regex, include = GitIgnoreSpecPattern.pattern_to_regex('a[!b]c')
-		self.assertTrue(include)
-
-		self.assertEqual(regex, equiv_regex)
-
-	def test_14_issue_81_a(self):
-		"""
-		Test ignoring files in a directory, scenario A.
-		"""
-		pattern = GitIgnoreSpecPattern('!libfoo/**')
-
-		self.assertEqual(pattern.regex.pattern, '^libfoo/[^/]')
-		self.assertIs(pattern.include, False)
-		self.assertTrue(pattern.match_file('libfoo/__init__.py'))
-
-	def test_14_issue_81_b(self):
-		"""
-		Test ignoring files in a directory, scenario B.
-		"""
-		pattern = GitIgnoreSpecPattern('!libfoo/*')
-
-		self.assertEqual(pattern.regex.pattern, f'^libfoo/[^/]+{_DIR_MARK_OPT}')
-		self.assertIs(pattern.include, False)
-		self.assertTrue(pattern.match_file('libfoo/__init__.py'))
-
-	def test_14_issue_81_c(self):
-		"""
-		Test ignoring files in a directory, scenario C.
-		"""
-		# GitIgnoreSpecPattern will match the file, but GitIgnoreSpec should not.
-		pattern = GitIgnoreSpecPattern('!libfoo/')
-
-		self.assertEqual(pattern.regex.pattern, f'^(?s:.+/)?libfoo{_DIR_MARK_CG}')
-		self.assertIs(pattern.include, False)
-		self.assertTrue(pattern.match_file('libfoo/__init__.py'))
-
-	def test_15_issue_93_a_1(self):
-		"""
-		Test patterns with trailing double asterisks in a segment.
-		"""
-		pattern = GitIgnoreSpecPattern('foo**')
-		self.assertIs(pattern.include, True)
-		self.assertEqual(pattern.regex.pattern, f'^(?s:.+/)?foo[^/]*[^/]*{_DIR_MARK_OPT}')
-		self.assertTrue(pattern.match_file('foosrodah'))
-
-	def test_15_issue_93_a_2(self):
-		"""
-		Test patterns with trailing double asterisks in a segment.
-		"""
-		pattern = GitIgnoreSpecPattern('foo**/bar')
-		self.assertIs(pattern.include, True)
-		self.assertEqual(pattern.regex.pattern, f'^foo[^/]*[^/]*/bar{_DIR_MARK_OPT}')
-		self.assertFalse(pattern.match_file('foobar'))
-		self.assertTrue(pattern.match_file('foosrodah/bar'))
-
-	def test_15_issue_93_b_1_single(self):
-		"""
-		Test patterns with leading spaces.
-		"""
-		pattern = GitIgnoreSpecPattern(' foo')
-		self.assertIs(pattern.include, True)
-		self.assertEqual(pattern.regex.pattern, f'^(?s:.+/)?\\ foo{_DIR_MARK_OPT}')
-		self.assertFalse(pattern.match_file('foo'))
-		self.assertTrue(pattern.match_file(' foo'))
-
-	def test_15_issue_93_b_2_double(self):
-		"""
-		Test patterns with leading spaces.
-		"""
-		pattern = GitIgnoreSpecPattern('  foo')
-		self.assertIs(pattern.include, True)
-		self.assertEqual(pattern.regex.pattern, f'^(?s:.+/)?\\ \\ foo{_DIR_MARK_OPT}')
-		self.assertFalse(pattern.match_file('foo'))
-		self.assertFalse(pattern.match_file(' foo'))
-		self.assertTrue(pattern.match_file('  foo'))
-
-	def test_15_issue_93_c_1_valid(self):
-		"""
-		Test patterns with valid range notation.
-		"""
-		for raw_pattern, regex in [
-			('[!a-z]', f'^(?s:.+/)?[^a-z]{_DIR_MARK_OPT}'),
-			('[^a-z]', f'^(?s:.+/)?[^a-z]{_DIR_MARK_OPT}'),
-			('[a-z]', f'^(?s:.+/)?[a-z]{_DIR_MARK_OPT}'),
-			('a[!a-z]', f'^(?s:.+/)?a[^a-z]{_DIR_MARK_OPT}'),
-			('a[^a-z]', f'^(?s:.+/)?a[^a-z]{_DIR_MARK_OPT}'),
-			('a[a-z]', f'^(?s:.+/)?a[a-z]{_DIR_MARK_OPT}'),
-		]:
-			with self.subTest(f"p={raw_pattern!r}"):
-				pattern = GitIgnoreSpecPattern(raw_pattern)
-				self.assertIs(pattern.include, True)
-				self.assertEqual(pattern.regex.pattern, regex)
-
-	def test_15_issue_93_c_2_invalid(self):
-		"""
-		Test patterns with invalid range notation.
-		"""
-		# The spec pattern discards patterns with invalid range notation.
-		for raw_pattern in [
-			'[!]',
-			'[^]',
-			'[z-a]',
-			'a[!]',
-			'a[^]',
-			'a[z-a]',
-		]:
-			with self.subTest(f"p={raw_pattern!r}"):
-				pattern = GitIgnoreSpecPattern(raw_pattern)
-				self.assertIs(pattern.include, None)
-				self.assertIs(pattern.regex, None)
-
-	def test_15_issue_93_c_3_unclosed(self):
-		"""
-		Test patterns with unclosed range notation.
-		"""
-		for raw_pattern in [
-			'[!',
-			'[',
-			'[-',
-			'[^',
-			'[a',
-			'[a-',
-			'[a-z',
-			'a[!',
-			'a[',
-			'a[-',
-			'a[^',
-			'a[a-',
-			'a[a-z',
-		]:
-			with self.subTest(f"p={raw_pattern!r}"):
-				pattern = GitIgnoreSpecPattern(raw_pattern)
-				self.assertIs(pattern.include, None)
-				self.assertIs(pattern.regex, None)
-
-	def test_16_posix_class_a_regex(self):
+	def test_12_posix_class_a_regex(self):
 		"""
 		Test that each POSIX bracket character class is translated to the ASCII
 		range that git's wildmatch uses. Git implements these classes with its
@@ -1032,7 +782,7 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 					pattern.regex.pattern, f'^(?s:.+/)?{expr}{_DIR_MARK_OPT}',
 				)
 
-	def test_16_posix_class_b_match(self):
+	def test_12_posix_class_b_match(self):
 		"""
 		Test that each POSIX bracket character class matches the same characters
 		as git (spot checks matching git's ``check-ignore``).
@@ -1059,7 +809,7 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 				with self.subTest(f"p={raw_pattern!r} no-match {path!r}"):
 					self.assertFalse(pattern.match_file(path))
 
-	def test_16_posix_class_c_composed(self):
+	def test_12_posix_class_c_composed(self):
 		"""
 		Test that POSIX classes compose with other bracket members, ranges, and
 		bracket negation, as git allows.
@@ -1080,7 +830,7 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 				with self.subTest(f"p={raw_pattern!r} no-match {path!r}"):
 					self.assertFalse(pattern.match_file(path))
 
-	def test_16_posix_class_d_ascii_only(self):
+	def test_12_posix_class_d_ascii_only(self):
 		"""
 		Test that the classes stay ASCII-only, matching git rather than Python's
 		Unicode-aware regex. Non-ASCII digits/letters/spaces must NOT match.
@@ -1098,7 +848,7 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 				pattern = GitIgnoreSpecPattern(raw_pattern)
 				self.assertFalse(pattern.match_file(path))
 
-	def test_16_posix_class_e_invalid(self):
+	def test_12_posix_class_e_invalid(self):
 		"""
 		Test that an unknown or negated POSIX class name is discarded, matching
 		git's treatment of it as a malformed pattern.
@@ -1109,6 +859,292 @@ class GitIgnoreSpecPatternTest(unittest.TestCase):
 			'[[:^alpha:]]',
 			'[[::]]',
 			'a[[:nope:]]',
+		]:
+			with self.subTest(f"p={raw_pattern!r}"):
+				pattern = GitIgnoreSpecPattern(raw_pattern)
+				self.assertIs(pattern.include, None)
+				self.assertIs(pattern.regex, None)
+
+
+class GitIgnoreSpecPatternIssue19Test(TestCase):
+	"""
+	The :class:`GitIgnoreSpecPatternIssue19Test` class tests the
+	:class:`.GitIgnoreSpecPattern` implementation for issue #19.
+	"""
+
+	def test_a_directory(self):
+		"""
+		Test a directory discrepancy, scenario A.
+		"""
+		# NOTE: The result from GitIgnoreSpecPattern will differ from GitIgnoreSpec.
+		pattern = GitIgnoreSpecPattern('dirG/')
+		results = set(filter(pattern.match_file, [
+			'fileA',
+			'fileB',
+			'dirD/fileE',
+			'dirD/fileF',
+			'dirG/dirH/fileI',
+			'dirG/dirH/fileJ',
+			'dirG/fileO',
+		]))
+		self.assertEqual(results, {
+			'dirG/dirH/fileI',
+			'dirG/dirH/fileJ',
+			'dirG/fileO',
+		})
+
+	def test_b_directory(self):
+		"""
+		Test a directory discrepancy, scenario B.
+		"""
+		# NOTE: The result from GitIgnoreSpecPattern will differ from GitIgnoreSpec.
+		pattern = GitIgnoreSpecPattern('dirG/*')
+		results = set(filter(pattern.match_file, [
+			'fileA',
+			'fileB',
+			'dirD/fileE',
+			'dirD/fileF',
+			'dirG/dirH/fileI',
+			'dirG/dirH/fileJ',
+			'dirG/fileO',
+		]))
+		self.assertEqual(results, {
+			'dirG/dirH/fileI',
+			'dirG/dirH/fileJ',
+			'dirG/fileO',
+		})
+
+	def test_c_directory(self):
+		"""
+		Test a directory discrepancy, scenario C.
+		"""
+		# NOTE: The result from GitIgnoreSpecPattern will differ from GitIgnoreSpec.
+		pattern = GitIgnoreSpecPattern('dirG/**')
+		results = set(filter(pattern.match_file, [
+			'fileA',
+			'fileB',
+			'dirD/fileE',
+			'dirD/fileF',
+			'dirG/dirH/fileI',
+			'dirG/dirH/fileJ',
+			'dirG/fileO',
+		]))
+		self.assertEqual(results, {
+			'dirG/dirH/fileI',
+			'dirG/dirH/fileJ',
+			'dirG/fileO',
+		})
+
+
+class GitIgnoreSpecPatternIssue62Test(TestCase):
+	"""
+	The :class:`GitIgnoreSpecPatternIssue62Test` class tests the
+	:class:`.GitIgnoreSpecPattern` implementation for issue #62.
+	"""
+
+	def test_a_files(self):
+		"""
+		Test including all files, scenario A.
+		"""
+		pattern = GitIgnoreSpecPattern('*')
+		results = set(filter(pattern.match_file, [
+			'file.txt',
+			'anydir/file.txt',
+		]))
+		self.assertEqual(results, {
+			'file.txt',
+			'anydir/file.txt',
+		})
+
+
+class GitIgnoreSpecPatternIssue77Test(TestCase):
+	"""
+	The :class:`GitIgnoreSpecPatternIssue77Test` class tests the
+	:class:`.GitIgnoreSpecPattern` implementation for issue #77.
+	"""
+
+	def test_1_negate_with_caret(self):
+		"""
+		Test negation using the caret symbol ("^").
+		"""
+		pattern = GitIgnoreSpecPattern('a[^gy]c')
+		results = set(filter(pattern.match_file, [
+			'agc',
+			'ayc',
+			'abc',
+			'adc',
+		]))
+		self.assertEqual(results, {
+			'abc',
+			'adc',
+		})
+
+	def test_2_negate_with_exclamation_mark(self):
+		"""
+		Test negation using the exclamation mark ("!").
+		"""
+		pattern = GitIgnoreSpecPattern('a[!gy]c')
+		results = set(filter(pattern.match_file, [
+			'agc',
+			'ayc',
+			'abc',
+			'adc',
+		]))
+		self.assertEqual(results, {
+			'abc',
+			'adc',
+		})
+
+	def test_3_regex(self):
+		"""
+		Test the resulting regex for regex bracket expression negation.
+		"""
+		regex, include = GitIgnoreSpecPattern.pattern_to_regex('a[^b]c')
+		self.assertTrue(include)
+
+		equiv_regex, include = GitIgnoreSpecPattern.pattern_to_regex('a[!b]c')
+		self.assertTrue(include)
+
+		self.assertEqual(regex, equiv_regex)
+
+
+class GitIgnoreSpecPatternIssue81Test(TestCase):
+	"""
+	The :class:`GitIgnoreSpecPatternIssue81Test` class tests the
+	:class:`.GitIgnoreSpecPattern` implementation for issue #81.
+	"""
+
+	def test_a(self):
+		"""
+		Test ignoring files in a directory, scenario A.
+		"""
+		pattern = GitIgnoreSpecPattern('!libfoo/**')
+
+		self.assertEqual(pattern.regex.pattern, '^libfoo/[^/]')
+		self.assertIs(pattern.include, False)
+		self.assertTrue(pattern.match_file('libfoo/__init__.py'))
+
+	def test_b(self):
+		"""
+		Test ignoring files in a directory, scenario B.
+		"""
+		pattern = GitIgnoreSpecPattern('!libfoo/*')
+
+		self.assertEqual(pattern.regex.pattern, f'^libfoo/[^/]+{_DIR_MARK_OPT}')
+		self.assertIs(pattern.include, False)
+		self.assertTrue(pattern.match_file('libfoo/__init__.py'))
+
+	def test_c(self):
+		"""
+		Test ignoring files in a directory, scenario C.
+		"""
+		# GitIgnoreSpecPattern will match the file, but GitIgnoreSpec should not.
+		pattern = GitIgnoreSpecPattern('!libfoo/')
+
+		self.assertEqual(pattern.regex.pattern, f'^(?s:.+/)?libfoo{_DIR_MARK_CG}')
+		self.assertIs(pattern.include, False)
+		self.assertTrue(pattern.match_file('libfoo/__init__.py'))
+
+
+class GitIgnoreSpecPatternIssue93Test(TestCase):
+	"""
+	The :class:`GitIgnoreSpecPatternIssue93Test` class tests the
+	:class:`.GitIgnoreSpecPattern` implementation for issue #93.
+	"""
+
+	def test_a_1(self):
+		"""
+		Test patterns with trailing double asterisks in a segment.
+		"""
+		pattern = GitIgnoreSpecPattern('foo**')
+		self.assertIs(pattern.include, True)
+		self.assertEqual(pattern.regex.pattern, f'^(?s:.+/)?foo[^/]*[^/]*{_DIR_MARK_OPT}')
+		self.assertTrue(pattern.match_file('foosrodah'))
+
+	def test_a_2(self):
+		"""
+		Test patterns with trailing double asterisks in a segment.
+		"""
+		pattern = GitIgnoreSpecPattern('foo**/bar')
+		self.assertIs(pattern.include, True)
+		self.assertEqual(pattern.regex.pattern, f'^foo[^/]*[^/]*/bar{_DIR_MARK_OPT}')
+		self.assertFalse(pattern.match_file('foobar'))
+		self.assertTrue(pattern.match_file('foosrodah/bar'))
+
+	def test_b_1_single(self):
+		"""
+		Test patterns with leading spaces.
+		"""
+		pattern = GitIgnoreSpecPattern(' foo')
+		self.assertIs(pattern.include, True)
+		self.assertEqual(pattern.regex.pattern, f'^(?s:.+/)?\\ foo{_DIR_MARK_OPT}')
+		self.assertFalse(pattern.match_file('foo'))
+		self.assertTrue(pattern.match_file(' foo'))
+
+	def test_b_2_double(self):
+		"""
+		Test patterns with leading spaces.
+		"""
+		pattern = GitIgnoreSpecPattern('  foo')
+		self.assertIs(pattern.include, True)
+		self.assertEqual(pattern.regex.pattern, f'^(?s:.+/)?\\ \\ foo{_DIR_MARK_OPT}')
+		self.assertFalse(pattern.match_file('foo'))
+		self.assertFalse(pattern.match_file(' foo'))
+		self.assertTrue(pattern.match_file('  foo'))
+
+	def test_c_1_valid(self):
+		"""
+		Test patterns with valid range notation.
+		"""
+		for raw_pattern, regex in [
+			('[!a-z]', f'^(?s:.+/)?[^a-z]{_DIR_MARK_OPT}'),
+			('[^a-z]', f'^(?s:.+/)?[^a-z]{_DIR_MARK_OPT}'),
+			('[a-z]', f'^(?s:.+/)?[a-z]{_DIR_MARK_OPT}'),
+			('a[!a-z]', f'^(?s:.+/)?a[^a-z]{_DIR_MARK_OPT}'),
+			('a[^a-z]', f'^(?s:.+/)?a[^a-z]{_DIR_MARK_OPT}'),
+			('a[a-z]', f'^(?s:.+/)?a[a-z]{_DIR_MARK_OPT}'),
+		]:
+			with self.subTest(f"p={raw_pattern!r}"):
+				pattern = GitIgnoreSpecPattern(raw_pattern)
+				self.assertIs(pattern.include, True)
+				self.assertEqual(pattern.regex.pattern, regex)
+
+	def test_c_2_invalid(self):
+		"""
+		Test patterns with invalid range notation.
+		"""
+		# The spec pattern discards patterns with invalid range notation.
+		for raw_pattern in [
+			'[!]',
+			'[^]',
+			'[z-a]',
+			'a[!]',
+			'a[^]',
+			'a[z-a]',
+		]:
+			with self.subTest(f"p={raw_pattern!r}"):
+				pattern = GitIgnoreSpecPattern(raw_pattern)
+				self.assertIs(pattern.include, None)
+				self.assertIs(pattern.regex, None)
+
+	def test_c_3_unclosed(self):
+		"""
+		Test patterns with unclosed range notation.
+		"""
+		for raw_pattern in [
+			'[!',
+			'[',
+			'[-',
+			'[^',
+			'[a',
+			'[a-',
+			'[a-z',
+			'a[!',
+			'a[',
+			'a[-',
+			'a[^',
+			'a[a-',
+			'a[a-z',
 		]:
 			with self.subTest(f"p={raw_pattern!r}"):
 				pattern = GitIgnoreSpecPattern(raw_pattern)
