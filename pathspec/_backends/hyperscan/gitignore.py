@@ -131,14 +131,17 @@ class HyperscanGiBackend(HyperscanPsBackend):
 					# Found directory marker.
 					if regex_str.endswith(_DIR_MARK_OPT):
 						# Regex has optional directory marker. Split regex into directory
-						# and file variants.
+						# and file variants. The directory variant must require a child
+						# segment: without one the query *is* that directory, which is a
+						# direct match and not an excluded ancestor.
 						base_regex = regex_str[:-len(_DIR_MARK_OPT)]
-						use_regexes.append((f'{base_regex}/', True))
-						use_regexes.append((f'{base_regex}$', False))
+						use_regexes.append((f'{base_regex}/(?s:.)', True))
+						use_regexes.append((f'{base_regex}/?$', False))
 					else:
 						# Remove capture group.
 						base_regex = regex_str.replace(_DIR_MARK_CG, '/')
-						use_regexes.append((base_regex, True))
+						use_regexes.append((f'{base_regex}(?s:.)', True))
+						use_regexes.append((f'{base_regex}$', False))
 
 			if not use_regexes:
 				# No special case for regex.
@@ -193,6 +196,16 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		or :data:`None`), and the index of the last matched pattern (:class:`int` or
 		:data:`None`).
 		"""
+		return self._match(file, check_ancestors=True)
+
+	def _match(
+		self, file: str, check_ancestors: bool,
+	) -> tuple[Optional[bool], Optional[int]]:
+		"""
+		Implements :meth:`match_file`. *check_ancestors* (:class:`bool`) is
+		whether to ask if an ancestor directory of *file* is excluded; see
+		:meth:`_ancestor_excluded` for why it can be skipped.
+		"""
 		# NOTICE: According to benchmarking, a method callback is 13% faster than
 		# using a closure here.
 		db = self._db
@@ -205,14 +218,40 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		db.scan(file.encode('utf8'), match_event_handler=self.__on_match)
 
 		dir_include, dir_index, file_include, file_index = self._out
-		if dir_include:
+		if dir_include and check_ancestors and self._ancestor_excluded(file):
 			out_include, out_index = dir_include, dir_index
 		elif file_include is not None:
 			out_include, out_index = file_include, file_index
+		elif dir_include:
+			# An ancestor matched an exclude pattern, but the spec as a whole
+			# re-includes that ancestor, so the rule does not apply.
+			out_include, out_index = None, -1
 		else:
 			out_include, out_index = dir_include, dir_index
 
 		return (out_include, out_index if out_index != -1 else None)
+
+	def _ancestor_excluded(self, file: str) -> bool:
+		"""
+		Whether any strict ancestor directory of *file* is excluded. Git stops
+		descending at the first excluded directory, so the ancestors are asked
+		outermost first, each as a directory query (trailing slash included).
+		By the time an ancestor is asked, every ancestor above it is known not to
+		be excluded, so it is matched without checking its own ancestors again;
+		otherwise each level re-asks all the levels above it and the work grows
+		exponentially with depth.
+		"""
+		index = file.find('/')
+		while index != -1 and index + 1 < len(file):
+			ancestor_include, _ancestor_index = self._match(
+				file[:index + 1], check_ancestors=False,
+			)
+			if ancestor_include:
+				return True
+			index = file.find('/', index + 1)
+
+		return False
+
 
 	@override
 	def __on_match(
