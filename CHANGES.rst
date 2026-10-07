@@ -20,6 +20,8 @@ New features:
 
 Bug fixes:
 
+- Preserve the descendant-directory restriction in explicit trailing ``/**/`` patterns, including wildcard prefixes and collapsed recursive wildcards.
+
 - Honor `on_error` when opening a directory fails during tree traversal.
 
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.

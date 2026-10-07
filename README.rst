@@ -94,6 +94,13 @@ You do not specify the style of pattern for ``GitIgnoreSpec`` because it should
 always use ``GitIgnoreSpecPattern`` internally.
 
 
+A pattern ending in ``/**/`` matches descendant directories and their contents,
+while leaving the named parent and its immediate files available. For example,
+``folder/**/`` does not ignore ``folder/`` or ``folder/file``, but does ignore
+``folder/sub/`` and ``folder/sub/file``. An ordinary ``folder/`` pattern continues
+to ignore the parent directory and everything inside it.
+
+
 Performance
 -----------
 

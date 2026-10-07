@@ -69,12 +69,17 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 	def __normalize_segments(
 		is_dir_pattern: bool,
 		pattern_segs: list[str],
+		*,
+		is_recursive_dir_pattern: bool = False,
 	) -> tuple[Optional[list[str]], Optional[str]]:
 		"""
 		Normalize the pattern segments to make processing easier.
 
 		*is_dir_pattern* (:class:`bool`) is whether the pattern is a directory
 		pattern (i.e., ends with a slash '/').
+
+		*is_recursive_dir_pattern* (:class:`bool`) is whether the original pattern
+		ends with an explicit double-asterisk segment followed by a slash (``**/``).
 
 		*pattern_segs* (:class:`list` of :class:`str`) contains the pattern
 		segments. This may be modified in place.
@@ -151,14 +156,13 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			and pattern_segs[0] == '**'
 			and pattern_segs[1] == '*'
 			and pattern_segs[2] == '**'
+			and is_dir_pattern
+			and not is_recursive_dir_pattern
 		):
 			# The pattern "*/" will be normalized to "**/*/**" which will match every
 			# file not in the root directory. Special case this pattern for
 			# efficiency.
-			if is_dir_pattern:
-				return (None, _DIR_MARK_CG)
-			else:
-				return (None, '/')
+			return (None, _DIR_MARK_CG)
 
 		# No regular expression override, return modified pattern segments.
 		return (pattern_segs, None)
@@ -264,11 +268,13 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		# Check whether the pattern is specifically a directory pattern before
 		# normalization.
 		is_dir_pattern = not orig_segs[-1]
+		is_recursive_dir_pattern = is_dir_pattern and orig_segs[-2] == '**'
 
 		# Normalize pattern to make processing easier.
 		try:
 			pattern_segs, override_regex = cls.__normalize_segments(
 				is_dir_pattern, orig_segs,
+				is_recursive_dir_pattern=is_recursive_dir_pattern,
 			)
 		except ValueError as e:
 			raise GitIgnorePatternError((
@@ -284,6 +290,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			try:
 				regex_parts = cls.__translate_segments(
 					seg_errors, is_dir_pattern, pattern_segs,
+					is_recursive_dir_pattern=is_recursive_dir_pattern,
 				)
 			except (_PosixClassError, _RangeNotationError) as e:
 				if errors == 'raise':
@@ -325,6 +332,8 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		errors: Literal['literal', 'raise'],
 		is_dir_pattern: bool,
 		pattern_segs: list[str],
+		*,
+		is_recursive_dir_pattern: bool = False,
 	) -> list[str]:
 		"""
 		Translate the pattern segments to regular expressions.
@@ -338,6 +347,9 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 		*is_dir_pattern* (:class:`bool`) is whether the pattern is a directory
 		pattern (i.e., ends with a slash '/').
+
+		*is_recursive_dir_pattern* (:class:`bool`) is whether the original pattern
+		ends with an explicit double-asterisk segment followed by a slash (``**/``).
 
 		*pattern_segs* (:class:`list` of :class:`str`) contains the pattern
 		segments.
@@ -374,7 +386,11 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 					assert i == end, (i, end)
 					# A normalized pattern ending with double-asterisks ('**') will match
 					# nonempty trailing path segments, not the parent directory itself.
-					if is_dir_pattern:
+					if is_recursive_dir_pattern:
+						# An explicit trailing **/ matches descendant directories,
+						# not the parent or files immediately inside the parent.
+						out_parts.append(f'/(?s:.+/)?[^/]+{_DIR_MARK_CG}')
+					elif is_dir_pattern:
 						out_parts.append(_DIR_MARK_CG)
 					else:
 						out_parts.append('/[^/]')
