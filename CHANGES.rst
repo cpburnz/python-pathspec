@@ -15,6 +15,7 @@ API changes:
 
 New features:
 
+- `Issue #131`_: Add an overridable ``_audit_segments()`` hook to gitignore patterns for application-specific complexity policies.
 - `Issue #126`_: `.iter_tree_files()` / `.iter_tree_entries()` methods now have a *subdir* parameter to allow traversing only part of the tree.
 - `GitIgnoreBasicPattern` and `GitIgnoreSpecPattern` now accept an `errors` argument to `__init__()` and `pattern_to_regex()` to control how invalid patterns are handled.
 
@@ -43,6 +44,7 @@ Bug fixes:
 .. _`Pull #128`: https://github.com/cpburnz/python-pathspec/pull/128
 .. _`Issue #129`: https://github.com/cpburnz/python-pathspec/issues/129
 .. _`Pull #132`: https://github.com/cpburnz/python-pathspec/pull/132
+.. _`Issue #131`: https://github.com/cpburnz/python-pathspec/issues/131
 .. _`Pull #133`: https://github.com/cpburnz/python-pathspec/pull/133
 .. _`Issue #134`: https://github.com/cpburnz/python-pathspec/issues/134
 .. _`Pull #135`: https://github.com/cpburnz/python-pathspec/pull/135

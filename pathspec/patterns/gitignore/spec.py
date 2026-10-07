@@ -275,6 +275,10 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 				f"Invalid git pattern: {original_pattern!r}"
 			)) from e  # GitIgnorePatternError
 
+		# Normalization modifies orig_segs in place, including regex overrides.
+		# Audit outside the notation-error handlers so rejections propagate.
+		cls._audit_segments(tuple(orig_segs))
+
 		if override_regex is not None:
 			# Use regex override.
 			regex = override_regex

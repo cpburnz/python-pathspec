@@ -145,6 +145,24 @@ class _GitIgnoreBasePattern(RegexPattern):
 		"""
 		super().__init__(pattern, include, errors=errors)
 
+	@classmethod
+	def _audit_segments(cls, pattern_segs: tuple[str, ...], /) -> None:
+		"""
+		Audit normalized pattern segments before translating them to a regex.
+
+		Subclasses may override this hook to enforce application-specific pattern
+		limits by raising an exception. The default implementation does nothing.
+
+		*pattern_segs* (:class:`tuple` of :class:`str`) contains the normalized
+		segments, including implicit double-asterisks and with adjacent recursive
+		wildcards collapsed. Byte patterns are decoded before auditing. The tuple
+		cannot be changed by the hook.
+
+		The hook also runs for patterns with a regex override, but not for null
+		patterns, comments or precompiled regular expressions. Exceptions from the
+		hook propagate unchanged, regardless of the notation *errors* policy.
+		"""
+
 	@staticmethod
 	def escape(s: AnyStr) -> AnyStr:
 		"""
