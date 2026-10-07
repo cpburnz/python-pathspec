@@ -476,7 +476,7 @@ def _iter_tree_files_next(
 				# files.
 				yield from _iter_tree_files_next(root_full, node_rel, memo, on_error, follow_links)
 
-			elif node_ent.is_file():
+			elif node_ent.is_file(follow_symlinks=follow_links):
 				# Child node is a file, yield it.
 				yield node_rel
 

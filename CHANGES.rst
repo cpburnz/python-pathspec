@@ -20,6 +20,8 @@ New features:
 
 Bug fixes:
 
+- Avoid following symbolic link targets when checking file types in ``iter_tree_files(follow_links=False)``.
+
 - Honor `on_error` when opening a directory fails during tree traversal.
 
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
