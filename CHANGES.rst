@@ -20,6 +20,8 @@ New features:
 
 Bug fixes:
 
+- Resolve excluded ancestor directories before descendant negations in all GitIgnoreSpec backends, and report the blocking pattern index.
+
 - Honor `on_error` when opening a directory fails during tree traversal.
 
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.

@@ -93,6 +93,13 @@ handles these cases to more closely replicate Git's behavior::
 You do not specify the style of pattern for ``GitIgnoreSpec`` because it should
 always use ``GitIgnoreSpecPattern`` internally.
 
+A negated file pattern cannot re-include a file while any of its parent
+directories remains excluded. For example, ``dir/**`` followed by
+``!dir/**/file`` re-includes ``dir/file``, but leaves ``dir/nested/file`` ignored
+because ``dir/nested/`` is still excluded. Re-include the necessary parent
+directories as well. ``GitIgnoreSpec.check_file()`` reports the pattern index
+that excludes the first blocking ancestor in this situation.
+
 
 Performance
 -----------

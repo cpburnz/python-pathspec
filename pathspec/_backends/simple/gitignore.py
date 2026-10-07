@@ -70,8 +70,13 @@ class SimpleGiBackend(SimplePsBackend):
 		"""
 		Implements :meth:`match_file`. *check_ancestors* (:class:`bool`) is
 		whether to ask if an ancestor directory of *file* is excluded; see
-		:meth:`_ancestor_excluded` for why it can be skipped.
+		:meth:`_excluded_ancestor_index` for why it can be skipped.
 		"""
+		if check_ancestors:
+			ancestor_index = self._excluded_ancestor_index(file)
+			if ancestor_index is not None:
+				return (True, ancestor_index)
+
 		is_reversed = self._is_reversed
 
 		# Resolve the ancestor directory and the file separately: a file negation
@@ -112,9 +117,7 @@ class SimpleGiBackend(SimplePsBackend):
 					file_include = include
 					file_index = index
 
-		if dir_include and check_ancestors and self._ancestor_excluded(file):
-			return (dir_include, dir_index)
-		elif file_include is not None:
+		if file_include is not None:
 			return (file_include, file_index)
 		elif dir_include:
 			# An ancestor matched an exclude pattern, but the spec as a whole
@@ -123,10 +126,10 @@ class SimpleGiBackend(SimplePsBackend):
 		else:
 			return (dir_include, dir_index)
 
-	def _ancestor_excluded(self, file: str) -> bool:
+	def _excluded_ancestor_index(self, file: str) -> Optional[int]:
 		"""
-		Whether any strict ancestor directory of *file* is excluded. Git stops
-		descending at the first excluded directory, so the ancestors are asked
+		Return the pattern index excluding the first strict ancestor, or None.
+		Git stops descending at the first excluded directory, so ancestors are asked
 		outermost first, each as a directory query (trailing slash included).
 		By the time an ancestor is asked, every ancestor above it is known not to
 		be excluded, so it is matched without checking its own ancestors again;
@@ -135,12 +138,11 @@ class SimpleGiBackend(SimplePsBackend):
 		"""
 		index = file.find('/')
 		while index != -1 and index + 1 < len(file):
-			ancestor_include, _ancestor_index = self._match(
+			ancestor_include, ancestor_index = self._match(
 				file[:index + 1], check_ancestors=False,
 			)
 			if ancestor_include:
-				return True
+				return ancestor_index
 			index = file.find('/', index + 1)
 
-		return False
-
+		return None
