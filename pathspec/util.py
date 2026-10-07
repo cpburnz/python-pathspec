@@ -322,7 +322,15 @@ def _iter_tree_entries_next(
 	else:
 		raise RecursionError(real_path=dir_real, first_path=memo[dir_real], second_path=dir_rel)
 
-	with os.scandir(dir_full) as scan_iter:
+	try:
+		scan_iter = os.scandir(dir_full)
+	except OSError as e:
+		del memo[dir_real]
+		if on_error is not None:
+			on_error(e)
+		return
+
+	with scan_iter:
 		node_ent: os.DirEntry
 		for node_ent in scan_iter:
 			node_rel = os.path.join(dir_rel, node_ent.name)
@@ -450,7 +458,15 @@ def _iter_tree_files_next(
 	else:
 		raise RecursionError(real_path=dir_real, first_path=memo[dir_real], second_path=dir_rel)
 
-	with os.scandir(dir_full) as scan_iter:
+	try:
+		scan_iter = os.scandir(dir_full)
+	except OSError as e:
+		del memo[dir_real]
+		if on_error is not None:
+			on_error(e)
+		return
+
+	with scan_iter:
 		node_ent: os.DirEntry
 		for node_ent in scan_iter:
 			node_rel = os.path.join(dir_rel, node_ent.name)
