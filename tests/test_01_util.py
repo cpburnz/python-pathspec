@@ -163,51 +163,6 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		shutil.rmtree(self.temp_dir)
 
-	def test_scan_missing_directory(self):
-		"""Directory scan failures honor the error handler."""
-		missing = os.path.join(self.temp_dir, 'missing')
-		for walk in (iter_tree_entries, iter_tree_files):
-			for mode in ('ignore', 'record', 'raise'):
-				with self.subTest(walk=walk.__name__, mode=mode):
-					errors = []
-
-					def on_error(error):
-						errors.append(error)
-						if mode == 'raise':
-							raise RuntimeError('stop walking') from error
-
-					handler = None if mode == 'ignore' else on_error
-					if mode == 'raise':
-						with self.assertRaisesRegex(RuntimeError, 'stop walking'):
-							list(walk(missing, on_error=handler))
-					else:
-						self.assertEqual(list(walk(missing, on_error=handler)), [])
-					if mode != 'ignore':
-						self.assertEqual(len(errors), 1)
-						self.assertEqual(errors[0].errno, errno.ENOENT)
-
-	def test_scan_inaccessible_child(self):
-		"""An inaccessible child does not prevent walking readable siblings."""
-		self.make_dirs(['blocked'])
-		self.make_files(['kept.txt'])
-		scandir = os.scandir
-		error = PermissionError(errno.EACCES, 'permission denied', 'blocked')
-
-		def scan(path):
-			if os.path.basename(path) == 'blocked':
-				raise error
-			return scandir(path)
-
-		for walk in (iter_tree_entries, iter_tree_files):
-			for record in (False, True):
-				with self.subTest(walk=walk.__name__, record=record):
-					errors = []
-					with patch('pathspec.util.os.scandir', side_effect=scan):
-						results = list(walk(self.temp_dir, on_error=errors.append if record else None))
-					paths = get_paths_from_entries(results) if walk is iter_tree_entries else set(results)
-					self.assertIn('kept.txt', paths)
-					self.assertEqual(errors, [error] if record else [])
-
 	def test_01_files_1_entries(self):
 		"""
 		Tests to make sure all files are found.
@@ -709,6 +664,55 @@ class IterTreeTest(unittest.TestCase):
 		self.make_files(['a.txt'])
 		root = str(self.temp_dir).swapcase()
 		self.assertEqual(set(iter_tree_files(root, subdir=self.temp_dir)), {'a.txt'})
+
+	def test_04_scan_missing_directory(self):
+		"""
+		Directory scan failures honor the error handler.
+		"""
+		missing = os.path.join(self.temp_dir, 'missing')
+		for walk in (iter_tree_entries, iter_tree_files):
+			for mode in ('ignore', 'record', 'raise'):
+				with self.subTest(walk=walk.__name__, mode=mode):
+					errors = []
+
+					def on_error(error):
+						errors.append(error)
+						if mode == 'raise':
+							raise RuntimeError('stop walking') from error
+
+					handler = None if mode == 'ignore' else on_error
+					if mode == 'raise':
+						with self.assertRaisesRegex(RuntimeError, 'stop walking'):
+							list(walk(missing, on_error=handler))
+					else:
+						self.assertEqual(list(walk(missing, on_error=handler)), [])
+					if mode != 'ignore':
+						self.assertEqual(len(errors), 1)
+						self.assertEqual(errors[0].errno, errno.ENOENT)
+
+	def test_04_scan_inaccessible_child(self):
+		"""
+		An inaccessible child does not prevent walking readable siblings.
+		"""
+		self.make_dirs(['blocked'])
+		self.make_files(['kept.txt'])
+		scandir = os.scandir
+		error = PermissionError(errno.EACCES, 'permission denied', 'blocked')
+
+		def scan(path):
+			if os.path.basename(path) == 'blocked':
+				raise error
+			return scandir(path)
+
+		for walk in (iter_tree_entries, iter_tree_files):
+			for record in (False, True):
+				with self.subTest(walk=walk.__name__, record=record):
+					errors = []
+					with patch('pathspec.util.os.scandir', side_effect=scan):
+						results = list(walk(self.temp_dir, on_error=errors.append if record else None))
+					paths = get_paths_from_entries(results) if walk is iter_tree_entries else set(results)
+					self.assertIn('kept.txt', paths)
+					self.assertEqual(errors, [error] if record else [])
 
 
 class MatchFileTest(unittest.TestCase):
