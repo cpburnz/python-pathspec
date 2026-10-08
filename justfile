@@ -121,14 +121,14 @@ _venv_cpy_create:
 	{{cpy_bin}} -m venv --clear dev/venv-cpy
 
 _venv_cpy_update:
-	{{cpy_run}} pip install -r doc/requirements.txt --uploaded-prior-to "$(date -d '7 days ago' '+%Y-%m-%d')" --upgrade build google-re2 google-re2-stubs hyperscan mypy packaging pip pyright pytest pytest-benchmark setuptools tomli tox twine typing-extensions wheel
+	{{cpy_run}} pip install -r doc/requirements.txt --uploaded-prior-to "$(date -d '30 days ago' '+%Y-%m-%d')" --upgrade build google-re2 google-re2-stubs hyperscan mypy packaging pip pyright pytest pytest-benchmark setuptools tomli tox twine typing-extensions wheel
 	{{cpy_run}} pip install -e .
 
 _venv_pypy_create:
 	{{pypy_bin}} -m venv --clear dev/venv-pypy
 
 _venv_pypy_update:
-	{{pypy_run}} pip install --upgrade hyperscan pip pytest pytest-benchmark setuptools wheel
+	{{pypy_run}} pip install --uploaded-prior-to "$(date -d '30 days ago' '+%Y-%m-%d')" --upgrade hyperscan pip pytest pytest-benchmark setuptools wheel
 	{{pypy_run}} pip install -e .
 
 
