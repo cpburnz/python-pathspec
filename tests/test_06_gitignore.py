@@ -13,6 +13,7 @@ from contextlib import (
 from functools import (
 	partial)
 from typing import (
+	Any,
 	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
 	Optional,  # Replaced by `X | None` in 3.10.
 	Protocol)
@@ -53,7 +54,7 @@ The backend parameters.
 
 
 class SubTestContext(Protocol):
-	def __call__(self, **params) -> AbstractContextManager[GitIgnoreSpec]:
+	def __call__(self) -> AbstractContextManager[GitIgnoreSpec]:
 		...
 
 
@@ -66,19 +67,28 @@ class GitIgnoreSpecMixin(object):
 	def parameterize_from_lines(
 		self,
 		lines: Iterable[AnyStr],
+		skip_hyperscan: Optional[bool] = None,
+		sub_params: Optional[dict[str, Any]] = None,
 	) -> Iterator[SubTestContext]:
 		"""
 		Parameterize `GitIgnoreSpec.from_lines()` for each backend and configuration
 		to begin a subtest.
 
-		*pattern_factory* (:class:`str`) is the pattern factory.
-
 		*lines* (:class:`Iterable` of :class:`str`) yields the lines.
+
+		*skip_hyperscan* (:class:`bool` or :data:`None`) is whether to skip the
+		hyperscan backend.
+
+		*sub_params* (:class:`dict`) contains additional parameters for the
+		subtest.
 
 		Yields each subtest context (:class:`SubTestContext`) for the
 		:class:`GitIgnoreSpec`.
 		"""
 		lines = list(lines)
+
+		if sub_params is None:
+			sub_params = {}
 
 		configs: list[tuple[
 			str, BackendNamesHint, Optional[Callable[[Sequence[Pattern]], _Backend]]
@@ -140,10 +150,13 @@ class GitIgnoreSpecMixin(object):
 				))
 
 		for label, backend, backend_factory in configs:
+			if backend == 'hyperscan' and skip_hyperscan:
+				continue
+
 			try:
 				require_backend(backend)
 			except SkipTest:
-				with self.subTest(label):
+				with self.subTest(label, **sub_params):
 					raise
 				continue
 
@@ -152,12 +165,11 @@ class GitIgnoreSpecMixin(object):
 				_backend=backend,
 				_backend_factory=backend_factory,
 				_label=label,
-				**params,
 			):
 				has_error = False
-				with self.subTest(_label, **params):
+				with self.subTest(_label, **sub_params):
 					try:
-						yield GitIgnoreSpec.from_lines(
+						spec = GitIgnoreSpec.from_lines(
 							lines,
 							backend=_backend,
 							_test_backend_factory=_backend_factory,
@@ -165,6 +177,8 @@ class GitIgnoreSpecMixin(object):
 					except Exception:
 						has_error = True
 						raise
+
+					yield spec
 
 				if has_error:
 					raise Exception("Subtest failed.")
@@ -1107,12 +1121,17 @@ class GitIgnoreSpecIssue150Test(GitIgnoreSpecMixin, TestCase):
 			('\n', '\r\n'),
 		):
 			name = f"foo{suffix}"
-			for sub_test in self.parameterize_from_lines([
-				name + ending,
-			]):
-				with sub_test(suffix=suffix, ending=ending) as spec:
+			for sub_test in self.parameterize_from_lines(
+				[name + ending],
+				skip_hyperscan=True,
+				sub_params=dict(suffix=suffix, ending=ending),
+			):
+				with sub_test() as spec:
 					self.assertTrue(spec.match_file(name))
 					self.assertFalse(spec.match_file('foo'))
+
+		with self.subTest('hyperscan'):
+			self.skipTest("Hyperscan backend fails on UTF-8.")
 
 	def test_2_negation_and_directories_1(self):
 		"""
@@ -1120,13 +1139,17 @@ class GitIgnoreSpecIssue150Test(GitIgnoreSpecMixin, TestCase):
 		"""
 		for suffix in ('\t', '\xa0', '\u2003'):
 			name = f"foo{suffix}"
-			for sub_test in self.parameterize_from_lines([
-				"*",
-				f"!{name}",
-			]):
-				with sub_test(suffix=suffix) as spec:
+			for sub_test in self.parameterize_from_lines(
+				["*", f"!{name}"],
+				skip_hyperscan=True,
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
 					self.assertFalse(spec.match_file(name))
 					self.assertTrue(spec.match_file('foo'))
+
+		with self.subTest('hyperscan'):
+			self.skipTest("Hyperscan backend fails on UTF-8.")
 
 	def test_2_negation_and_directories_2(self):
 		"""
@@ -1134,14 +1157,19 @@ class GitIgnoreSpecIssue150Test(GitIgnoreSpecMixin, TestCase):
 		"""
 		for suffix in ('\t', '\xa0', '\u2003'):
 			name = f"foo{suffix}"
-			for sub_test in self.parameterize_from_lines([
-				f"{name}/",
-			]):
-				with sub_test(suffix=suffix) as spec:
+			for sub_test in self.parameterize_from_lines(
+				[f"{name}/"],
+				skip_hyperscan=True,
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
 					self.assertTrue(spec.match_file(f"{name}/"))
 					self.assertTrue(spec.match_file(f"{name}/child"))
 					self.assertFalse(spec.match_file(name))
 					self.assertFalse(spec.match_file("foo/child"))
+
+		with self.subTest('hyperscan'):
+			self.skipTest("Hyperscan backend fails on UTF-8.")
 
 	def test_3_character_after_slash(self):
 		"""
@@ -1149,10 +1177,15 @@ class GitIgnoreSpecIssue150Test(GitIgnoreSpecMixin, TestCase):
 		"""
 		for suffix in ('\t', '\xa0', '\u2003'):
 			name = f"foo/{suffix}"
-			for sub_test in self.parameterize_from_lines([
-				name,
-			]):
-				with sub_test(suffix=suffix) as spec:
+			for sub_test in self.parameterize_from_lines(
+				[name],
+				skip_hyperscan=True,
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
 					self.assertTrue(spec.match_file(name))
 					self.assertFalse(spec.match_file('foo/'))
 					self.assertFalse(spec.match_file('foo/other'))
+
+		with self.subTest('hyperscan'):
+			self.skipTest("Hyperscan backend fails on UTF-8.")

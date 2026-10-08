@@ -19,6 +19,7 @@ from functools import (
 from pathlib import (
 	Path)
 from typing import (
+	Any,
 	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
 	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
@@ -45,6 +46,7 @@ from pathspec.pattern import (
 from pathspec.patterns.gitignore.basic import (
 	GitIgnoreBasicPattern)
 from pathspec._typing import (
+
 	AnyStr)  # Removed in 3.18.
 from pathspec.util import (
 	TPattern_co,
@@ -73,7 +75,7 @@ The backend parameters.
 
 
 class SubTestContext(Protocol[TPattern_co]):
-	def __call__(self, **params) -> AbstractContextManager[PathSpec[TPattern_co]]:
+	def __call__(self) -> AbstractContextManager[PathSpec[TPattern_co]]:
 		...
 
 
@@ -106,6 +108,8 @@ class PathSpecMixin(object):
 		self,
 		pattern_factory: Literal['gitignore'],
 		lines: Iterable[AnyStr],
+		skip_hyperscan: Optional[bool] = None,
+		sub_params: Optional[dict[str, Any]] = None,
 	) -> Iterator[SubTestContext[GitIgnoreBasicPattern]]:
 		...
 
@@ -114,6 +118,8 @@ class PathSpecMixin(object):
 		self,
 		pattern_factory: str,
 		lines: Iterable[AnyStr],
+		skip_hyperscan: Optional[bool] = None,
+		sub_params: Optional[dict[str, Any]] = None,
 	) -> Iterator[SubTestContext[Pattern]]:
 		...
 
@@ -121,6 +127,8 @@ class PathSpecMixin(object):
 		self,
 		pattern_factory: str,
 		lines: Iterable[AnyStr],
+		skip_hyperscan: Optional[bool] = None,
+		sub_params: Optional[dict[str, Any]] = None,
 	) -> Iterator[SubTestContext]:
 		"""
 		Parameterize `PathSpec.from_lines()` for each backend and configuration to
@@ -130,10 +138,19 @@ class PathSpecMixin(object):
 
 		*lines* (:class:`Iterable` of :class:`str`) yields the lines.
 
+		*skip_hyperscan* (:class:`bool` or :data:`None`) is whether to skip the
+		hyperscan backend.
+
+		*sub_params* (:class:`dict`) contains additional parameters for the
+		subtest.
+
 		Yields each subtest context (:class:`SubTestContext`) for the
 		:class:`PathSpec`.
 		"""
 		lines = list(lines)
+
+		if sub_params is None:
+			sub_params = {}
 
 		configs: list[tuple[
 			str, BackendNamesHint, Optional[Callable[[Sequence[Pattern]], _Backend]]
@@ -195,10 +212,13 @@ class PathSpecMixin(object):
 				))
 
 		for label, backend, backend_factory in configs:
+			if backend == 'hyperscan' and skip_hyperscan:
+				continue
+
 			try:
 				require_backend(backend)
 			except SkipTest:
-				with self.subTest(label):
+				with self.subTest(label, **sub_params):
 					raise
 				continue
 
@@ -207,13 +227,12 @@ class PathSpecMixin(object):
 				_backend=backend,
 				_backend_factory=backend_factory,
 				_label=label,
-				**params,
 			):
 				self.clear_temp_dir()
 				has_error = False
-				with self.subTest(_label, **params):
+				with self.subTest(_label, **sub_params):
 					try:
-						yield PathSpec.from_lines(
+						spec = PathSpec.from_lines(
 							pattern_factory,
 							lines,
 							backend=_backend,
@@ -222,6 +241,8 @@ class PathSpecMixin(object):
 					except Exception:
 						has_error = True
 						raise
+
+					yield spec
 
 				if has_error:
 					raise Exception("Subtest failed.")
@@ -520,7 +541,7 @@ class PathSpecTest(PathSpecMixin, TestCase):
 				file = 'test/exclude.txt'
 
 				include = spec.match_file(file)
-				includes = {file} if include else {}
+				includes = {file} if include else set()
 				debug = debug_includes(spec, {file}, includes)
 
 				self.assertIs(include, False, debug)
@@ -537,7 +558,7 @@ class PathSpecTest(PathSpecMixin, TestCase):
 				file = 'unmatch.bin'
 
 				include = spec.match_file(file)
-				includes = {file} if include else {}
+				includes = {file} if include else set()
 				debug = debug_includes(spec, {file}, includes)
 
 				self.assertIs(include, False, debug)
@@ -1302,12 +1323,18 @@ class PathSpecIssue150Test(PathSpecMixin, TestCase):
 			('\n', '\r\n'),
 		):
 			name = f"foo{suffix}"
-			for sub_test in self.parameterize_from_lines('gitignore', [
-				name + ending,
-			]):
-				with sub_test(suffix=suffix, ending=ending) as spec:
+			for sub_test in self.parameterize_from_lines(
+				'gitignore',
+				[name + ending],
+				skip_hyperscan=True,
+				sub_params=dict(suffix=suffix, ending=ending),
+			):
+				with sub_test() as spec:
 					self.assertTrue(spec.match_file(name))
 					self.assertFalse(spec.match_file('foo'))
+
+		with self.subTest('hyperscan'):
+			self.skipTest("Hyperscan backend fails on UTF-8.")
 
 	def test_2_negation_and_directories_1(self):
 		"""
@@ -1315,13 +1342,18 @@ class PathSpecIssue150Test(PathSpecMixin, TestCase):
 		"""
 		for suffix in ('\t', '\xa0', '\u2003'):
 			name = f"foo{suffix}"
-			for sub_test in self.parameterize_from_lines('gitignore', [
-				"*",
-				f"!{name}",
-			]):
-				with sub_test(suffix=suffix) as spec:
+			for sub_test in self.parameterize_from_lines(
+				'gitignore',
+				["*", f"!{name}"],
+				skip_hyperscan=True,
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
 					self.assertFalse(spec.match_file(name))
 					self.assertTrue(spec.match_file('foo'))
+
+		with self.subTest('hyperscan'):
+			self.skipTest("Hyperscan backend fails on UTF-8.")
 
 	def test_2_negation_and_directories_2(self):
 		"""
@@ -1329,14 +1361,20 @@ class PathSpecIssue150Test(PathSpecMixin, TestCase):
 		"""
 		for suffix in ('\t', '\xa0', '\u2003'):
 			name = f"foo{suffix}"
-			for sub_test in self.parameterize_from_lines('gitignore', [
-				f"{name}/",
-			]):
-				with sub_test(suffix=suffix) as spec:
+			for sub_test in self.parameterize_from_lines(
+				'gitignore',
+				[f"{name}/"],
+				skip_hyperscan=True,
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
 					self.assertTrue(spec.match_file(f"{name}/"))
 					self.assertTrue(spec.match_file(f"{name}/child"))
 					self.assertFalse(spec.match_file(name))
 					self.assertFalse(spec.match_file("foo/child"))
+
+		with self.subTest('hyperscan'):
+			self.skipTest("Hyperscan backend fails on UTF-8.")
 
 	def test_3_character_after_slash(self):
 		"""
@@ -1344,10 +1382,16 @@ class PathSpecIssue150Test(PathSpecMixin, TestCase):
 		"""
 		for suffix in ('\t', '\xa0', '\u2003'):
 			name = f"foo/{suffix}"
-			for sub_test in self.parameterize_from_lines('gitignore', [
-				name,
-			]):
-				with sub_test(suffix=suffix) as spec:
+			for sub_test in self.parameterize_from_lines(
+				'gitignore',
+				[name],
+				skip_hyperscan=True,
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
 					self.assertTrue(spec.match_file(name))
 					self.assertFalse(spec.match_file('foo/'))
 					self.assertFalse(spec.match_file('foo/other'))
+
+		with self.subTest('hyperscan'):
+			self.skipTest("Hyperscan backend fails on UTF-8.")
