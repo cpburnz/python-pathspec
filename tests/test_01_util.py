@@ -26,6 +26,7 @@ from pathspec.patterns.gitignore.basic import (
 from pathspec.util import (
 	RecursionError,
 	check_match_file,
+	detailed_match_files,
 	iter_tree_entries,
 	iter_tree_files,
 	match_file,
@@ -113,6 +114,30 @@ class CheckMatchFileTest(unittest.TestCase):
 			'Y/a.txt',
 			'Y/Z/c.txt',
 		})
+
+
+class DetailedMatchFilesTest(unittest.TestCase):
+	"""Test inclusion and exclusion bookkeeping for detailed matches."""
+
+	def test_negation_without_previous_match(self):
+		patterns = list(map(GitIgnoreBasicPattern, ['*.txt', '!*.log']))
+		for all_matches in (False, True):
+			with self.subTest(all_matches=all_matches):
+				results = detailed_match_files(patterns, ['notes.txt', 'debug.log'], all_matches)
+				self.assertEqual(set(results), {'notes.txt'})
+				self.assertEqual(results['notes.txt'].patterns, [patterns[0]])
+
+	def test_repeated_negation_and_reinclusion(self):
+		patterns = list(map(GitIgnoreBasicPattern, ['*.txt', '!notes.txt', '!notes.txt', 'notes.txt']))
+		for all_matches in (False, True):
+			with self.subTest(all_matches=all_matches):
+				results = detailed_match_files(iter(patterns), iter(['notes.txt']), all_matches)
+				self.assertEqual(set(results), {'notes.txt'})
+				self.assertEqual(results['notes.txt'].patterns, [patterns[-1]])
+
+	def test_negation_removes_previous_match(self):
+		patterns = list(map(GitIgnoreBasicPattern, ['*.txt', '!notes.txt']))
+		self.assertEqual(detailed_match_files(patterns, ['notes.txt']), {})
 
 
 class IterTreeTest(unittest.TestCase):

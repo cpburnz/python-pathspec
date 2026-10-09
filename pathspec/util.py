@@ -171,7 +171,7 @@ def detailed_match_files(
 			else:
 				# Remove files.
 				for file in result_files:
-					del return_files[file]
+					return_files.pop(file, None)
 
 	return return_files
 
