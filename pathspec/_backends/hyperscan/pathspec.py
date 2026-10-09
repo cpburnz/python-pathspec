@@ -32,8 +32,11 @@ from .base import (
 	hyperscan_error)
 from ._base import (
 	HS_FLAGS,
+	HS_VERSION,
+	HS_VERSION_0_9_1,
 	HyperscanExprDat,
-	HyperscanExprDebug)
+	HyperscanExprDebug,
+	compat_convert_utf8)
 
 
 class HyperscanPsBackend(_Backend):
@@ -147,7 +150,8 @@ class HyperscanPsBackend(_Backend):
 		expr_data: list[HyperscanExprDat] = []
 		exprs: list[bytes] = []
 		for pattern_index, pattern in patterns:
-			assert pattern.include is not None, (pattern_index, pattern)
+			pattern_include = pattern.include
+			assert pattern_include is not None, (pattern_index, pattern)
 			assert pattern.regex is not None, (pattern_index, pattern)
 
 			# Encode regex.
@@ -158,18 +162,22 @@ class HyperscanPsBackend(_Backend):
 				regex_bytes = regex
 			else:
 				assert isinstance(regex, str), regex
-				regex_bytes = regex.encode('utf8')
+				if HS_VERSION >= HS_VERSION_0_9_1:
+					regex_bytes = regex.encode('utf8')
+				else:
+					# Convert unicode for older version of hyperscan.
+					regex_bytes = compat_convert_utf8(regex)
 
 			if debug:
 				expr_data.append(HyperscanExprDebug(
-					include=pattern.include,
+					include=pattern_include,
 					index=pattern_index,
 					is_dir_pattern=False,
 					regex=regex,
 				))
 			else:
 				expr_data.append(HyperscanExprDat(
-					include=pattern.include,
+					include=pattern_include,
 					index=pattern_index,
 					is_dir_pattern=False,
 				))
