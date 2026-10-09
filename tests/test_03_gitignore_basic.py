@@ -743,6 +743,26 @@ class GitIgnoreBasicPatternTest(TestCase):
 			with self.subTest(pattern=pattern, path=path):
 				self.assertIsNotNone(GitIgnoreBasicPattern(pattern).match_file(path))
 
+	def test_14_bracket_escape(self):
+		"""
+		Test that a backslash inside a bracket expression escapes the next
+		character.
+		"""
+		for raw_pattern, positives, negatives in [
+			('[a\\-c]', ['a', '-', 'c'], ['b', '\\']),
+			('[\\]]', [']'], ['\\', '\\]']),
+			('[a\\]]', ['a', ']'], ['\\', '\\]']),
+			('[\\!a]', ['!', 'a'], ['\\']),
+			('[\\\\]', ['\\'], ['a']),
+		]:
+			pattern = GitIgnoreBasicPattern(raw_pattern)
+			for path in positives:
+				with self.subTest(f"p={raw_pattern!r} match {path!r}"):
+					self.assertIsNotNone(pattern.match_file(path))
+			for path in negatives:
+				with self.subTest(f"p={raw_pattern!r} no-match {path!r}"):
+					self.assertIsNone(pattern.match_file(path))
+
 
 class GitIgnoreBasicPatternIssue19Test(TestCase):
 	"""
