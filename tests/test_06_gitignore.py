@@ -2,6 +2,7 @@
 This script tests :class:`.GitIgnoreSpec`.
 """
 
+import itertools
 from collections.abc import (
 	Iterable,
 	Iterator,
@@ -12,8 +13,10 @@ from contextlib import (
 from functools import (
 	partial)
 from typing import (
+	Any,
 	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
-	Optional)  # Replaced by `X | None` in 3.10.
+	Optional,  # Replaced by `X | None` in 3.10.
+	Protocol)
 from unittest import (
 	SkipTest,
 	TestCase)
@@ -50,6 +53,11 @@ The backend parameters.
 """
 
 
+class SubTestContext(Protocol):
+	def __call__(self) -> AbstractContextManager[GitIgnoreSpec]:
+		...
+
+
 class GitIgnoreSpecMixin(object):
 	"""
 	The :class:`GitIgnoreSpecMixin` class provides utility methods used by the
@@ -59,19 +67,24 @@ class GitIgnoreSpecMixin(object):
 	def parameterize_from_lines(
 		self,
 		lines: Iterable[AnyStr],
-	) -> Iterator[Callable[[], AbstractContextManager[GitIgnoreSpec]]]:
+		sub_params: Optional[dict[str, Any]] = None,
+	) -> Iterator[SubTestContext]:
 		"""
 		Parameterize `GitIgnoreSpec.from_lines()` for each backend and configuration
 		to begin a subtest.
 
-		*pattern_factory* (:class:`str`) is the pattern factory.
-
 		*lines* (:class:`Iterable` of :class:`str`) yields the lines.
 
-		Returns an :class:`Iterator` yielding each context for the
+		*sub_params* (:class:`dict`) contains additional parameters for the
+		subtest.
+
+		Yields each subtest context (:class:`SubTestContext`) for the
 		:class:`GitIgnoreSpec`.
 		"""
 		lines = list(lines)
+
+		if sub_params is None:
+			sub_params = {}
 
 		configs: list[tuple[
 			str, BackendNamesHint, Optional[Callable[[Sequence[Pattern]], _Backend]]
@@ -136,22 +149,32 @@ class GitIgnoreSpecMixin(object):
 			try:
 				require_backend(backend)
 			except SkipTest:
-				with self.subTest(label):
+				with self.subTest(label, **sub_params):
 					raise
 				continue
 
 			@contextmanager
 			def _sub_test(
-				backend=backend,
-				backend_factory=backend_factory,
-				label=label,
+				_backend=backend,
+				_backend_factory=backend_factory,
+				_label=label,
 			):
-				with self.subTest(label):
-					yield GitIgnoreSpec.from_lines(
-						lines,
-						backend=backend,
-						_test_backend_factory=backend_factory,
-					)
+				has_error = False
+				with self.subTest(_label, **sub_params):
+					try:
+						spec = GitIgnoreSpec.from_lines(
+							lines,
+							backend=_backend,
+							_test_backend_factory=_backend_factory,
+						)
+					except Exception:
+						has_error = True
+						raise
+
+					yield spec
+
+				if has_error:
+					raise Exception("Subtest failed.")
 
 			yield _sub_test
 
@@ -1074,3 +1097,72 @@ class GitIgnoreSpecIssue139Test(GitIgnoreSpecMixin, TestCase):
 			for sub_test in self.parameterize_from_lines([pattern]):
 				with sub_test() as spec:
 					self.assertTrue(spec.match_file(path))
+
+
+class GitIgnoreSpecIssue150Test(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecIssue150Test` class tests the :class:`.GitIgnoreSpec`
+	implementation for issue #150.
+	"""
+
+	def test_1_stream_lines(self):
+		"""
+		Test handling of trailing tabs, non-breaking spaces, and em-spaces.
+		"""
+		for suffix, ending in itertools.product(
+			('\t', '\xa0', '\u2003'),
+			('\n', '\r\n'),
+		):
+			name = f"foo{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				[name + ending],
+				sub_params=dict(suffix=suffix, ending=ending),
+			):
+				with sub_test() as spec:
+					self.assertTrue(spec.match_file(name))
+					self.assertFalse(spec.match_file('foo'))
+
+	def test_2_negation_and_directories_1(self):
+		"""
+		Test handling of negation and directories.
+		"""
+		for suffix in ('\t', '\xa0', '\u2003'):
+			name = f"foo{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				["*", f"!{name}"],
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
+					self.assertFalse(spec.match_file(name))
+					self.assertTrue(spec.match_file('foo'))
+
+	def test_2_negation_and_directories_2(self):
+		"""
+		Test handling of negation and directories.
+		"""
+		for suffix in ('\t', '\xa0', '\u2003'):
+			name = f"foo{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				[f"{name}/"],
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
+					self.assertTrue(spec.match_file(f"{name}/"))
+					self.assertTrue(spec.match_file(f"{name}/child"))
+					self.assertFalse(spec.match_file(name))
+					self.assertFalse(spec.match_file("foo/child"))
+
+	def test_3_character_after_slash(self):
+		"""
+		Test handling of characters after a slash.
+		"""
+		for suffix in ('\t', '\xa0', '\u2003'):
+			name = f"foo/{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				[name],
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
+					self.assertTrue(spec.match_file(name))
+					self.assertFalse(spec.match_file('foo/'))
+					self.assertFalse(spec.match_file('foo/other'))

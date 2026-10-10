@@ -2,6 +2,7 @@
 This script tests :class:`.PathSpec`.
 """
 
+import itertools
 import os
 import re
 import shutil
@@ -18,9 +19,11 @@ from functools import (
 from pathlib import (
 	Path)
 from typing import (
+	Any,
 	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
 	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
+	Protocol,
 	overload)
 from unittest import (
 	SkipTest,
@@ -43,8 +46,10 @@ from pathspec.pattern import (
 from pathspec.patterns.gitignore.basic import (
 	GitIgnoreBasicPattern)
 from pathspec._typing import (
+
 	AnyStr)  # Removed in 3.18.
 from pathspec.util import (
+	TPattern_co,
 	iter_tree_entries)
 
 from .util import (
@@ -67,6 +72,11 @@ BACKENDS: list[BackendNamesHint] = [
 """
 The backend parameters.
 """
+
+
+class SubTestContext(Protocol[TPattern_co]):
+	def __call__(self) -> AbstractContextManager[PathSpec[TPattern_co]]:
+		...
 
 
 class PathSpecMixin(object):
@@ -98,7 +108,8 @@ class PathSpecMixin(object):
 		self,
 		pattern_factory: Literal['gitignore'],
 		lines: Iterable[AnyStr],
-	) -> Iterator[Callable[[], AbstractContextManager[PathSpec[GitIgnoreBasicPattern]]]]:
+		sub_params: Optional[dict[str, Any]] = None,
+	) -> Iterator[SubTestContext[GitIgnoreBasicPattern]]:
 		...
 
 	@overload
@@ -106,14 +117,16 @@ class PathSpecMixin(object):
 		self,
 		pattern_factory: str,
 		lines: Iterable[AnyStr],
-	) -> Iterator[Callable[[], AbstractContextManager[PathSpec[Pattern]]]]:
+		sub_params: Optional[dict[str, Any]] = None,
+	) -> Iterator[SubTestContext[Pattern]]:
 		...
 
 	def parameterize_from_lines(
 		self,
 		pattern_factory: str,
 		lines: Iterable[AnyStr],
-	) -> Iterator[Callable[[], AbstractContextManager[PathSpec]]]:
+		sub_params: Optional[dict[str, Any]] = None,
+	) -> Iterator[SubTestContext]:
 		"""
 		Parameterize `PathSpec.from_lines()` for each backend and configuration to
 		begin a subtest.
@@ -122,10 +135,16 @@ class PathSpecMixin(object):
 
 		*lines* (:class:`Iterable` of :class:`str`) yields the lines.
 
-		Returns an :class:`Iterator` yielding each subtest context for the
+		*sub_params* (:class:`dict`) contains additional parameters for the
+		subtest.
+
+		Yields each subtest context (:class:`SubTestContext`) for the
 		:class:`PathSpec`.
 		"""
 		lines = list(lines)
+
+		if sub_params is None:
+			sub_params = {}
 
 		configs: list[tuple[
 			str, BackendNamesHint, Optional[Callable[[Sequence[Pattern]], _Backend]]
@@ -190,24 +209,34 @@ class PathSpecMixin(object):
 			try:
 				require_backend(backend)
 			except SkipTest:
-				with self.subTest(label):
+				with self.subTest(label, **sub_params):
 					raise
 				continue
 
 			@contextmanager
 			def _sub_test(
-				backend=backend,
-				backend_factory=backend_factory,
-				label=label,
+				_backend=backend,
+				_backend_factory=backend_factory,
+				_label=label,
 			):
 				self.clear_temp_dir()
-				with self.subTest(label):
-					yield PathSpec.from_lines(
-						pattern_factory,
-						lines,
-						backend=backend,
-						_test_backend_factory=backend_factory,
-					)
+				has_error = False
+				with self.subTest(_label, **sub_params):
+					try:
+						spec = PathSpec.from_lines(
+							pattern_factory,
+							lines,
+							backend=_backend,
+							_test_backend_factory=_backend_factory,
+						)
+					except Exception:
+						has_error = True
+						raise
+
+					yield spec
+
+				if has_error:
+					raise Exception("Subtest failed.")
 
 			yield _sub_test
 
@@ -503,7 +532,7 @@ class PathSpecTest(PathSpecMixin, TestCase):
 				file = 'test/exclude.txt'
 
 				include = spec.match_file(file)
-				includes = {file} if include else {}
+				includes = {file} if include else set()
 				debug = debug_includes(spec, {file}, includes)
 
 				self.assertIs(include, False, debug)
@@ -520,7 +549,7 @@ class PathSpecTest(PathSpecMixin, TestCase):
 				file = 'unmatch.bin'
 
 				include = spec.match_file(file)
-				includes = {file} if include else {}
+				includes = {file} if include else set()
 				debug = debug_includes(spec, {file}, includes)
 
 				self.assertIs(include, False, debug)
@@ -1268,3 +1297,76 @@ class PathSpecIssue100Test(PathSpecMixin, TestCase):
 				includes = get_includes(results)
 				debug = debug_results(spec, results)
 				self.assertEqual(includes, set(), debug)
+
+
+class PathSpecIssue150Test(PathSpecMixin, TestCase):
+	"""
+	The :class:`PathSpecIssue150Test` class tests the :class:`.PathSpec`
+	implementation for issue #150.
+	"""
+
+	def test_1_stream_lines(self):
+		"""
+		Test handling of trailing tabs, non-breaking spaces, and em-spaces.
+		"""
+		for suffix, ending in itertools.product(
+			('\t', '\xa0', '\u2003'),
+			('\n', '\r\n'),
+		):
+			name = f"foo{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				'gitignore',
+				[name + ending],
+				sub_params=dict(suffix=suffix, ending=ending),
+			):
+				with sub_test() as spec:
+					self.assertTrue(spec.match_file(name))
+					self.assertFalse(spec.match_file('foo'))
+
+	def test_2_negation_and_directories_1(self):
+		"""
+		Test handling of negation and directories.
+		"""
+		for suffix in ('\t', '\xa0', '\u2003'):
+			name = f"foo{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				'gitignore',
+				["*", f"!{name}"],
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
+					self.assertFalse(spec.match_file(name))
+					self.assertTrue(spec.match_file('foo'))
+
+	def test_2_negation_and_directories_2(self):
+		"""
+		Test handling of negation and directories.
+		"""
+		for suffix in ('\t', '\xa0', '\u2003'):
+			name = f"foo{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				'gitignore',
+				[f"{name}/"],
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
+					self.assertTrue(spec.match_file(f"{name}/"))
+					self.assertTrue(spec.match_file(f"{name}/child"))
+					self.assertFalse(spec.match_file(name))
+					self.assertFalse(spec.match_file("foo/child"))
+
+	def test_3_character_after_slash(self):
+		"""
+		Test handling of characters after a slash.
+		"""
+		for suffix in ('\t', '\xa0', '\u2003'):
+			name = f"foo/{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				'gitignore',
+				[name],
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
+					self.assertTrue(spec.match_file(name))
+					self.assertFalse(spec.match_file('foo/'))
+					self.assertFalse(spec.match_file('foo/other'))

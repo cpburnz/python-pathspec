@@ -1150,3 +1150,51 @@ class GitIgnoreSpecPatternIssue93Test(TestCase):
 				pattern = GitIgnoreSpecPattern(raw_pattern)
 				self.assertIs(pattern.include, None)
 				self.assertIs(pattern.regex, None)
+
+
+class GitIgnoreSpecPatternIssue150Test(TestCase):
+	"""
+	The :class:`GitIgnoreSpecPatternIssue150Test` class tests the
+	:class:`.GitIgnoreSpecPattern` implementation for issue #150.
+	"""
+
+	def test_1_literal_whitespace(self):
+		"""
+		Test that other whitespace characters (not space or newlines) are matched.
+		"""
+		for suffix in ('\t', '\v', '\f', '\x85', '\xa0', '\u2003'):
+			name = 'foo' + suffix
+			for ending in ('', ' ', '\n', '\r\n'):
+				with self.subTest(suffix=suffix, ending=ending):
+					pattern = GitIgnoreSpecPattern(name + ending)
+					self.assertTrue(pattern.match_file(name))
+					self.assertIsNone(pattern.match_file('foo'))
+					escaped = GitIgnoreSpecPattern(GitIgnoreSpecPattern.escape(name))
+					self.assertTrue(escaped.match_file(name))
+
+	def test_2_bytes(self):
+		"""
+		Test that other whitespace characters (not space or newlines) are matched,
+		using bytes.
+		"""
+		for suffix in (b'\t', b'\v', b'\f', b'\x85', b'\xa0', b'\xc2\xa0', b'\xe2\x80\x83'):
+			name = b'foo' + suffix
+			for ending in (b'', b' ', b'\n', b'\r\n'):
+				with self.subTest(suffix=suffix, ending=ending):
+					pattern = GitIgnoreSpecPattern(name + ending)
+					self.assertTrue(pattern.match_file(name))
+					self.assertIsNone(pattern.match_file(b'foo'))
+					escaped = GitIgnoreSpecPattern(GitIgnoreSpecPattern.escape(name))
+					self.assertTrue(escaped.match_file(name))
+
+	def test_3_spaces_and_backslashes(self):
+		for raw, name in (
+			('foo  ', 'foo'),
+			('foo\\  ', 'foo '),
+			('foo\\\\ ', 'foo\\'),
+			('foo\\\\\\ ', 'foo\\ '),
+			('foo\\\t ', 'foo\t'),
+		):
+			for ending in ('', '\n', '\r\n'):
+				with self.subTest(raw=raw, ending=ending):
+					self.assertTrue(GitIgnoreSpecPattern(raw + ending).match_file(name))
