@@ -236,6 +236,8 @@ Major changes:
 
 Bug fixes:
 
+- Avoid following symbolic link targets when checking file types in ``iter_tree_files(follow_links=False)``.
+
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
 
 
