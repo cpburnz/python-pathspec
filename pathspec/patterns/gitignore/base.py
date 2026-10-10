@@ -49,6 +49,15 @@ bracket expression. Group 1 captures a leading caret (unsupported by git);
 group 2 captures the class name.
 """
 
+_BRACKET_TOKEN_REGEX = re.compile(
+	_POSIX_CLASS_REGEX.pattern + r'|\\(.)', re.DOTALL,
+)
+"""
+Matches either a POSIX bracket character class token (groups 1 and 2, see
+:data:`_POSIX_CLASS_REGEX`) or a backslash escaped character (group 3) inside a
+bracket expression.
+"""
+
 
 def _strip_trailing_ws(pattern: str) -> str:
 	"""
@@ -99,6 +108,20 @@ def _translate_posix_class(match: 're.Match') -> str:
 		))  # _PosixClassError
 
 	return class_regex
+
+
+def _translate_bracket_token(match: 're.Match') -> str:
+	"""
+	Translate a single token matched by :data:`_BRACKET_TOKEN_REGEX`. A backslash
+	escaped character becomes that literal character, the same as git's
+	wildmatch. A POSIX character class is translated by
+	:func:`_translate_posix_class`.
+	"""
+	escaped = match.group(3)
+	if escaped is not None:
+		return re.escape(escaped)
+
+	return _translate_posix_class(match)
 
 
 class _GitIgnoreBasePattern(RegexPattern):
@@ -262,7 +285,11 @@ class _GitIgnoreBasePattern(RegexPattern):
 
 				# Find closing bracket. Stop once we reach the end or find it.
 				while j < end and pattern[j] != ']':
-					if pattern[j] == '[' and j + 1 < end and pattern[j + 1] == ':':
+					if pattern[j] == '\\':
+						# Skip over an escaped character so an escaped closing bracket
+						# ("\]") does not end the bracket expression.
+						j += 2
+					elif pattern[j] == '[' and j + 1 < end and pattern[j + 1] == ':':
 						# Skip over a POSIX character class token ("[:name:]") so its
 						# internal closing bracket is not mistaken for the end of the whole
 						# bracket expression.
@@ -298,17 +325,19 @@ class _GitIgnoreBasePattern(RegexPattern):
 						expr += '^'
 						i += 1
 
-					# Build regex bracket expression. Escape slashes so they are treated
-					# as literal slashes by regex as defined by POSIX.
-					body = pattern[i:j].replace('\\', '\\\\')
-
+					# Build regex bracket expression. A backslash escapes the next
+					# character (e.g. "[\]]" matches ']'), the same as outside of a bracket
+					# expression.
+					#
 					# Translate POSIX character classes (e.g. "[:alpha:]") into their
 					# ASCII regex equivalents. Git's wildmatch supports these, but
 					# Python's `re` does not, so passing them through verbatim builds a
 					# broken regex that silently mismatches (and warns about a nested
 					# set).
 					try:
-						body = _POSIX_CLASS_REGEX.sub(_translate_posix_class, body)
+						body = _BRACKET_TOKEN_REGEX.sub(
+							_translate_bracket_token, pattern[i:j],
+						)
 					except _PosixClassError:
 						if errors == 'raise':
 							# EDGE CASE: Git discards patterns with an invalid range notation

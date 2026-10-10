@@ -865,6 +865,32 @@ class GitIgnoreSpecPatternTest(TestCase):
 				self.assertIs(pattern.include, None)
 				self.assertIs(pattern.regex, None)
 
+	def test_13_bracket_escape(self):
+		"""
+		Test that a backslash inside a bracket expression escapes the next
+		character, matching git's ``check-ignore``.
+		"""
+		for raw_pattern, positives, negatives in [
+			('[a\\-c]', ['a', '-', 'c'], ['b', '\\']),
+			('[\\]]', [']'], ['\\', '\\]']),
+			('[\\]a]', [']', 'a'], ['\\', '\\]a']),
+			('[a\\]]', ['a', ']'], ['\\', '\\]']),
+			('[!\\]]', ['a', '\\'], [']']),
+			('[\\!a]', ['!', 'a'], ['\\']),
+			('[\\^a]', ['^', 'a'], ['\\', 'b']),
+			('[\\n]', ['n'], ['\\', '\n']),
+			('[\\\\]', ['\\'], ['a']),
+			('[\\[:alpha:]]', ['[]', ':]', 'a]'], ['a', 'b', '\\']),
+			('[[:alpha:]\\]]', ['a', ']'], ['5', '\\']),
+		]:
+			pattern = GitIgnoreSpecPattern(raw_pattern)
+			for path in positives:
+				with self.subTest(f"p={raw_pattern!r} match {path!r}"):
+					self.assertTrue(pattern.match_file(path))
+			for path in negatives:
+				with self.subTest(f"p={raw_pattern!r} no-match {path!r}"):
+					self.assertFalse(pattern.match_file(path))
+
 
 class GitIgnoreSpecPatternIssue19Test(TestCase):
 	"""
