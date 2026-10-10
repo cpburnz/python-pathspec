@@ -38,6 +38,7 @@ Bug fixes:
 - `Pull #149`_: Handle directory-open errors through on_error during tree walks.
 - `Pull #156`_: Avoid following symbolic link targets when checking file types in `iter_tree_files(follow_links=False)` / `iter_tree_entries(follow_links=False)`.
 - `Pull #158`_: Ignore unmatched exclusions in `detailed_match_files()`.
+- `Pull #159`_: Preserve PathSpec state when backend reconstruction fails.
 
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
@@ -60,6 +61,7 @@ Bug fixes:
 .. _`Pull #150`: https://github.com/cpburnz/python-pathspec/pull/150
 .. _`Pull #156`: https://github.com/cpburnz/python-pathspec/pull/156
 .. _`Pull #158`: https://github.com/cpburnz/python-pathspec/pull/158
+.. _`Pull #159`: https://github.com/cpburnz/python-pathspec/pull/159
 
 
 1.1.1 (2026-04-26)
