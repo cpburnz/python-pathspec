@@ -82,5 +82,6 @@ __credits__ = [
 	"Cheruku Sri Charan Reddy <https://github.com/sricharanreddycheruku>",
 	"Larry Gao <https://github.com/Larry-Labs>",
 	"kokotatan <https://github.com/kokotatan>",
+	"Gyanu Mayank <https://github.com/gyanu2507>",
 ]
 __license__ = "MPL 2.0"

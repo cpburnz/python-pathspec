@@ -1,6 +1,7 @@
 """
 This module provides common classes for the gitignore patterns.
 """
+from __future__ import annotations
 
 import re
 from typing import (
@@ -12,6 +13,22 @@ from pathspec.pattern import (
 	RegexPattern)
 from pathspec._typing import (
 	AnyStr)  # Removed in 3.18.
+
+_BRACKET_TOKEN_REGEX = re.compile((
+	# Escaped character.
+	r'\\(.)'
+	# POSIX class.
+	r'|\[:(\^?)([^:\]]*):\]'
+), re.DOTALL)
+"""
+Matches tokens inside a bracket expression:
+
+- A backslash escaped character (group 1).
+
+-	Matches a POSIX bracket character class token such as ``[:alpha:]`` inside a
+	bracket expression. Group 2 captures a leading caret (unsupported by git);
+	group 3 captures the class name.
+"""
 
 _BYTES_ENCODING = 'latin1'
 """
@@ -40,22 +57,6 @@ _POSIX_CLASS_TO_REGEX = {
 """
 Maps each POSIX bracket character class name to the ASCII regex range that
 reproduces git's wildmatch behavior.
-"""
-
-_POSIX_CLASS_REGEX = re.compile(r'\[:(\^?)([^:\]]*):\]')
-"""
-Matches a POSIX bracket character class token such as ``[:alpha:]`` inside a
-bracket expression. Group 1 captures a leading caret (unsupported by git);
-group 2 captures the class name.
-"""
-
-_BRACKET_TOKEN_REGEX = re.compile(
-	_POSIX_CLASS_REGEX.pattern + r'|\\(.)', re.DOTALL,
-)
-"""
-Matches either a POSIX bracket character class token (groups 1 and 2, see
-:data:`_POSIX_CLASS_REGEX`) or a backslash escaped character (group 3) inside a
-bracket expression.
 """
 
 
@@ -93,35 +94,31 @@ def _strip_trailing_ws(pattern: str) -> str:
 	return pattern[:last_ws]
 
 
-def _translate_posix_class(match: 're.Match') -> str:
+def _sub_bracket_token(match: re.Match[str]) -> str:
 	"""
-	Translate a single POSIX character class token to its ASCII regex range.
-	Raises :class:`_PosixClassError` for a negated (``[:^name:]``) or unknown
-	class name, matching git's treatment of it as a malformed pattern.
+	Translate a single token matched by :data:`_BRACKET_TOKEN_REGEX`. A token can
+	be a backslash escaped character (group 1), a POSIX bracket character class
+	(groups 2 and 3).
+
+	*match* (:class:`re.Match`) is the match object.
+
+	Returns the replacement string (:class:`str`).
 	"""
-	negated, name = match.group(1, 2)
-	class_regex = _POSIX_CLASS_TO_REGEX.get(name)
-	if negated or class_regex is None:
-		raise _PosixClassError((
-			f"Invalid character class={match.group(0)!r} found in pattern="
-			f"{match.string!r}."
-		))  # _PosixClassError
+	escape_char, class_negated, class_name = match.groups()  # type: str
 
-	return class_regex
+	# Backslash escaped character.
+	if escape_char:
+		return re.escape(escape_char)
 
+	# POSIX bracket character class.
+	class_regex = _POSIX_CLASS_TO_REGEX.get(class_name)
+	if class_regex is not None and not class_negated:
+		return class_regex
 
-def _translate_bracket_token(match: 're.Match') -> str:
-	"""
-	Translate a single token matched by :data:`_BRACKET_TOKEN_REGEX`. A backslash
-	escaped character becomes that literal character, the same as git's
-	wildmatch. A POSIX character class is translated by
-	:func:`_translate_posix_class`.
-	"""
-	escaped = match.group(3)
-	if escaped is not None:
-		return re.escape(escaped)
-
-	return _translate_posix_class(match)
+	raise _PosixClassError((
+		f"Invalid character class={match.group(0)!r} found in pattern="
+		f"{match.string!r}."
+	))  # _PosixClassError
 
 
 class _GitIgnoreBasePattern(RegexPattern):
@@ -325,9 +322,10 @@ class _GitIgnoreBasePattern(RegexPattern):
 						expr += '^'
 						i += 1
 
-					# Build regex bracket expression. A backslash escapes the next
-					# character (e.g. "[\]]" matches ']'), the same as outside of a bracket
-					# expression.
+					# Build regex bracket expression.
+					#
+					# A backslash escapes the next character (e.g. "[\]]" matches ']'),
+					# the same as outside of a bracket expression.
 					#
 					# Translate POSIX character classes (e.g. "[:alpha:]") into their
 					# ASCII regex equivalents. Git's wildmatch supports these, but
@@ -335,9 +333,7 @@ class _GitIgnoreBasePattern(RegexPattern):
 					# broken regex that silently mismatches (and warns about a nested
 					# set).
 					try:
-						body = _BRACKET_TOKEN_REGEX.sub(
-							_translate_bracket_token, pattern[i:j],
-						)
+						body = _BRACKET_TOKEN_REGEX.sub(_sub_bracket_token, pattern[i:j])
 					except _PosixClassError:
 						if errors == 'raise':
 							# EDGE CASE: Git discards patterns with an invalid range notation

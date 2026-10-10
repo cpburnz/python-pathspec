@@ -36,6 +36,7 @@ Bug fixes:
 - `Pull #149`_: Handle directory-open errors through on_error during tree walks.
 - `Pull #152`_: Anchor gitignore filename matches at the actual end of the path.
 - `Pull #156`_: Avoid following symbolic link targets when checking file types in `iter_tree_files(follow_links=False)` / `iter_tree_entries(follow_links=False)`.
+- `Pull #157`_: Handle backslash escapes in gitignore bracket expressions.
 - `Pull #158`_: Ignore unmatched exclusions in `detailed_match_files()`.
 - `Pull #159`_: Preserve PathSpec state when backend reconstruction fails.
 
@@ -60,6 +61,7 @@ Bug fixes:
 .. _`Pull #150`: https://github.com/cpburnz/python-pathspec/pull/150
 .. _`Pull #152`: https://github.com/cpburnz/python-pathspec/pull/152
 .. _`Pull #156`: https://github.com/cpburnz/python-pathspec/pull/156
+.. _`Pull #157`: https://github.com/cpburnz/python-pathspec/pull/157
 .. _`Pull #158`: https://github.com/cpburnz/python-pathspec/pull/158
 .. _`Pull #159`: https://github.com/cpburnz/python-pathspec/pull/159
 
