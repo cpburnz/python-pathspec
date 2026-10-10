@@ -28,8 +28,11 @@ from typing import (
 from unittest import (
 	SkipTest,
 	TestCase)
+from unittest.mock import (
+	patch)
 
 from pathspec import (
+	GitIgnoreSpec,
 	PathSpec,
 	RegexPattern)
 from pathspec.backend import (
@@ -783,6 +786,43 @@ class PathSpecTest(PathSpecMixin, TestCase):
 			'test.png',
 			'test.txt',
 		}, debug)
+
+	def test_03_iadd_backend_failure(self):
+		"""
+		A failed backend rebuild must leave the original spec usable and unchanged.
+		"""
+		for spec_class in (PathSpec, GitIgnoreSpec):
+			with self.subTest(spec_class=spec_class):
+				spec = spec_class.from_lines('gitignore', ['*.txt'], backend='simple')
+				original_patterns = spec.patterns
+				other = spec_class.from_lines('gitignore', ['!keep.txt'], backend='simple')
+				with patch.object(spec_class, '_make_backend', side_effect=ValueError('Cannot compile patterns')):
+					with self.assertRaisesRegex(ValueError, 'Cannot compile patterns'):
+						spec += other
+
+				self.assertIs(spec.patterns, original_patterns)
+				self.assertEqual(len(spec), 1)
+				self.assertTrue(spec.match_file('keep.txt'))
+				spec += other
+				self.assertEqual(len(spec), 2)
+				self.assertFalse(spec.match_file('keep.txt'))
+				self.assertTrue(spec.match_file('other.txt'))
+
+	def test_03_iadd_incompatible_re2_pattern(self):
+		"""An unsupported regex must not become part of the RE2 spec."""
+		require_backend('re2')
+		import re2
+		spec = PathSpec([RegexPattern(re.compile(r'.*\.txt$'), include=True)], backend='re2')
+		other = PathSpec([RegexPattern(re.compile(r'(?=keep).*'), include=False)], backend='simple')
+		original_patterns = spec.patterns
+		with self.assertRaises(re2.error):
+			spec += other
+		self.assertIs(spec.patterns, original_patterns)
+		self.assertTrue(spec.match_file('keep.txt'))
+		spec += PathSpec.from_lines('gitignore', ['!keep.txt'], backend='simple')
+		self.assertEqual(len(spec), 2)
+		self.assertFalse(spec.match_file('keep.txt'))
+		self.assertTrue(spec.match_file('other.txt'))
 
 	def test_04_len(self):
 		"""

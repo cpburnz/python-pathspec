@@ -141,8 +141,10 @@ class PathSpec(Generic[TPattern_co]):
 		(:class:`PathSpec`) to this instance.
 		"""
 		if isinstance(other, PathSpec):
-			self.patterns = [*self.patterns, *other.patterns]
-			self._backend = self._make_backend(self._backend_name, self.patterns)
+			patterns = [*self.patterns, *other.patterns]
+			backend = self._make_backend(self._backend_name, patterns)
+			self.patterns = patterns
+			self._backend = backend
 			return self
 		else:
 			return NotImplemented
