@@ -128,7 +128,8 @@ class Re2PsBackend(_Backend):
 		regex_data: list[Re2RegexDat] = []
 		for pattern_index in indices:
 			pattern = patterns[pattern_index]
-			if pattern.include is None:
+			pattern_include = pattern.include
+			if pattern_include is None:
 				continue
 
 			assert pattern.regex is not None, pattern
@@ -137,14 +138,14 @@ class Re2PsBackend(_Backend):
 
 			if debug:
 				regex_data.append(Re2RegexDebug(
-					include=pattern.include,
+					include=pattern_include,
 					index=pattern_index,
 					is_dir_pattern=False,
 					regex=regex,
 				))
 			else:
 				regex_data.append(Re2RegexDat(
-					include=pattern.include,
+					include=pattern_include,
 					index=pattern_index,
 					is_dir_pattern=False,
 				))

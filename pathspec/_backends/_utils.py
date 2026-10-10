@@ -9,34 +9,24 @@ import re
 from collections.abc import (
 	Iterable)
 from typing import (
-	TypeVar,
-	Union,
-	overload)
+	TypeVar)
 
 from pathspec.pattern import (
 	Pattern)
+from pathspec._typing import (
+	AnyStr)
+
+_END_ANCHOR_BYTES = re.compile(rb'\\.')
+"""
+Regular expression to match an escaped character.
+"""
+
+_END_ANCHOR_STR = re.compile(r'\\.')
+"""
+Regular expression to match an escaped character.
+"""
 
 TPattern = TypeVar("TPattern", bound=Pattern)
-
-
-@overload
-def translate_end_anchor(regex: str) -> str: ...
-
-
-@overload
-def translate_end_anchor(regex: bytes) -> bytes: ...
-
-
-def translate_end_anchor(regex: Union[str, bytes]) -> Union[str, bytes]:
-	"""
-	Translate Python's strict end anchor to the RE2 and Hyperscan spelling.
-
-	Escaped backslashes are consumed as pairs, keeping literal ``\\Z`` names intact.
-	"""
-	if isinstance(regex, bytes):
-		return re.sub(rb'\\.', lambda match: rb'\z' if match[0] == rb'\Z' else match[0], regex)
-	else:
-		return re.sub(r'\\.', lambda match: r'\z' if match[0] == r'\Z' else match[0], regex)
 
 
 def enumerate_patterns(
@@ -66,3 +56,49 @@ def enumerate_patterns(
 		out_patterns.reverse()
 
 	return out_patterns
+
+
+def translate_end_anchor(regex: AnyStr) -> AnyStr:
+	"""
+	Translate Python's strict end anchor to the RE2 and Hyperscan spelling.
+
+	*regex* (:class:`bytes` or :class:`str`) is the regular expression.
+
+	Returns the translated regular expression (:class:`bytes` or :class:`str`).
+	"""
+	# Escaped backslashes are consumed as pairs, keeping literal `\Z` names
+	# intact.
+	if isinstance(regex, bytes):
+		return _END_ANCHOR_BYTES.sub(_sub_end_anchor_bytes, regex)
+	else:
+		return _END_ANCHOR_STR.sub(_sub_end_anchor_str, regex)
+
+
+def _sub_end_anchor_bytes(match: re.Match) -> bytes:
+	"""
+	Replaces Python's strict end anchor to the RE2 and Hyperscan spelling.
+
+	*match* (:class:`re.Match`) is the match object.
+
+	Returns the string replacement (:class:`bytes`).
+	"""
+	val = match[0]
+	if val == rb'\Z':
+		return rb'\z'
+	else:
+		return val
+
+
+def _sub_end_anchor_str(match: re.Match) -> str:
+	"""
+	Replaces Python's strict end anchor to the RE2 and Hyperscan spelling.
+
+	*match* (:class:`re.Match`) is the match object.
+
+	Returns the string replacement (:class:`str`).
+	"""
+	val = match[0]
+	if val == r'\Z':
+		return r'\z'
+	else:
+		return val

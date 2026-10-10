@@ -26,11 +26,12 @@ from pathspec.patterns.gitignore.spec import (
 from pathspec._typing import (
 	override)  # Added in 3.12.
 
+from .._utils import (
+	translate_end_anchor)
+
 from ._base import (
 	Re2RegexDat,
 	Re2RegexDebug)
-from .._utils import (
-	translate_end_anchor)
 from .pathspec import (
 	Re2PsBackend)
 
@@ -76,7 +77,8 @@ class Re2GiBackend(Re2PsBackend):
 		regex_data: list[Re2RegexDat] = []
 		for pattern_index in indices:
 			pattern = patterns[pattern_index]
-			if pattern.include is None:
+			pattern_include = pattern.include
+			if pattern_include is None:
 				continue
 
 			assert pattern.regex is not None, pattern
@@ -104,12 +106,12 @@ class Re2GiBackend(Re2PsBackend):
 						# direct match and not an excluded ancestor.
 						base_regex = regex_str[:-len(_DIR_MARK_OPT)]
 						use_regexes.append((f'{base_regex}/(?s:.)', True))
-						use_regexes.append((f'{base_regex}/?$', False))
+						use_regexes.append((rf'{base_regex}/?\z', False))
 					else:
 						# Remove capture group.
 						base_regex = regex_str.replace(_DIR_MARK_CG, '/')
 						use_regexes.append((f'{base_regex}(?s:.)', True))
-						use_regexes.append((f'{base_regex}$', False))
+						use_regexes.append((rf'{base_regex}\z', False))
 
 			if not use_regexes:
 				# No special case for regex.
@@ -119,14 +121,14 @@ class Re2GiBackend(Re2PsBackend):
 				regex = translate_end_anchor(regex)
 				if debug:
 					regex_data.append(Re2RegexDebug(
-						include=pattern.include,
+						include=pattern_include,
 						index=pattern_index,
 						is_dir_pattern=is_dir_pattern,
 						regex=regex,
 					))
 				else:
 					regex_data.append(Re2RegexDat(
-						include=pattern.include,
+						include=pattern_include,
 						index=pattern_index,
 						is_dir_pattern=is_dir_pattern,
 					))
@@ -220,4 +222,3 @@ class Re2GiBackend(Re2PsBackend):
 			index = file.find('/', index + 1)
 
 		return False
-
