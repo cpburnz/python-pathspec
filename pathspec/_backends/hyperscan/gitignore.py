@@ -30,7 +30,9 @@ from pathspec._typing import (
 	override)  # Added in 3.12.
 
 from .._utils import (
-	translate_end_anchor)
+	get_regex_flags,
+	translate_end_anchor,
+	translate_regex_flags)
 
 from ._base import (
 	HS_FLAGS,
@@ -156,6 +158,10 @@ class HyperscanGiBackend(HyperscanPsBackend):
 
 			for regex, is_dir_pattern in use_regexes:
 				regex = translate_end_anchor(regex)
+				regex = translate_regex_flags(  # type: ignore[type-var]
+					regex,
+					get_regex_flags(pattern.regex),
+				)
 				if isinstance(regex, bytes):
 					regex_bytes = regex
 				else:

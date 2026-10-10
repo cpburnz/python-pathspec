@@ -27,7 +27,9 @@ from pathspec._typing import (
 	override)  # Added in 3.12.
 
 from .._utils import (
-	translate_end_anchor)
+	get_regex_flags,
+	translate_end_anchor,
+	translate_regex_flags)
 
 from ._base import (
 	Re2RegexDat,
@@ -119,6 +121,10 @@ class Re2GiBackend(Re2PsBackend):
 
 			for regex, is_dir_pattern in use_regexes:
 				regex = translate_end_anchor(regex)
+				regex = translate_regex_flags(  # type: ignore[type-var]
+					regex,
+					get_regex_flags(pattern.regex),
+				)
 				if debug:
 					regex_data.append(Re2RegexDebug(
 						include=pattern_include,
