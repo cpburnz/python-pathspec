@@ -34,6 +34,7 @@ Bug fixes:
 - `Pull #147`_: Match directory entries with directory-only patterns. `PathSpec.match_entries()` and `.match_tree_entries()` will now match directory entries as directory paths (i.e., with a trailing `/`), instead of as file paths (no trailing `/`).
 - `Pull #149`_: Handle directory-open errors through on_error during tree walks.
 - `Pull #156`_: Avoid following symbolic link targets when checking file types in `iter_tree_files(follow_links=False)` / `iter_tree_entries(follow_links=False)`.
+- `Pull #158`_: Ignore unmatched exclusions in `detailed_match_files()`.
 
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
@@ -55,6 +56,7 @@ Bug fixes:
 .. _`Pull #149`: https://github.com/cpburnz/python-pathspec/pull/149
 .. _`Pull #150`: https://github.com/cpburnz/python-pathspec/pull/150
 .. _`Pull #156`: https://github.com/cpburnz/python-pathspec/pull/156
+.. _`Pull #158`: https://github.com/cpburnz/python-pathspec/pull/158
 
 
 1.1.1 (2026-04-26)

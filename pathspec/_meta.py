@@ -80,5 +80,6 @@ __credits__ = [
 	"Alan <https://github.com/shkyyy18>",
 	"Metis-dot <https://github.com/Metis-dot>",
 	"Cheruku Sri Charan Reddy <https://github.com/sricharanreddycheruku>",
+	"Larry Gao <https://github.com/Larry-Labs>",
 ]
 __license__ = "MPL 2.0"
