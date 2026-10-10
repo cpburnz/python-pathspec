@@ -16,12 +16,12 @@ from pathspec.pattern import (
 from pathspec._typing import (
 	AnyStr)
 
-_END_ANCHOR_BYTES = re.compile(rb'\\.')
+_END_ANCHOR_BYTES = re.compile(rb'\\.', re.DOTALL)
 """
 Regular expression to match an escaped character.
 """
 
-_END_ANCHOR_STR = re.compile(r'\\.')
+_END_ANCHOR_STR = re.compile(r'\\.', re.DOTALL)
 """
 Regular expression to match an escaped character.
 """
