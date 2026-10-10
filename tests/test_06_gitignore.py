@@ -2,7 +2,7 @@
 This script tests :class:`.GitIgnoreSpec`.
 """
 
-import unittest
+import itertools
 from collections.abc import (
 	Iterable,
 	Iterator,
@@ -13,10 +13,13 @@ from contextlib import (
 from functools import (
 	partial)
 from typing import (
+	Any,
 	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
-	Optional)  # Replaced by `X | None` in 3.10.
+	Optional,  # Replaced by `X | None` in 3.10.
+	Protocol)
 from unittest import (
-	SkipTest)
+	SkipTest,
+	TestCase)
 
 from pathspec.backend import (
 	BackendNamesHint,
@@ -50,27 +53,38 @@ The backend parameters.
 """
 
 
-class GitIgnoreSpecTest(unittest.TestCase):
+class SubTestContext(Protocol):
+	def __call__(self) -> AbstractContextManager[GitIgnoreSpec]:
+		...
+
+
+class GitIgnoreSpecMixin(object):
 	"""
-	The :class:`GitIgnoreSpecTest` class tests the :class:`.GitIgnoreSpec` class.
+	The :class:`GitIgnoreSpecMixin` class provides utility methods used by the
+	tests.
 	"""
 
 	def parameterize_from_lines(
 		self,
 		lines: Iterable[AnyStr],
-	) -> Iterator[Callable[[], AbstractContextManager[GitIgnoreSpec]]]:
+		sub_params: Optional[dict[str, Any]] = None,
+	) -> Iterator[SubTestContext]:
 		"""
 		Parameterize `GitIgnoreSpec.from_lines()` for each backend and configuration
 		to begin a subtest.
 
-		*pattern_factory* (:class:`str`) is the pattern factory.
-
 		*lines* (:class:`Iterable` of :class:`str`) yields the lines.
 
-		Returns an :class:`Iterator` yielding each context for the
+		*sub_params* (:class:`dict`) contains additional parameters for the
+		subtest.
+
+		Yields each subtest context (:class:`SubTestContext`) for the
 		:class:`GitIgnoreSpec`.
 		"""
 		lines = list(lines)
+
+		if sub_params is None:
+			sub_params = {}
 
 		configs: list[tuple[
 			str, BackendNamesHint, Optional[Callable[[Sequence[Pattern]], _Backend]]
@@ -135,24 +149,40 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			try:
 				require_backend(backend)
 			except SkipTest:
-				with self.subTest(label):
+				with self.subTest(label, **sub_params):
 					raise
 				continue
 
 			@contextmanager
 			def _sub_test(
-				backend=backend,
-				backend_factory=backend_factory,
-				label=label,
+				_backend=backend,
+				_backend_factory=backend_factory,
+				_label=label,
 			):
-				with self.subTest(label):
-					yield GitIgnoreSpec.from_lines(
-						lines,
-						backend=backend,
-						_test_backend_factory=backend_factory,
-					)
+				has_error = False
+				with self.subTest(_label, **sub_params):
+					try:
+						spec = GitIgnoreSpec.from_lines(
+							lines,
+							backend=_backend,
+							_test_backend_factory=_backend_factory,
+						)
+					except Exception:
+						has_error = True
+						raise
+
+					yield spec
+
+				if has_error:
+					raise Exception("Subtest failed.")
 
 			yield _sub_test
+
+
+class GitIgnoreSpecTest(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecTest` class tests the :class:`.GitIgnoreSpec` class.
+	"""
 
 	def test_01_reversed_args(self):
 		"""
@@ -280,7 +310,196 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					'Y/b.txt',
 				}, debug)
 
-	def test_02_issue_41_a(self):
+	def test_03_subdir(self):
+		"""
+		Test matching files in a subdirectory of an included directory.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			"dirG/",
+		]):
+			with sub_test() as spec:
+				files = {
+					'fileA',
+					'fileB',
+					'dirD/fileE',
+					'dirD/fileF',
+					'dirG/dirH/fileI',
+					'dirG/dirH/fileJ',
+					'dirG/fileO',
+				}
+
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+
+				self.assertEqual(ignores, {
+					'dirG/dirH/fileI',
+					'dirG/dirH/fileJ',
+					'dirG/fileO',
+				}, debug)
+				self.assertEqual(files - ignores, {
+					'fileA',
+					'fileB',
+					'dirD/fileE',
+					'dirD/fileF',
+				}, debug)
+
+
+class GitIgnoreSpecIssue19Test(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecIssue19Test` class tests the :class:`.GitIgnoreSpec`
+	implementation for issue #19.
+	"""
+
+	def test_a(self):
+		"""
+		Test matching files in a subdirectory of an included directory, scenario A.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			"dirG/",
+		]):
+			with sub_test() as spec:
+				files = {
+					'fileA',
+					'fileB',
+					'dirD/fileE',
+					'dirD/fileF',
+					'dirG/dirH/fileI',
+					'dirG/dirH/fileJ',
+					'dirG/fileO',
+				}
+
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+
+				self.assertEqual(ignores, {
+					'dirG/dirH/fileI',
+					'dirG/dirH/fileJ',
+					'dirG/fileO',
+				}, debug)
+				self.assertEqual(files - ignores, {
+					'fileA',
+					'fileB',
+					'dirD/fileE',
+					'dirD/fileF',
+				}, debug)
+
+	def test_b(self):
+		"""
+		Test matching files in a subdirectory of an included directory, scenario B.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			"dirG/*",
+		]):
+			with sub_test() as spec:
+				files = {
+					'fileA',
+					'fileB',
+					'dirD/fileE',
+					'dirD/fileF',
+					'dirG/dirH/fileI',
+					'dirG/dirH/fileJ',
+					'dirG/fileO',
+				}
+
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+
+				self.assertEqual(ignores, {
+					'dirG/dirH/fileI',
+					'dirG/dirH/fileJ',
+					'dirG/fileO',
+				}, debug)
+				self.assertEqual(files - ignores, {
+					'fileA',
+					'fileB',
+					'dirD/fileE',
+					'dirD/fileF',
+				}, debug)
+
+	def test_c(self):
+		"""
+		Test matching files in a subdirectory of an included directory, scenario C.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			"dirG/**",
+		]):
+			with sub_test() as spec:
+				files = {
+					'fileA',
+					'fileB',
+					'dirD/fileE',
+					'dirD/fileF',
+					'dirG/dirH/fileI',
+					'dirG/dirH/fileJ',
+					'dirG/fileO',
+				}
+
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+
+				self.assertEqual(ignores, {
+					'dirG/dirH/fileI',
+					'dirG/dirH/fileJ',
+					'dirG/fileO',
+				}, debug)
+				self.assertEqual(files - ignores, {
+					'fileA',
+					'fileB',
+					'dirD/fileE',
+					'dirD/fileF',
+				}, debug)
+
+
+class GitIgnoreSpecIssue39Test(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecIssue39Test` class tests the :class:`.GitIgnoreSpec`
+	implementation for issue #39.
+	"""
+
+	def test_1(self):
+		"""
+		Test excluding files in a directory.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			'*.log',
+			'!important/*.log',
+			'trace.*',
+		]):
+			with sub_test() as spec:
+				files = {
+					'a.log',
+					'b.txt',
+					'important/d.log',
+					'important/e.txt',
+					'trace.c',
+				}
+
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+
+				self.assertEqual(ignores, {
+					'a.log',
+					'trace.c',
+				}, debug)
+				self.assertEqual(files - ignores, {
+					'b.txt',
+					'important/d.log',
+					'important/e.txt',
+				}, debug)
+
+
+class GitIgnoreSpecIssue41Test(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecIssue41Test` class tests the :class:`.GitIgnoreSpec`
+	implementation for issue #41.
+	"""
+
+	def test_a(self):
 		"""
 		Test including a file and excluding a directory with the same name pattern,
 		scenario A.
@@ -317,7 +536,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					'dir/index.txt',
 				}, debug)
 
-	def test_02_issue_41_b(self):
+	def test_b(self):
 		"""
 		Test including a file and excluding a directory with the same name pattern,
 		scenario B.
@@ -354,7 +573,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					'dir/index.txt',
 				}, debug)
 
-	def test_02_issue_41_c(self):
+	def test_c(self):
 		"""
 		Test including a file and excluding a directory with the same name pattern,
 		scenario C.
@@ -391,143 +610,14 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					'dir/index.txt',
 				}, debug)
 
-	def test_03_subdir(self):
-		"""
-		Test matching files in a subdirectory of an included directory.
-		"""
-		for sub_test in self.parameterize_from_lines([
-			"dirG/",
-		]):
-			with sub_test() as spec:
-				files = {
-					'fileA',
-					'fileB',
-					'dirD/fileE',
-					'dirD/fileF',
-					'dirG/dirH/fileI',
-					'dirG/dirH/fileJ',
-					'dirG/fileO',
-				}
 
-				results = list(spec.check_files(files))
-				ignores = get_includes(results)
-				debug = debug_results(spec, results)
+class GitIgnoreSpecIssue62Test(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecIssue62Test` class tests the :class:`.GitIgnoreSpec`
+	implementation for issue #62.
+	"""
 
-				self.assertEqual(ignores, {
-					'dirG/dirH/fileI',
-					'dirG/dirH/fileJ',
-					'dirG/fileO',
-				}, debug)
-				self.assertEqual(files - ignores, {
-					'fileA',
-					'fileB',
-					'dirD/fileE',
-					'dirD/fileF',
-				}, debug)
-
-	def test_03_issue_19_a(self):
-		"""
-		Test matching files in a subdirectory of an included directory, scenario A.
-		"""
-		for sub_test in self.parameterize_from_lines([
-			"dirG/",
-		]):
-			with sub_test() as spec:
-				files = {
-					'fileA',
-					'fileB',
-					'dirD/fileE',
-					'dirD/fileF',
-					'dirG/dirH/fileI',
-					'dirG/dirH/fileJ',
-					'dirG/fileO',
-				}
-
-				results = list(spec.check_files(files))
-				ignores = get_includes(results)
-				debug = debug_results(spec, results)
-
-				self.assertEqual(ignores, {
-					'dirG/dirH/fileI',
-					'dirG/dirH/fileJ',
-					'dirG/fileO',
-				}, debug)
-				self.assertEqual(files - ignores, {
-					'fileA',
-					'fileB',
-					'dirD/fileE',
-					'dirD/fileF',
-				}, debug)
-
-	def test_03_issue_19_b(self):
-		"""
-		Test matching files in a subdirectory of an included directory, scenario B.
-		"""
-		for sub_test in self.parameterize_from_lines([
-			"dirG/*",
-		]):
-			with sub_test() as spec:
-				files = {
-					'fileA',
-					'fileB',
-					'dirD/fileE',
-					'dirD/fileF',
-					'dirG/dirH/fileI',
-					'dirG/dirH/fileJ',
-					'dirG/fileO',
-				}
-
-				results = list(spec.check_files(files))
-				ignores = get_includes(results)
-				debug = debug_results(spec, results)
-
-				self.assertEqual(ignores, {
-					'dirG/dirH/fileI',
-					'dirG/dirH/fileJ',
-					'dirG/fileO',
-				}, debug)
-				self.assertEqual(files - ignores, {
-					'fileA',
-					'fileB',
-					'dirD/fileE',
-					'dirD/fileF',
-				}, debug)
-
-	def test_03_issue_19_c(self):
-		"""
-		Test matching files in a subdirectory of an included directory, scenario C.
-		"""
-		for sub_test in self.parameterize_from_lines([
-			"dirG/**",
-		]):
-			with sub_test() as spec:
-				files = {
-					'fileA',
-					'fileB',
-					'dirD/fileE',
-					'dirD/fileF',
-					'dirG/dirH/fileI',
-					'dirG/dirH/fileJ',
-					'dirG/fileO',
-				}
-
-				results = list(spec.check_files(files))
-				ignores = get_includes(results)
-				debug = debug_results(spec, results)
-
-				self.assertEqual(ignores, {
-					'dirG/dirH/fileI',
-					'dirG/dirH/fileJ',
-					'dirG/fileO',
-				}, debug)
-				self.assertEqual(files - ignores, {
-					'fileA',
-					'fileB',
-					'dirD/fileE',
-					'dirD/fileF',
-				}, debug)
-
-	def test_04_issue_62(self):
+	def test_1(self):
 		"""
 		Test including all files and excluding a directory.
 		"""
@@ -550,39 +640,14 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					'product_dir/file.txt',
 				}, debug)
 
-	def test_05_issue_39(self):
-		"""
-		Test excluding files in a directory.
-		"""
-		for sub_test in self.parameterize_from_lines([
-			'*.log',
-			'!important/*.log',
-			'trace.*',
-		]):
-			with sub_test() as spec:
-				files = {
-					'a.log',
-					'b.txt',
-					'important/d.log',
-					'important/e.txt',
-					'trace.c',
-				}
 
-				results = list(spec.check_files(files))
-				ignores = get_includes(results)
-				debug = debug_results(spec, results)
+class GitIgnoreSpecIssue64Test(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecIssue64Test` class tests the :class:`.GitIgnoreSpec`
+	implementation for issue #64.
+	"""
 
-				self.assertEqual(ignores, {
-					'a.log',
-					'trace.c',
-				}, debug)
-				self.assertEqual(files - ignores, {
-					'b.txt',
-					'important/d.log',
-					'important/e.txt',
-				}, debug)
-
-	def test_06_issue_64(self):
+	def test_1(self):
 		"""
 		Test using a double asterisk pattern.
 		"""
@@ -607,7 +672,14 @@ class GitIgnoreSpecTest(unittest.TestCase):
 
 				self.assertEqual(ignores, files, debug)
 
-	def test_07_issue_74(self):
+
+class GitIgnoreSpecIssue74Test(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecIssue74Test` class tests the :class:`.GitIgnoreSpec`
+	implementation for issue #74.
+	"""
+
+	def test_1(self):
 		"""
 		Test include directory should override exclude file.
 		"""
@@ -642,7 +714,14 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					'test2/c/c.txt',
 				}, debug)
 
-	def test_08_issue_81_a(self):
+
+class GitIgnoreSpecIssue81Test(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecIssue81Test` class tests the :class:`.GitIgnoreSpec`
+	implementation for issue #81.
+	"""
+
+	def test_a(self):
 		"""
 		Test issue 81 whitelist, scenario A.
 		"""
@@ -669,7 +748,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					"libfoo/__init__.py",
 				}, debug)
 
-	def test_08_issue_81_b(self):
+	def test_b(self):
 		"""
 		Test issue 81 whitelist, scenario B.
 		"""
@@ -696,7 +775,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					"libfoo/__init__.py",
 				}, debug)
 
-	def test_08_issue_81_c(self):
+	def test_c(self):
 		"""
 		Test issue 81 whitelist, scenario C.
 		"""
@@ -720,7 +799,14 @@ class GitIgnoreSpecTest(unittest.TestCase):
 				}, debug)
 				self.assertEqual(files - ignores, set())
 
-	def test_09_issue_100(self):
+
+class GitIgnoreSpecIssue100Test(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecIssue100Test` class tests the :class:`.GitIgnoreSpec`
+	implementation for issue #100.
+	"""
+
+	def test_1(self):
 		"""
 		Test an empty list of patterns.
 		"""
@@ -732,7 +818,14 @@ class GitIgnoreSpecTest(unittest.TestCase):
 				debug = debug_results(spec, results)
 				self.assertEqual(includes, set(), debug)
 
-	def test_10_issue_129_a1(self):
+
+class GitIgnoreSpecIssue129Test(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecIssue129Test` class tests the :class:`.GitIgnoreSpec`
+	implementation for issue #129.
+	"""
+
+	def test_a1(self):
 		"""
 		Test issue 129, a file negation under an excluded directory.
 		"""
@@ -756,7 +849,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					"keep.log",
 				}, debug)
 
-	def test_10_issue_129_a2(self):
+	def test_a2(self):
 		"""
 		Test issue 129, a file negation under an excluded directory.
 		"""
@@ -779,7 +872,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					"keep.log",
 				}, debug)
 
-	def test_10_issue_129_a3(self):
+	def test_a3(self):
 		"""
 		Test issue 129, a file negation under an excluded directory.
 		"""
@@ -802,7 +895,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					"keep.log",
 				}, debug)
 
-	def test_10_issue_129_b(self):
+	def test_b(self):
 		"""
 		Test issue 129, a file negation naming the excluded directory, and a
 		grandparent.
@@ -824,7 +917,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 				debug = debug_results(spec, results)
 				self.assertEqual(ignores, files, debug)
 
-	def test_10_issue_129_c1(self):
+	def test_c1(self):
 		"""
 		Test issue 129, re-inclusion that must keep working: the directory itself is
 		not excluded, or its exclusion is undone before the file negation.
@@ -854,7 +947,7 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					"log/keep.log",
 				}, debug)
 
-	def test_10_issue_129_c2(self):
+	def test_c2(self):
 		"""
 		Test issue 129, re-inclusion that must keep working: the directory itself is
 		not excluded, or its exclusion is undone before the file negation.
@@ -884,7 +977,14 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					"log/keep.log",
 				}, debug)
 
-	def test_11_issue_134(self):
+
+class GitIgnoreSpecIssue134Test(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecIssue134Test` class tests the :class:`.GitIgnoreSpec`
+	implementation for issue #134.
+	"""
+
+	def test_1(self):
 		"""
 		Test a forward and reverse evaluation discrepancy.
 		"""
@@ -908,7 +1008,14 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					"node_modules/leaf.txt",
 				}, debug)
 
-	def test_12_issue_137_a(self):
+
+class GitIgnoreSpecIssue137Test(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecIssue137Test` class tests the :class:`.GitIgnoreSpec`
+	implementation for issue #137.
+	"""
+
+	def test_a(self):
 		"""
 		Test that trailing glob-stars do not ignore parent.
 		"""
@@ -939,7 +1046,42 @@ class GitIgnoreSpecTest(unittest.TestCase):
 					"d/",
 				})
 
-	def test_13_issue_139(self):
+	def test_b(self):
+		"""
+		Test that the excluded ancestor rule does not fire on an ancestor which the
+		spec itself re-includes.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			".*",
+			"!**/node_modules/**",
+		]):
+			with sub_test() as spec:
+				# Confirmed results with git (v2.55.0).
+				files = {
+					".hidden",                                      # 1:.*
+					"vendor/keep.txt",                              # -
+					"vendor/.cache/y.txt",                          # 1:.*
+					"vendor/deps/npm/node_modules/keep.txt",        # 2:!**/node_modules/**
+					"vendor/deps/npm/node_modules/.bin/x.txt",      # 2:!**/node_modules/**
+					"vendor/deps/npm/node_modules/.bin/.hide.txt",  # 2:!**/node_modules/**
+					"node_modules/.bin/z.txt",                      # 2:!**/node_modules/**
+				}
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+				self.assertEqual(ignores, {
+					".hidden",
+					"vendor/.cache/y.txt",
+				}, debug)
+
+
+class GitIgnoreSpecIssue139Test(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecIssue139Test` class tests the :class:`.GitIgnoreSpec`
+	implementation for issue #139.
+	"""
+
+	def test_1(self):
 		"""
 		Test that glob-stars match newlines in names.
 		"""
@@ -955,3 +1097,72 @@ class GitIgnoreSpecTest(unittest.TestCase):
 			for sub_test in self.parameterize_from_lines([pattern]):
 				with sub_test() as spec:
 					self.assertTrue(spec.match_file(path))
+
+
+class GitIgnoreSpecIssue150Test(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecIssue150Test` class tests the :class:`.GitIgnoreSpec`
+	implementation for issue #150.
+	"""
+
+	def test_1_stream_lines(self):
+		"""
+		Test handling of trailing tabs, non-breaking spaces, and em-spaces.
+		"""
+		for suffix, ending in itertools.product(
+			('\t', '\xa0', '\u2003'),
+			('\n', '\r\n'),
+		):
+			name = f"foo{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				[name + ending],
+				sub_params=dict(suffix=suffix, ending=ending),
+			):
+				with sub_test() as spec:
+					self.assertTrue(spec.match_file(name))
+					self.assertFalse(spec.match_file('foo'))
+
+	def test_2_negation_and_directories_1(self):
+		"""
+		Test handling of negation and directories.
+		"""
+		for suffix in ('\t', '\xa0', '\u2003'):
+			name = f"foo{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				["*", f"!{name}"],
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
+					self.assertFalse(spec.match_file(name))
+					self.assertTrue(spec.match_file('foo'))
+
+	def test_2_negation_and_directories_2(self):
+		"""
+		Test handling of negation and directories.
+		"""
+		for suffix in ('\t', '\xa0', '\u2003'):
+			name = f"foo{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				[f"{name}/"],
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
+					self.assertTrue(spec.match_file(f"{name}/"))
+					self.assertTrue(spec.match_file(f"{name}/child"))
+					self.assertFalse(spec.match_file(name))
+					self.assertFalse(spec.match_file("foo/child"))
+
+	def test_3_character_after_slash(self):
+		"""
+		Test handling of characters after a slash.
+		"""
+		for suffix in ('\t', '\xa0', '\u2003'):
+			name = f"foo/{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				[name],
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
+					self.assertTrue(spec.match_file(name))
+					self.assertFalse(spec.match_file('foo/'))
+					self.assertFalse(spec.match_file('foo/other'))

@@ -77,5 +77,9 @@ __credits__ = [
 	"Cristian Ramirez <https://github.com/Str0k>",
 	"SergiPantoja <https://github.com/SergiPantoja>",
 	"JingKun Huang <https://github.com/9Kun>",
+	"Alan <https://github.com/shkyyy18>",
+	"Metis-dot <https://github.com/Metis-dot>",
+	"Cheruku Sri Charan Reddy <https://github.com/sricharanreddycheruku>",
+	"Larry Gao <https://github.com/Larry-Labs>",
 ]
 __license__ = "MPL 2.0"

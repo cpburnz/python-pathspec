@@ -54,7 +54,7 @@ class GitIgnoreBasePatternTest(unittest.TestCase):
 		"""
 		for n, wc in product(
 			[0, 2, 4],
-			[' ', '\n', '\t'],
+			[' ', '\n', '\r'],
 		):
 			with self.subTest(n=n, wc=wc):
 				bs = BS*n
@@ -69,10 +69,21 @@ class GitIgnoreBasePatternTest(unittest.TestCase):
 		"""
 		for n, wc in product(
 			[0, 1, 3],
-			[' ', '\n', '\t'],
+			[' ', '\n', '\r'],
 		):
 			with self.subTest(n=n, wc=wc):
 				bs = BS*n
 				ws = wc*n
 				val = _strip_trailing_ws(f' foo{bs}{ws}')
 				self.assertEqual(val, f' foo{bs}{ws[:1]}')
+
+	def test_02_strip_trailing_ws_3_literal_whitespace(self):
+		"""
+		Only spaces and line endings are stripped, not filename characters.
+		"""
+		for wc, ending in product(
+			['\t', '\v', '\f', '\x85', '\xa0', '\u2003'],
+			['', ' ', '\n', '\r\n'],
+		):
+			with self.subTest(wc=wc, ending=ending):
+				self.assertEqual(_strip_trailing_ws(f'foo{wc}{ending}'), f'foo{wc}')

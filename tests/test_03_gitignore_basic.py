@@ -3,7 +3,8 @@ This script tests :class:`.GitIgnoreBasicPattern`.
 """
 
 import re
-import unittest
+from unittest import (
+	TestCase)
 try:
 	from re import PatternError as re_PatternError  # Added in 3.13.
 except ImportError:
@@ -23,9 +24,9 @@ Optional directory ending.
 """
 
 
-class GitIgnoreBasicPatternTest(unittest.TestCase):
+class GitIgnoreBasicPatternTest(TestCase):
 	"""
-	The :class:`GitIgnoreBasicPatternTest` class tests the :class:`GitIgnoreBasicPattern`
+	The :class:`GitIgnoreBasicPatternTest` class tests the :class:`.GitIgnoreBasicPattern`
 	implementation.
 	"""
 
@@ -688,7 +689,68 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		]))
 		self.assertEqual(results, {'#sign'})
 
-	def test_11_issue_19_directory_a(self):
+	def test_11_asterisk_1_regex(self):
+		"""
+		Test a relative asterisk path pattern's regular expression.
+		"""
+		regex, include = GitIgnoreBasicPattern.pattern_to_regex('*')
+		self.assertTrue(include)
+		self.assertEqual(regex, '(?s:.)')
+
+	def test_11_asterisk_2_regex_equivalent(self):
+		"""
+		Test a path pattern equivalent to the relative asterisk using double
+		asterisk.
+		"""
+		regex, include = GitIgnoreBasicPattern.pattern_to_regex('*')
+		self.assertTrue(include)
+
+		equiv_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/*')
+		self.assertTrue(include)
+
+		self.assertEqual(regex, equiv_regex)
+
+	def test_11_asterisk_3_child(self):
+		"""
+		Test a relative asterisk path pattern matching a direct child path.
+		"""
+		pattern = GitIgnoreBasicPattern('*')
+		self.assertTrue(pattern.match_file('file.txt'))
+
+	def test_11_asterisk_4_descendant(self):
+		"""
+		Test a relative asterisk path pattern matching a descendant path.
+		"""
+		pattern = GitIgnoreBasicPattern('*')
+		self.assertTrue(pattern.match_file('anydir/file.txt'))
+
+	def test_12_repr_str(self):
+		"""
+		Test debug and string representations.
+		"""
+		pattern = GitIgnoreBasicPattern('*.py')
+		self.assertEqual(repr(pattern), "GitIgnoreBasicPattern(pattern='*.py', include=True)")
+		self.assertEqual(str(pattern), '*.py')
+
+	def test_13_globstars_match_newlines(self):
+		for pattern, path in [
+			("target", "line\nbreak/target"),
+			("**/target", "line\nbreak/target"),
+			("root/**/target", "root/line\nbreak/target"),
+			("**", "\n"),
+			("*", "\n"),
+		]:
+			with self.subTest(pattern=pattern, path=path):
+				self.assertIsNotNone(GitIgnoreBasicPattern(pattern).match_file(path))
+
+
+class GitIgnoreBasicPatternIssue19Test(TestCase):
+	"""
+	The :class:`GitIgnoreBasicPatternIssue19Test` class tests the
+	:class:`.GitIgnoreBasicPattern` implementation for issue #19.
+	"""
+
+	def test_a_directory(self):
 		"""
 		Test a directory discrepancy, scenario A.
 		"""
@@ -710,7 +772,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 			'dirG/fileO',
 		})
 
-	def test_11_issue_19_directory_b(self):
+	def test_b_directory(self):
 		"""
 		Test a directory discrepancy, scenario B.
 		"""
@@ -730,7 +792,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 			'dirG/fileO',
 		})
 
-	def test_11_issue_19_directory_c(self):
+	def test_c_directory(self):
 		"""
 		Test a directory discrepancy, scenario C.
 		"""
@@ -752,42 +814,14 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 			'dirG/fileO',
 		})
 
-	def test_12_asterisk_1_regex(self):
-		"""
-		Test a relative asterisk path pattern's regular expression.
-		"""
-		regex, include = GitIgnoreBasicPattern.pattern_to_regex('*')
-		self.assertTrue(include)
-		self.assertEqual(regex, '(?s:.)')
 
-	def test_12_asterisk_2_regex_equivalent(self):
-		"""
-		Test a path pattern equivalent to the relative asterisk using double
-		asterisk.
-		"""
-		regex, include = GitIgnoreBasicPattern.pattern_to_regex('*')
-		self.assertTrue(include)
+class GitIgnoreBasicPatternIssue62Test(TestCase):
+	"""
+	The :class:`GitIgnoreBasicPatternIssue62Test` class tests the
+	:class:`.GitIgnoreBasicPattern` implementation for issue #62.
+	"""
 
-		equiv_regex, include = GitIgnoreBasicPattern.pattern_to_regex('**/*')
-		self.assertTrue(include)
-
-		self.assertEqual(regex, equiv_regex)
-
-	def test_12_asterisk_3_child(self):
-		"""
-		Test a relative asterisk path pattern matching a direct child path.
-		"""
-		pattern = GitIgnoreBasicPattern('*')
-		self.assertTrue(pattern.match_file('file.txt'))
-
-	def test_12_asterisk_4_descendant(self):
-		"""
-		Test a relative asterisk path pattern matching a descendant path.
-		"""
-		pattern = GitIgnoreBasicPattern('*')
-		self.assertTrue(pattern.match_file('anydir/file.txt'))
-
-	def test_12_issue_62(self):
+	def test_a_files(self):
 		"""
 		Test including all files, scenario A.
 		"""
@@ -801,7 +835,14 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 			'anydir/file.txt',
 		})
 
-	def test_13_issue_77_1_negate_with_caret(self):
+
+class GitIgnoreBasicPatternIssue77Test(TestCase):
+	"""
+	The :class:`GitIgnoreBasicPatternIssue77Test` class tests the
+	:class:`.GitIgnoreBasicPattern` implementation for issue #77.
+	"""
+
+	def test_1_negate_with_caret(self):
 		"""
 		Test negation using the caret symbol ("^").
 		"""
@@ -817,7 +858,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 			'adc',
 		})
 
-	def test_13_issue_77_1_negate_with_exclamation_mark(self):
+	def test_2_negate_with_exclamation_mark(self):
 		"""
 		Test negation using the exclamation mark ("!").
 		"""
@@ -833,7 +874,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 			'adc',
 		})
 
-	def test_13_issue_77_2_regex(self):
+	def test_3_regex(self):
 		"""
 		Test the resulting regex for regex bracket expression negation.
 		"""
@@ -845,7 +886,14 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 
 		self.assertEqual(regex, equiv_regex)
 
-	def test_14_issue_81_a(self):
+
+class GitIgnoreBasicPatternIssue81Test(TestCase):
+	"""
+	The :class:`GitIgnoreBasicPatternIssue81Test` class tests the
+	:class:`.GitIgnoreBasicPattern` implementation for issue #81.
+	"""
+
+	def test_a_files(self):
 		"""
 		Test ignoring files in a directory, scenario A.
 		"""
@@ -855,7 +903,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		self.assertIs(pattern.include, False)
 		self.assertTrue(pattern.match_file('libfoo/__init__.py'))
 
-	def test_14_issue_81_b(self):
+	def test_b_files(self):
 		"""
 		Test ignoring files in a directory, scenario B.
 		"""
@@ -865,7 +913,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		self.assertIs(pattern.include, False)
 		self.assertTrue(pattern.match_file('libfoo/__init__.py'))
 
-	def test_14_issue_81_c(self):
+	def test_c_files(self):
 		"""
 		Test ignoring files in a directory, scenario C.
 		"""
@@ -877,7 +925,14 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		self.assertIs(pattern.include, False)
 		self.assertTrue(pattern.match_file('libfoo/__init__.py'))
 
-	def test_15_issue_93_a_1(self):
+
+class GitIgnoreBasicPatternIssue93Test(TestCase):
+	"""
+	The :class:`GitIgnoreBasicPatternIssue93Test` class tests the
+	:class:`.GitIgnoreBasicPattern` implementation for issue #93.
+	"""
+
+	def test_a_1(self):
 		"""
 		Test patterns with trailing double asterisks in a segment.
 		"""
@@ -886,7 +941,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		self.assertEqual(pattern.regex.pattern, f'^(?s:.+/)?foo[^/]*[^/]*{_DIR_OPT}')
 		self.assertTrue(pattern.match_file('foosrodah'))
 
-	def test_15_issue_93_a_2(self):
+	def test_a_2(self):
 		"""
 		Test patterns with trailing double asterisks in a segment.
 		"""
@@ -896,7 +951,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		self.assertFalse(pattern.match_file('foobar'))
 		self.assertTrue(pattern.match_file('foosrodah/bar'))
 
-	def test_15_issue_93_b_1_single(self):
+	def test_b_1_single(self):
 		"""
 		Test patterns with leading spaces.
 		"""
@@ -906,7 +961,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		self.assertFalse(pattern.match_file('foo'))
 		self.assertTrue(pattern.match_file(' foo'))
 
-	def test_15_issue_93_b_2_double(self):
+	def test_b_2_double(self):
 		"""
 		Test patterns with leading spaces.
 		"""
@@ -917,7 +972,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 		self.assertFalse(pattern.match_file(' foo'))
 		self.assertTrue(pattern.match_file('  foo'))
 
-	def test_15_issue_93_c_1_valid(self):
+	def test_c_1_valid(self):
 		"""
 		Test patterns with valid range notation.
 		"""
@@ -934,7 +989,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 				self.assertIs(pattern.include, True)
 				self.assertEqual(pattern.regex.pattern, regex)
 
-	def test_15_issue_93_c_2_invalid(self):
+	def test_c_2_invalid(self):
 		"""
 		Test patterns with invalid range notation.
 		"""
@@ -959,7 +1014,7 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 				with self.assertRaises(re_PatternError):
 					GitIgnoreBasicPattern(raw_pattern)
 
-	def test_15_issue_93_c_3_unclosed(self):
+	def test_c_3_unclosed(self):
 		"""
 		Test patterns with unclosed range notation.
 		"""
@@ -983,21 +1038,50 @@ class GitIgnoreBasicPatternTest(unittest.TestCase):
 				self.assertIs(pattern.include, True)
 				self.assertEqual(pattern.regex.pattern, regex)
 
-	def test_16_repr_str(self):
-		"""
-		Test debug and string representations.
-		"""
-		pattern = GitIgnoreBasicPattern('*.py')
-		self.assertEqual(repr(pattern), "GitIgnoreBasicPattern(pattern='*.py', include=True)")
-		self.assertEqual(str(pattern), '*.py')
 
-	def test_globstars_match_newlines(self):
-		for pattern, path in [
-			("target", "line\nbreak/target"),
-			("**/target", "line\nbreak/target"),
-			("root/**/target", "root/line\nbreak/target"),
-			("**", "\n"),
-			("*", "\n"),
-		]:
-			with self.subTest(pattern=pattern, path=path):
-				self.assertIsNotNone(GitIgnoreBasicPattern(pattern).match_file(path))
+class GitIgnoreBasicPatternIssue150Test(TestCase):
+	"""
+	The :class:`GitIgnoreBasicPatternIssue150Test` class tests the
+	:class:`.GitIgnoreBasicPattern` implementation for issue #150.
+	"""
+
+	def test_1_literal_whitespace(self):
+		"""
+		Test that other whitespace characters (not space or newlines) are matched.
+		"""
+		for suffix in ('\t', '\v', '\f', '\x85', '\xa0', '\u2003'):
+			name = 'foo' + suffix
+			for ending in ('', ' ', '\n', '\r\n'):
+				with self.subTest(suffix=suffix, ending=ending):
+					pattern = GitIgnoreBasicPattern(name + ending)
+					self.assertTrue(pattern.match_file(name))
+					self.assertIsNone(pattern.match_file('foo'))
+					escaped = GitIgnoreBasicPattern(GitIgnoreBasicPattern.escape(name))
+					self.assertTrue(escaped.match_file(name))
+
+	def test_2_bytes(self):
+		"""
+		Test that other whitespace characters (not space or newlines) are matched,
+		using bytes.
+		"""
+		for suffix in (b'\t', b'\v', b'\f', b'\x85', b'\xa0', b'\xc2\xa0', b'\xe2\x80\x83'):
+			name = b'foo' + suffix
+			for ending in (b'', b' ', b'\n', b'\r\n'):
+				with self.subTest(suffix=suffix, ending=ending):
+					pattern = GitIgnoreBasicPattern(name + ending)
+					self.assertTrue(pattern.match_file(name))
+					self.assertIsNone(pattern.match_file(b'foo'))
+					escaped = GitIgnoreBasicPattern(GitIgnoreBasicPattern.escape(name))
+					self.assertTrue(escaped.match_file(name))
+
+	def test_3_spaces_and_backslashes(self):
+		for raw, name in (
+			('foo  ', 'foo'),
+			('foo\\  ', 'foo '),
+			('foo\\\\ ', 'foo\\'),
+			('foo\\\\\\ ', 'foo\\ '),
+			('foo\\\t ', 'foo\t'),
+		):
+			for ending in ('', '\n', '\r\n'):
+				with self.subTest(raw=raw, ending=ending):
+					self.assertTrue(GitIgnoreBasicPattern(raw + ending).match_file(name))

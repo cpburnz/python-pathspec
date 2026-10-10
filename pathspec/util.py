@@ -171,7 +171,7 @@ def detailed_match_files(
 			else:
 				# Remove files.
 				for file in result_files:
-					del return_files[file]
+					return_files.pop(file, None)
 
 	return return_files
 
@@ -244,7 +244,7 @@ def iter_tree_entries(
 	on_error: Optional[Callable[[OSError], None]] = None,
 	follow_links: Optional[bool] = None,
 	subdir: Optional[StrPath] = None,
-) -> Iterator['TreeEntry']:
+) -> Iterator[TreeEntry]:
 	"""
 	Walks the specified directory for all files and directories.
 
@@ -292,7 +292,7 @@ def _iter_tree_entries_next(
 	memo: dict[str, str],
 	on_error: Optional[Callable[[OSError], None]],
 	follow_links: bool,
-) -> Iterator['TreeEntry']:
+) -> Iterator[TreeEntry]:
 	"""
 	Scan the directory for all descendant files.
 
@@ -322,7 +322,15 @@ def _iter_tree_entries_next(
 	else:
 		raise RecursionError(real_path=dir_real, first_path=memo[dir_real], second_path=dir_rel)
 
-	with os.scandir(dir_full) as scan_iter:
+	try:
+		scan_iter = os.scandir(dir_full)
+	except OSError as e:
+		del memo[dir_real]
+		if on_error is not None:
+			on_error(e)
+		return
+
+	with scan_iter:
 		node_ent: os.DirEntry
 		for node_ent in scan_iter:
 			node_rel = os.path.join(dir_rel, node_ent.name)
@@ -335,7 +343,7 @@ def _iter_tree_entries_next(
 					on_error(e)
 				continue
 
-			if node_ent.is_symlink():
+			if follow_links and node_ent.is_symlink():
 				# Child node is a link, inspect the target node.
 				try:
 					node_stat = node_ent.stat()
@@ -353,8 +361,12 @@ def _iter_tree_entries_next(
 
 				yield from _iter_tree_entries_next(root_full, node_rel, memo, on_error, follow_links)
 
-			elif node_ent.is_file() or node_ent.is_symlink():
-				# Child node is either a file or an unfollowed link, yield it.
+			elif node_ent.is_file(follow_symlinks=follow_links):
+				# Child node is a file, yield it.
+				yield TreeEntry(node_ent.name, node_rel, node_lstat, node_stat)
+
+			elif not follow_links and node_ent.is_symlink():
+				# Child node is an unfollowed link, yield it.
 				yield TreeEntry(node_ent.name, node_rel, node_lstat, node_stat)
 
 	# NOTE: Make sure to remove the canonical (real) path of the directory from
@@ -450,7 +462,15 @@ def _iter_tree_files_next(
 	else:
 		raise RecursionError(real_path=dir_real, first_path=memo[dir_real], second_path=dir_rel)
 
-	with os.scandir(dir_full) as scan_iter:
+	try:
+		scan_iter = os.scandir(dir_full)
+	except OSError as e:
+		del memo[dir_real]
+		if on_error is not None:
+			on_error(e)
+		return
+
+	with scan_iter:
 		node_ent: os.DirEntry
 		for node_ent in scan_iter:
 			node_rel = os.path.join(dir_rel, node_ent.name)
@@ -460,7 +480,7 @@ def _iter_tree_files_next(
 				# files.
 				yield from _iter_tree_files_next(root_full, node_rel, memo, on_error, follow_links)
 
-			elif node_ent.is_file():
+			elif node_ent.is_file(follow_symlinks=follow_links):
 				# Child node is a file, yield it.
 				yield node_rel
 

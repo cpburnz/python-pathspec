@@ -2,11 +2,11 @@
 This script tests :class:`.PathSpec`.
 """
 
+import itertools
 import os
 import re
 import shutil
 import tempfile
-import unittest
 from collections.abc import (
 	Iterable,
 	Iterator,
@@ -19,14 +19,20 @@ from functools import (
 from pathlib import (
 	Path)
 from typing import (
+	Any,
 	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
 	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
+	Protocol,
 	overload)
 from unittest import (
-	SkipTest)
+	SkipTest,
+	TestCase)
+from unittest.mock import (
+	patch)
 
 from pathspec import (
+	GitIgnoreSpec,
 	PathSpec,
 	RegexPattern)
 from pathspec.backend import (
@@ -43,8 +49,10 @@ from pathspec.pattern import (
 from pathspec.patterns.gitignore.basic import (
 	GitIgnoreBasicPattern)
 from pathspec._typing import (
+
 	AnyStr)  # Removed in 3.18.
 from pathspec.util import (
+	TPattern_co,
 	iter_tree_entries)
 
 from .util import (
@@ -69,9 +77,14 @@ The backend parameters.
 """
 
 
-class PathSpecTest(unittest.TestCase):
+class SubTestContext(Protocol[TPattern_co]):
+	def __call__(self) -> AbstractContextManager[PathSpec[TPattern_co]]:
+		...
+
+
+class PathSpecMixin(object):
 	"""
-	The :class:`PathSpecTest` class tests the :class:`.PathSpec` class.
+	The :class:`PathSpecMixin` class provides utility methods used by the tests.
 	"""
 
 	def clear_temp_dir(self) -> None:
@@ -91,14 +104,15 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		Create the specified files.
 		"""
-		return make_files(self.temp_dir, files)
+		make_files(self.temp_dir, files)
 
 	@overload
 	def parameterize_from_lines(
 		self,
 		pattern_factory: Literal['gitignore'],
 		lines: Iterable[AnyStr],
-	) -> Iterator[Callable[[], AbstractContextManager[PathSpec[GitIgnoreBasicPattern]]]]:
+		sub_params: Optional[dict[str, Any]] = None,
+	) -> Iterator[SubTestContext[GitIgnoreBasicPattern]]:
 		...
 
 	@overload
@@ -106,14 +120,16 @@ class PathSpecTest(unittest.TestCase):
 		self,
 		pattern_factory: str,
 		lines: Iterable[AnyStr],
-	) -> Iterator[Callable[[], AbstractContextManager[PathSpec[Pattern]]]]:
+		sub_params: Optional[dict[str, Any]] = None,
+	) -> Iterator[SubTestContext[Pattern]]:
 		...
 
 	def parameterize_from_lines(
 		self,
 		pattern_factory: str,
 		lines: Iterable[AnyStr],
-	) -> Iterator[Callable[[], AbstractContextManager[PathSpec]]]:
+		sub_params: Optional[dict[str, Any]] = None,
+	) -> Iterator[SubTestContext]:
 		"""
 		Parameterize `PathSpec.from_lines()` for each backend and configuration to
 		begin a subtest.
@@ -122,10 +138,16 @@ class PathSpecTest(unittest.TestCase):
 
 		*lines* (:class:`Iterable` of :class:`str`) yields the lines.
 
-		Returns an :class:`Iterator` yielding each subtest context for the
+		*sub_params* (:class:`dict`) contains additional parameters for the
+		subtest.
+
+		Yields each subtest context (:class:`SubTestContext`) for the
 		:class:`PathSpec`.
 		"""
 		lines = list(lines)
+
+		if sub_params is None:
+			sub_params = {}
 
 		configs: list[tuple[
 			str, BackendNamesHint, Optional[Callable[[Sequence[Pattern]], _Backend]]
@@ -190,24 +212,34 @@ class PathSpecTest(unittest.TestCase):
 			try:
 				require_backend(backend)
 			except SkipTest:
-				with self.subTest(label):
+				with self.subTest(label, **sub_params):
 					raise
 				continue
 
 			@contextmanager
 			def _sub_test(
-				backend=backend,
-				backend_factory=backend_factory,
-				label=label,
+				_backend=backend,
+				_backend_factory=backend_factory,
+				_label=label,
 			):
 				self.clear_temp_dir()
-				with self.subTest(label):
-					yield PathSpec.from_lines(
-						pattern_factory,
-						lines,
-						backend=backend,
-						_test_backend_factory=backend_factory,
-					)
+				has_error = False
+				with self.subTest(_label, **sub_params):
+					try:
+						spec = PathSpec.from_lines(
+							pattern_factory,
+							lines,
+							backend=_backend,
+							_test_backend_factory=_backend_factory,
+						)
+					except Exception:
+						has_error = True
+						raise
+
+					yield spec
+
+				if has_error:
+					raise Exception("Subtest failed.")
 
 			yield _sub_test
 
@@ -223,6 +255,12 @@ class PathSpecTest(unittest.TestCase):
 		"""
 		shutil.rmtree(self.temp_dir)
 
+
+class PathSpecTest(PathSpecMixin, TestCase):
+	"""
+	The :class:`PathSpecTest` class tests the :class:`.PathSpec` class.
+	"""
+
 	def test_01_absolute_dir_paths_1(self):
 		"""
 		Tests that absolute paths will be properly normalized and matched.
@@ -231,15 +269,16 @@ class PathSpecTest(unittest.TestCase):
 			'foo',
 		]):
 			with sub_test() as spec:
+				# Confirmed results with git check-ignore (v2.43.0).
 				files = {
-					'/a.py',
-					'/foo/a.py',
-					'/x/a.py',
-					'/x/foo/a.py',
-					'a.py',
-					'foo/a.py',
-					'x/a.py',
-					'x/foo/a.py',
+					'/a.py',        # -
+					'/foo/a.py',    # 1:foo
+					'/x/a.py',      # -
+					'/x/foo/a.py',  # 1:foo
+					'a.py',         # -
+					'foo/a.py',     # 1:foo
+					'x/a.py',       # -
+					'x/foo/a.py',   # 1:foo
 				}
 
 				results = list(spec.check_files(files))
@@ -261,15 +300,16 @@ class PathSpecTest(unittest.TestCase):
 			'/foo',
 		]):
 			with sub_test() as spec:
+				# Confirmed results with git check-ignore (v2.43.0).
 				files = {
-					'/a.py',
-					'/foo/a.py',
-					'/x/a.py',
-					'/x/foo/a.py',
-					'a.py',
-					'foo/a.py',
-					'x/a.py',
-					'x/foo/a.py',
+					'/a.py',        # -
+					'/foo/a.py',    # 1:/foo
+					'/x/a.py',      # -
+					'/x/foo/a.py',  # -
+					'a.py',         # -
+					'foo/a.py',     # 1:/foo
+					'x/a.py',       # -
+					'x/foo/a.py',   # -
 				}
 
 				results = list(spec.check_files(files))
@@ -333,18 +373,29 @@ class PathSpecTest(unittest.TestCase):
 			'!test1/',
 		]):
 			with sub_test() as spec:
+				# Confirmed results with git check-ignore (v2.43.0).
 				files = {
-					'test1/a.txt',
-					'test1/b.txt',
-					'test1/c/c.txt',
-					'test2/a.txt',
-					'test2/b.txt',
-					'test2/c/c.txt',
+					'test1/a.txt',    # 1:*.txt - Discrepancy: Git matches.
+					'test1/b.txt',    # 1:*.txt - Discrepancy: Git matches.
+					'test1/c/c.txt',  # 1:*.txt - Discrepancy: Git matches.
+					'test2/a.txt',    # 1:*.txt
+					'test2/b.txt',    # 1:*.txt
+					'test2/c/c.txt',  # 1:*.txt
 				}
 
 				single_results = set(map(spec.check_file, files))
 				multi_results = set(spec.check_files(files))
+				includes = get_includes(single_results)
 				debug = debug_results(spec, single_results)
+
+				self.assertEqual(includes, {
+					#'test1/a.txt',  # Discrepancy with Git.
+					#'test1/b.txt',  # Discrepancy with Git.
+					#'test1/c/c.txt',  # Discrepancy with Git.
+					'test2/a.txt',
+					'test2/b.txt',
+					'test2/c/c.txt',
+				}, debug)
 
 				self.assertEqual(single_results, multi_results, debug)
 
@@ -357,13 +408,14 @@ class PathSpecTest(unittest.TestCase):
 			'!test1/**',
 		]):
 			with sub_test() as spec:
+				# Confirmed results with git check-ignore (v2.43.0).
 				files = {
-					'src/test1/a.txt',
-					'src/test1/b.txt',
-					'src/test1/c/c.txt',
-					'src/test2/a.txt',
-					'src/test2/b.txt',
-					'src/test2/c/c.txt',
+					'src/test1/a.txt',    # 1:*.txt
+					'src/test1/b.txt',    # 1:*.txt
+					'src/test1/c/c.txt',  # 1:*.txt
+					'src/test2/a.txt',    # 1:*.txt
+					'src/test2/b.txt',    # 1:*.txt
+					'src/test2/c/c.txt',  # 1:*.txt
 				}
 
 				check_results = set(spec.check_files(files))
@@ -371,6 +423,7 @@ class PathSpecTest(unittest.TestCase):
 				match_files = set(spec.match_files(files))
 				debug = debug_results(spec, check_results)
 
+				self.assertEqual(check_includes, files, debug)
 				self.assertEqual(check_includes, match_files, debug)
 
 	def test_01_current_dir_paths(self):
@@ -383,13 +436,14 @@ class PathSpecTest(unittest.TestCase):
 			'!test1/',
 		]):
 			with sub_test() as spec:
+				# Confirmed results with git check-ignore (v2.43.0).
 				files = {
-					'./src/test1/a.txt',
-					'./src/test1/b.txt',
-					'./src/test1/c/c.txt',
-					'./src/test2/a.txt',
-					'./src/test2/b.txt',
-					'./src/test2/c/c.txt',
+					'./src/test1/a.txt',    # 1:*.txt - Discrepancy: Git matches.
+					'./src/test1/b.txt',    # 1:*.txt - Discrepancy: Git matches.
+					'./src/test1/c/c.txt',  # 1:*.txt - Discrepancy: Git matches.
+					'./src/test2/a.txt',    # 1:*.txt
+					'./src/test2/b.txt',    # 1:*.txt
+					'./src/test2/c/c.txt',  # 1:*.txt
 				}
 
 				results = list(spec.check_files(files))
@@ -397,6 +451,9 @@ class PathSpecTest(unittest.TestCase):
 				debug = debug_results(spec, results)
 
 				self.assertEqual(includes, {
+					#'./src/test1/a.txt',  # Discrepancy with Git.
+					#'./src/test1/b.txt',  # Discrepancy with Git.
+					#'./src/test1/c/c.txt',  # Discrepancy with Git.
 					'./src/test2/a.txt',
 					'./src/test2/b.txt',
 					'./src/test2/c/c.txt',
@@ -411,11 +468,12 @@ class PathSpecTest(unittest.TestCase):
 			'abc\\ ',
 		]):
 			with sub_test() as spec:
+				# Confirmed results with git check-ignore (v2.43.0).
 				files = {
-					' ',
-					'  ',
-					'abc ',
-					'somefile',
+					' ',         # 1:\
+					'  ',        # -
+					'abc ',      # 2:abc\
+					'somefile',  # -
 				}
 
 				results = list(spec.check_files(files))
@@ -436,9 +494,10 @@ class PathSpecTest(unittest.TestCase):
 			'odd\\\\\\ ',
 		]):
 			with sub_test() as spec:
+				# Confirmed results with git check-ignore (v2.43.0).
 				files = {
-					'even\\\\',
-					'odd\\ ',
+					'even\\\\',  # 1:even\\\\
+					'odd\\ ',    # 2:odd\\\
 				}
 
 				# Do not normalize Window's paths for this test.
@@ -476,7 +535,7 @@ class PathSpecTest(unittest.TestCase):
 				file = 'test/exclude.txt'
 
 				include = spec.match_file(file)
-				includes = {file} if include else {}
+				includes = {file} if include else set()
 				debug = debug_includes(spec, {file}, includes)
 
 				self.assertIs(include, False, debug)
@@ -493,7 +552,7 @@ class PathSpecTest(unittest.TestCase):
 				file = 'unmatch.bin'
 
 				include = spec.match_file(file)
-				includes = {file} if include else {}
+				includes = {file} if include else set()
 				debug = debug_includes(spec, {file}, includes)
 
 				self.assertIs(include, False, debug)
@@ -727,6 +786,43 @@ class PathSpecTest(unittest.TestCase):
 			'test.png',
 			'test.txt',
 		}, debug)
+
+	def test_03_iadd_backend_failure(self):
+		"""
+		A failed backend rebuild must leave the original spec usable and unchanged.
+		"""
+		for spec_class in (PathSpec, GitIgnoreSpec):
+			with self.subTest(spec_class=spec_class):
+				spec = spec_class.from_lines('gitignore', ['*.txt'], backend='simple')
+				original_patterns = spec.patterns
+				other = spec_class.from_lines('gitignore', ['!keep.txt'], backend='simple')
+				with patch.object(spec_class, '_make_backend', side_effect=ValueError('Cannot compile patterns')):
+					with self.assertRaisesRegex(ValueError, 'Cannot compile patterns'):
+						spec += other
+
+				self.assertIs(spec.patterns, original_patterns)
+				self.assertEqual(len(spec), 1)
+				self.assertTrue(spec.match_file('keep.txt'))
+				spec += other
+				self.assertEqual(len(spec), 2)
+				self.assertFalse(spec.match_file('keep.txt'))
+				self.assertTrue(spec.match_file('other.txt'))
+
+	def test_03_iadd_incompatible_re2_pattern(self):
+		"""An unsupported regex must not become part of the RE2 spec."""
+		require_backend('re2')
+		import re2
+		spec = PathSpec([RegexPattern(re.compile(r'.*\.txt$'), include=True)], backend='re2')
+		other = PathSpec([RegexPattern(re.compile(r'(?=keep).*'), include=False)], backend='simple')
+		original_patterns = spec.patterns
+		with self.assertRaises(re2.error):
+			spec += other
+		self.assertIs(spec.patterns, original_patterns)
+		self.assertTrue(spec.match_file('keep.txt'))
+		spec += PathSpec.from_lines('gitignore', ['!keep.txt'], backend='simple')
+		self.assertEqual(len(spec), 2)
+		self.assertFalse(spec.match_file('keep.txt'))
+		self.assertTrue(spec.match_file('other.txt'))
 
 	def test_04_len(self):
 		"""
@@ -962,7 +1058,64 @@ class PathSpecTest(unittest.TestCase):
 					'Y/Z/c.txt',
 				])), debug)
 
-	def test_06_issue_41_a(self):
+	def test_06_repr(self):
+		"""
+		Test the path-spec debug representation.
+		"""
+		spec = PathSpec.from_lines('gitignore', ['*.py'], backend='simple')
+		self.assertEqual(
+			repr(spec),
+			"PathSpec(patterns=[GitIgnoreBasicPattern(pattern='*.py', include=True)], backend='simple')",
+		)
+
+
+class PathSpecIssue39Test(PathSpecMixin, TestCase):
+	"""
+	The :class:`PathSpecIssue39Test` class tests the :class:`.PathSpec`
+	implementation for issue #39.
+	"""
+
+	def test_1(self):
+		"""
+		Test excluding files in a directory.
+		"""
+		for sub_test in self.parameterize_from_lines('gitignore', [
+			'*.log',
+			'!important/*.log',
+			'trace.*',
+		]):
+			with sub_test() as spec:
+				# Confirmed results with git check-ignore (v2.43.0).
+				files = {
+					'a.log',            # 1:*.log
+					'b.txt',            # -
+					'important/d.log',  # 2:!important/*.log
+					'important/e.txt',  # -
+					'trace.c',          # 3:trace.*
+				}
+
+				results = list(spec.check_files(files))
+				ignores = get_includes(results)
+				debug = debug_results(spec, results)
+
+				self.assertEqual(ignores, {
+					'a.log',
+					'trace.c',
+				}, debug)
+				self.assertEqual(files - ignores, {
+					'b.txt',
+					'important/d.log',
+					'important/e.txt',
+				}, debug)
+
+
+class PathSpecIssue41Test(PathSpecMixin, TestCase):
+	"""
+	The :class:`PathSpecIssue41Test` class tests the :class:`.PathSpec`
+	implementation for issue #41.
+	"""
+
+	def test_a(self):
 		"""
 		Test including a file and excluding a directory with the same name pattern,
 		scenario A.
@@ -999,10 +1152,10 @@ class PathSpecTest(unittest.TestCase):
 					'dir/index.txt',
 				}, debug)
 
-	def test_06_issue_41_b(self):
+	def test_b(self):
 		"""
-		Test including a file and excluding a directory with the same name
-		pattern, scenario B.
+		Test including a file and excluding a directory with the same name pattern,
+		scenario B.
 		"""
 		for sub_test in self.parameterize_from_lines('gitignore', [
 			'!*.yaml/',
@@ -1035,10 +1188,10 @@ class PathSpecTest(unittest.TestCase):
 					'dir/index.txt',
 				}, debug)
 
-	def test_06_issue_41_c(self):
+	def test_c(self):
 		"""
-		Test including a file and excluding a directory with the same name
-		pattern, scenario C.
+		Test including a file and excluding a directory with the same name pattern,
+		scenario C.
 		"""
 		for sub_test in self.parameterize_from_lines('gitignore', [
 			'*.yaml',
@@ -1072,7 +1225,14 @@ class PathSpecTest(unittest.TestCase):
 					'dir/index.txt',
 				}, debug)
 
-	def test_07_issue_62(self):
+
+class PathSpecIssue62Test(PathSpecMixin, TestCase):
+	"""
+	The :class:`PathSpecIssue62Test` class tests the :class:`.PathSpec`
+	implementation for issue #62.
+	"""
+
+	def test_1(self):
 		"""
 		Test including all files and excluding a directory.
 		"""
@@ -1094,41 +1254,16 @@ class PathSpecTest(unittest.TestCase):
 					'anydir/file.txt',
 				}, debug)
 
-	def test_08_issue_39(self):
-		"""
-		Test excluding files in a directory.
-		"""
-		for sub_test in self.parameterize_from_lines('gitignore', [
-			'*.log',
-			'!important/*.log',
-			'trace.*',
-		]):
-			with sub_test() as spec:
-				files = {
-					'a.log',
-					'b.txt',
-					'important/d.log',
-					'important/e.txt',
-					'trace.c',
-				}
 
-				results = list(spec.check_files(files))
-				ignores = get_includes(results)
-				debug = debug_results(spec, results)
+class PathSpecIssue80Test(PathSpecMixin, TestCase):
+	"""
+	The :class:`PathSpecIssue80Test` class tests the :class:`.PathSpec`
+	implementation for issue #80.
+	"""
 
-				self.assertEqual(ignores, {
-					'a.log',
-					'trace.c',
-				}, debug)
-				self.assertEqual(files - ignores, {
-					'b.txt',
-					'important/d.log',
-					'important/e.txt',
-				}, debug)
-
-	def test_09_issue_80_a(self):
+	def test_a(self):
 		"""
-		Test negating patterns.
+		Test negating patterns, scenario A.
 		"""
 		for sub_test in self.parameterize_from_lines('gitignore', [
 			'build',
@@ -1157,9 +1292,9 @@ class PathSpecTest(unittest.TestCase):
 					'trace.c',
 				}, debug)
 
-	def test_09_issue_80_b(self):
+	def test_b(self):
 		"""
-		Test negating patterns.
+		Test negating patterns, scenario B.
 		"""
 		for sub_test in self.parameterize_from_lines('gitignore', [
 			'build',
@@ -1184,7 +1319,14 @@ class PathSpecTest(unittest.TestCase):
 				self.assertEqual(files - ignores, keeps)
 				self.assertEqual(files - keeps, ignores)
 
-	def test_10_issue_100(self):
+
+class PathSpecIssue100Test(PathSpecMixin, TestCase):
+	"""
+	The :class:`PathSpecIssue100Test` class tests the :class:`.PathSpec`
+	implementation for issue #100.
+	"""
+
+	def test_1(self):
 		"""
 		Test an empty list of patterns.
 		"""
@@ -1196,12 +1338,75 @@ class PathSpecTest(unittest.TestCase):
 				debug = debug_results(spec, results)
 				self.assertEqual(includes, set(), debug)
 
-	def test_11_repr(self):
+
+class PathSpecIssue150Test(PathSpecMixin, TestCase):
+	"""
+	The :class:`PathSpecIssue150Test` class tests the :class:`.PathSpec`
+	implementation for issue #150.
+	"""
+
+	def test_1_stream_lines(self):
 		"""
-		Test the path-spec debug representation.
+		Test handling of trailing tabs, non-breaking spaces, and em-spaces.
 		"""
-		spec = PathSpec.from_lines('gitignore', ['*.py'], backend='simple')
-		self.assertEqual(
-			repr(spec),
-			"PathSpec(patterns=[GitIgnoreBasicPattern(pattern='*.py', include=True)], backend='simple')",
-		)
+		for suffix, ending in itertools.product(
+			('\t', '\xa0', '\u2003'),
+			('\n', '\r\n'),
+		):
+			name = f"foo{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				'gitignore',
+				[name + ending],
+				sub_params=dict(suffix=suffix, ending=ending),
+			):
+				with sub_test() as spec:
+					self.assertTrue(spec.match_file(name))
+					self.assertFalse(spec.match_file('foo'))
+
+	def test_2_negation_and_directories_1(self):
+		"""
+		Test handling of negation and directories.
+		"""
+		for suffix in ('\t', '\xa0', '\u2003'):
+			name = f"foo{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				'gitignore',
+				["*", f"!{name}"],
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
+					self.assertFalse(spec.match_file(name))
+					self.assertTrue(spec.match_file('foo'))
+
+	def test_2_negation_and_directories_2(self):
+		"""
+		Test handling of negation and directories.
+		"""
+		for suffix in ('\t', '\xa0', '\u2003'):
+			name = f"foo{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				'gitignore',
+				[f"{name}/"],
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
+					self.assertTrue(spec.match_file(f"{name}/"))
+					self.assertTrue(spec.match_file(f"{name}/child"))
+					self.assertFalse(spec.match_file(name))
+					self.assertFalse(spec.match_file("foo/child"))
+
+	def test_3_character_after_slash(self):
+		"""
+		Test handling of characters after a slash.
+		"""
+		for suffix in ('\t', '\xa0', '\u2003'):
+			name = f"foo/{suffix}"
+			for sub_test in self.parameterize_from_lines(
+				'gitignore',
+				[name],
+				sub_params=dict(suffix=suffix),
+			):
+				with sub_test() as spec:
+					self.assertTrue(spec.match_file(name))
+					self.assertFalse(spec.match_file('foo/'))
+					self.assertFalse(spec.match_file('foo/other'))

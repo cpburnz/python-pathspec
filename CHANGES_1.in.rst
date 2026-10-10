@@ -9,6 +9,8 @@ Major changes:
 API changes:
 
 - TODO: Deprecated: `pathspec.util.RecursionError` is now an alias for `pathspec.util.RecursivePathError`. Python has had a built-in named `RecursionError` since 3.4.
+- `TreeEntry.stat` will no longer be the `os.stat_result` of the linked node when using `iter_tree_entries(follow_links=False)`.
+
 
 New features:
 
@@ -17,9 +19,7 @@ New features:
 
 Bug fixes:
 
-- `Pull #152`_: Anchor gitignore filename matches at the actual end of the path, so a terminal
-  newline is not mistaken for the end of a filename.
-
+- Hyperscan backend no longer fails on multibyte UTF-8 characters.
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
 - `Pull #128`_: Support POSIX character classes (e.g. `[[:alpha:]]`) in gitignore bracket expressions.
 - `Issue #129`_ / `Pull #132`_: Fix GitIgnoreSpec re-including files under an excluded directory
@@ -27,10 +27,16 @@ Bug fixes:
 - `Issue #134`_: GitIgnoreSpec: reverse and forward evaluation disagree.
 - `Pull #135`_: Escape trailing spaces in `GitIgnoreSpecPattern.escape()`.
 - `Issue #137`_ / `Pull #138`_: Patterns ending in `/**` no longer match their bare parent directory, preserving traversal to re-included children.
+- `Issue #137`_ / `Pull #144`_: The excluded directory rule no longer applies to an ancestor directory which the spec itself re-includes.
 - `Pull #139`_: Match newline characters in paths with `*` and `**`.
-- `Pull #142`_: Fix trailing-space trimming after escaped backslashes.
+- `Pull #142`_ / `Pull #150`_: Fix trailing-space trimming after escaped backslashes.
 - `Issue #146`_: pattern_to_regex raises on three lines git accepts (bare '!', '! ', lone '\').
 - `Pull #147`_: Match directory entries with directory-only patterns. `PathSpec.match_entries()` and `.match_tree_entries()` will now match directory entries as directory paths (i.e., with a trailing `/`), instead of as file paths (no trailing `/`).
+- `Pull #149`_: Handle directory-open errors through on_error during tree walks.
+- `Pull #152`_: Anchor gitignore filename matches at the actual end of the path.
+- `Pull #156`_: Avoid following symbolic link targets when checking file types in `iter_tree_files(follow_links=False)` / `iter_tree_entries(follow_links=False)`.
+- `Pull #158`_: Ignore unmatched exclusions in `detailed_match_files()`.
+- `Pull #159`_: Preserve PathSpec state when backend reconstruction fails.
 
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
@@ -46,8 +52,15 @@ Bug fixes:
 .. _`Pull #138`: https://github.com/cpburnz/python-pathspec/pull/138
 .. _`Pull #139`: https://github.com/cpburnz/python-pathspec/pull/139
 .. _`Pull #142`: https://github.com/cpburnz/python-pathspec/pull/142
+.. _`Pull #144`: https://github.com/cpburnz/python-pathspec/pull/144
 .. _`Issue #146`: https://github.com/cpburnz/python-pathspec/issues/146
 .. _`Pull #147`: https://github.com/cpburnz/python-pathspec/pull/147
+.. _`Pull #149`: https://github.com/cpburnz/python-pathspec/pull/149
+.. _`Pull #150`: https://github.com/cpburnz/python-pathspec/pull/150
+.. _`Pull #152`: https://github.com/cpburnz/python-pathspec/pull/152
+.. _`Pull #156`: https://github.com/cpburnz/python-pathspec/pull/156
+.. _`Pull #158`: https://github.com/cpburnz/python-pathspec/pull/158
+.. _`Pull #159`: https://github.com/cpburnz/python-pathspec/pull/159
 
 
 1.1.1 (2026-04-26)
@@ -170,7 +183,6 @@ Improvements:
 
 
 .. _`Issue #38`: https://github.com/cpburnz/python-pathspec/issues/38
-.. _`Pull #152`: https://github.com/cpburnz/python-pathspec/pull/152
 .. _`Issue #91`: https://github.com/cpburnz/python-pathspec/issues/91
 .. _`Issue #93`: https://github.com/cpburnz/python-pathspec/issues/93
 .. _`Issue #95`: https://github.com/cpburnz/python-pathspec/issues/95
