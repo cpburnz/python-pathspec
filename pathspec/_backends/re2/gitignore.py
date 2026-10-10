@@ -29,6 +29,8 @@ from pathspec._typing import (
 from ._base import (
 	Re2RegexDat,
 	Re2RegexDebug)
+from .._utils import (
+	translate_end_anchor)
 from .pathspec import (
 	Re2PsBackend)
 
@@ -114,6 +116,7 @@ class Re2GiBackend(Re2PsBackend):
 				use_regexes.append((regex, False))
 
 			for regex, is_dir_pattern in use_regexes:
+				regex = translate_end_anchor(regex)
 				if debug:
 					regex_data.append(Re2RegexDebug(
 						include=pattern.include,

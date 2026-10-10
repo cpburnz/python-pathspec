@@ -29,6 +29,9 @@ from pathspec.patterns.gitignore.spec import (
 from pathspec._typing import (
 	override)  # Added in 3.12.
 
+from .._utils import (
+	translate_end_anchor)
+
 from ._base import (
 	HS_FLAGS,
 	HS_VERSION,
@@ -140,18 +143,19 @@ class HyperscanGiBackend(HyperscanPsBackend):
 						# direct match and not an excluded ancestor.
 						base_regex = regex_str[:-len(_DIR_MARK_OPT)]
 						use_regexes.append((f'{base_regex}/(?s:.)', True))
-						use_regexes.append((f'{base_regex}/?$', False))
+						use_regexes.append((rf'{base_regex}/?\z', False))
 					else:
 						# Remove capture group.
 						base_regex = regex_str.replace(_DIR_MARK_CG, '/')
 						use_regexes.append((f'{base_regex}(?s:.)', True))
-						use_regexes.append((f'{base_regex}$', False))
+						use_regexes.append((rf'{base_regex}\z', False))
 
 			if not use_regexes:
 				# No special case for regex.
 				use_regexes.append((regex, False))
 
 			for regex, is_dir_pattern in use_regexes:
+				regex = translate_end_anchor(regex)
 				if isinstance(regex, bytes):
 					regex_bytes = regex
 				else:

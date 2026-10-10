@@ -18,7 +18,7 @@ from pathspec.patterns.gitignore.basic import (
 from pathspec.util import (
 	lookup_pattern)
 
-_DIR_OPT = '(?:/|$)'
+_DIR_OPT = r'(?:/|\Z)'
 """
 Optional directory ending.
 """
@@ -909,7 +909,7 @@ class GitIgnoreBasicPatternIssue81Test(TestCase):
 		"""
 		pattern = GitIgnoreBasicPattern('!libfoo/*')
 
-		self.assertEqual(pattern.regex.pattern, f'^libfoo/[^/]+/?$')
+		self.assertEqual(pattern.regex.pattern, rf'^libfoo/[^/]+/?\Z')
 		self.assertIs(pattern.include, False)
 		self.assertTrue(pattern.match_file('libfoo/__init__.py'))
 

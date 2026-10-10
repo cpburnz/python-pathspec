@@ -25,7 +25,8 @@ from pathspec._typing import (
 	override)  # Added in 3.12.
 
 from .._utils import (
-	enumerate_patterns)
+	enumerate_patterns,
+	translate_end_anchor)
 
 from .base import (
 	re2_error)
@@ -132,7 +133,7 @@ class Re2PsBackend(_Backend):
 
 			assert pattern.regex is not None, pattern
 			assert isinstance(pattern, RegexPattern), pattern
-			regex = pattern.regex.pattern
+			regex = translate_end_anchor(pattern.regex.pattern)
 
 			if debug:
 				regex_data.append(Re2RegexDebug(
