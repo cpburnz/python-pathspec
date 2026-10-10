@@ -244,7 +244,7 @@ def iter_tree_entries(
 	on_error: Optional[Callable[[OSError], None]] = None,
 	follow_links: Optional[bool] = None,
 	subdir: Optional[StrPath] = None,
-) -> Iterator['TreeEntry']:
+) -> Iterator[TreeEntry]:
 	"""
 	Walks the specified directory for all files and directories.
 
@@ -292,7 +292,7 @@ def _iter_tree_entries_next(
 	memo: dict[str, str],
 	on_error: Optional[Callable[[OSError], None]],
 	follow_links: bool,
-) -> Iterator['TreeEntry']:
+) -> Iterator[TreeEntry]:
 	"""
 	Scan the directory for all descendant files.
 
@@ -343,7 +343,7 @@ def _iter_tree_entries_next(
 					on_error(e)
 				continue
 
-			if node_ent.is_symlink():
+			if follow_links and node_ent.is_symlink():
 				# Child node is a link, inspect the target node.
 				try:
 					node_stat = node_ent.stat()
@@ -361,8 +361,12 @@ def _iter_tree_entries_next(
 
 				yield from _iter_tree_entries_next(root_full, node_rel, memo, on_error, follow_links)
 
-			elif node_ent.is_file() or node_ent.is_symlink():
-				# Child node is either a file or an unfollowed link, yield it.
+			elif node_ent.is_file(follow_symlinks=follow_links):
+				# Child node is a file, yield it.
+				yield TreeEntry(node_ent.name, node_rel, node_lstat, node_stat)
+
+			elif not follow_links and node_ent.is_symlink():
+				# Child node is an unfollowed link, yield it.
 				yield TreeEntry(node_ent.name, node_rel, node_lstat, node_stat)
 
 	# NOTE: Make sure to remove the canonical (real) path of the directory from

@@ -9,6 +9,8 @@ Major changes:
 API changes:
 
 - TODO: Deprecated: `pathspec.util.RecursionError` is now an alias for `pathspec.util.RecursivePathError`. Python has had a built-in named `RecursionError` since 3.4.
+- `TreeEntry.stat` will no longer be the `os.stat_result` of the linked node when using `iter_tree_entries(follow_links=False)`.
+
 
 New features:
 
@@ -31,7 +33,7 @@ Bug fixes:
 - `Issue #146`_: pattern_to_regex raises on three lines git accepts (bare '!', '! ', lone '\').
 - `Pull #147`_: Match directory entries with directory-only patterns. `PathSpec.match_entries()` and `.match_tree_entries()` will now match directory entries as directory paths (i.e., with a trailing `/`), instead of as file paths (no trailing `/`).
 - `Pull #149`_: Handle directory-open errors through on_error during tree walks.
-- `Pull #156`_: Avoid following symbolic link targets when checking file types in ``iter_tree_files(follow_links=False)``.
+- `Pull #156`_: Avoid following symbolic link targets when checking file types in `iter_tree_files(follow_links=False)` / `iter_tree_entries(follow_links=False)`.
 
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
@@ -52,7 +54,7 @@ Bug fixes:
 .. _`Pull #147`: https://github.com/cpburnz/python-pathspec/pull/147
 .. _`Pull #149`: https://github.com/cpburnz/python-pathspec/pull/149
 .. _`Pull #150`: https://github.com/cpburnz/python-pathspec/pull/150
-.. _`Pull #150`: https://github.com/cpburnz/python-pathspec/pull/156
+.. _`Pull #156`: https://github.com/cpburnz/python-pathspec/pull/156
 
 
 1.1.1 (2026-04-26)

@@ -624,7 +624,7 @@ class IterTreeTest(unittest.TestCase):
 			'DirX',
 		])))
 
-	def test_02_link_9_no_follow_loop_links_2_files(self):
+	def test_02_link_9_no_follow_loop_links_1_files(self):
 		"""
 		Unfollowed links with cyclic targets are yielded without inspecting targets.
 		"""
@@ -634,8 +634,14 @@ class IterTreeTest(unittest.TestCase):
 			('Pair', [('First', 'Second'), ('Second', 'First')]),
 		]:
 			with self.subTest(case=case):
-				self.make_dirs([case, f'{case}/Dir'])
-				self.make_files([f'{case}/kept.txt', f'{case}/Dir/child.txt'])
+				self.make_dirs([
+					case,
+					f'{case}/Dir',
+				])
+				self.make_files([
+					f'{case}/kept.txt',
+					f'{case}/Dir/child.txt',
+				])
 				self.make_links([
 					(f'{case}/{link}', f'{case}/{target}')
 					for link, target in links
@@ -644,10 +650,46 @@ class IterTreeTest(unittest.TestCase):
 				results = set(iter_tree_files(
 					self.temp_dir / case, follow_links=False, on_error=errors.append,
 				))
-				self.assertEqual(results, {
-					'kept.txt', ospath('Dir/child.txt'), *[link for link, _ in links],
-				})
 				self.assertEqual(errors, [])
+				self.assertEqual(results, {
+					'kept.txt',
+					ospath('Dir/child.txt'),
+					*[link for link, _ in links],
+				})
+
+	def test_02_link_9_no_follow_loop_links_2_entries(self):
+		"""
+		Unfollowed links with cyclic targets are yielded without inspecting targets.
+		"""
+		self.require_symlink()
+		for case, links in [
+			('Self', [('Loop', 'Loop')]),
+			('Pair', [('First', 'Second'), ('Second', 'First')]),
+		]:
+			with self.subTest(case=case):
+				self.make_dirs([
+					case,
+					f'{case}/Dir',
+				])
+				self.make_files([
+					f'{case}/kept.txt',
+					f'{case}/Dir/child.txt',
+				])
+				self.make_links([
+					(f'{case}/{link}', f'{case}/{target}')
+					for link, target in links
+				])
+				errors = []
+				results = get_paths_from_entries(iter_tree_entries(
+					self.temp_dir / case, follow_links=False, on_error=errors.append,
+				))
+				self.assertEqual(errors, [])
+				self.assertEqual(results, {
+					'Dir',
+					'kept.txt',
+					ospath('Dir/child.txt'),
+					*[link for link, _ in links],
+				})
 
 	def test_03_subdir_1_from_filesystem_root(self):
 		"""
