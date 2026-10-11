@@ -10,7 +10,8 @@ from collections.abc import (
 	Iterable)
 from typing import (
 	Union,  # Replaced by `X | Y` in 3.10.
-	TypeVar)
+	TypeVar,
+	overload)
 
 from pathspec.pattern import (
 	Pattern,
@@ -86,7 +87,25 @@ def supports_regex_flags(flags: int) -> bool:
 	return True
 
 
-def translate_regex_flags(regex: AnyStr, flags: int) -> AnyStr:
+@overload
+def translate_regex_flags(regex: str, flags: int) -> str:
+	...
+
+
+@overload
+def translate_regex_flags(regex: bytes, flags: int) -> bytes:
+	...
+
+
+@overload
+def translate_regex_flags(regex: Union[str, bytes], flags: int) -> Union[str, bytes]:
+	...
+
+
+def translate_regex_flags(
+	regex: Union[str, bytes],
+	flags: int,
+) -> Union[str, bytes]:
 	"""
 	Prepend the global inline flags that a native backend understands.
 
@@ -183,7 +202,22 @@ def enumerate_patterns(
 	return out_patterns
 
 
-def translate_end_anchor(regex: AnyStr) -> AnyStr:
+@overload
+def translate_end_anchor(regex: str) -> str:
+	...
+
+
+@overload
+def translate_end_anchor(regex: bytes) -> bytes:
+	...
+
+
+@overload
+def translate_end_anchor(regex: Union[str, bytes]) -> Union[str, bytes]:
+	...
+
+
+def translate_end_anchor(regex: Union[str, bytes]) -> Union[str, bytes]:
 	"""
 	Translate Python's strict end anchor to the RE2 and Hyperscan spelling.
 

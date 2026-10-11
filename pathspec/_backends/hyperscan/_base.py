@@ -11,7 +11,8 @@ import re
 from dataclasses import (
 	dataclass)
 from typing import (
-	Union)  # Replaced by `X | Y` in 3.10.
+	Union,  # Replaced by `X | Y` in 3.10.
+	cast)
 
 try:
 	import hyperscan
@@ -21,7 +22,7 @@ except ModuleNotFoundError:
 	HS_VERSION = (-1, -1, -1)
 else:
 	HS_FLAGS = hyperscan.HS_FLAG_SINGLEMATCH | hyperscan.HS_FLAG_UTF8
-	HS_VERSION = tuple(map(int, hyperscan.__version__.split('.')[:3]))
+	HS_VERSION = cast(tuple[int, int, int], tuple(map(int, hyperscan.__version__.split('.')[:3])))  # type: ignore[attr-defined]
 
 _COMPAT_CONVERT_UNICODE = re.compile(r'\\(.)|([^\x00-\x7F])', re.DOTALL)
 """
@@ -87,7 +88,7 @@ def _replace_unicode(match: re.Match) -> str:
 
 	Returns the string replacement (:class:`str`).
 	"""
-	escaped, uchar = match.groups()  # type: str
+	escaped, uchar = match.groups()
 	if uchar is not None:
 		# Unicode character.
 		return _encode_uchar(uchar)

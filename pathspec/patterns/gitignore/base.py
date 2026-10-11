@@ -35,7 +35,7 @@ _BYTES_ENCODING = 'latin1'
 The encoding to use when parsing a byte string pattern.
 """
 
-_POSIX_CLASS_TO_REGEX = {
+_POSIX_CLASS_TO_REGEX: dict[str, str] = {
 	# Git's wildmatch implements POSIX bracket character classes using its own
 	# ASCII (locale-independent) ``is*`` functions, so each class maps to an
 	# explicit ASCII set. These are NOT the Unicode-aware equivalents (``\w``,
@@ -104,7 +104,7 @@ def _sub_bracket_token(match: re.Match[str]) -> str:
 
 	Returns the replacement string (:class:`str`).
 	"""
-	escape_char, class_negated, class_name = match.groups()  # type: str
+	escape_char, class_negated, class_name = match.groups()
 
 	# Backslash escaped character.
 	if escape_char:

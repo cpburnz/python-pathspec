@@ -121,7 +121,7 @@ class Re2GiBackend(Re2PsBackend):
 
 			for regex, is_dir_pattern in use_regexes:
 				regex = translate_end_anchor(regex)
-				regex = translate_regex_flags(  # type: ignore[type-var]
+				regex = translate_regex_flags(
 					regex,
 					get_regex_flags(pattern.regex),
 				)
