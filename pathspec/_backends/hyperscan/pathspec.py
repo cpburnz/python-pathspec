@@ -71,10 +71,10 @@ class HyperscanPsBackend(_Backend):
 			raise TypeError(f"{patterns[0]=!r} must be a RegexPattern.")
 
 		if has_unsupported_flags(patterns):
-			raise ValueError(
-				"The hyperscan backend cannot preserve these regex compile flags. "
+			raise ValueError((
+				"The hyperscan backend cannot preserve the regex compile flags. "
 				"Use backend='simple'."
-			)
+			))
 
 		use_patterns = enumerate_patterns(
 			patterns, filter=True, reverse=False,
@@ -166,8 +166,9 @@ class HyperscanPsBackend(_Backend):
 
 			# Encode regex.
 			assert isinstance(pattern, RegexPattern), pattern
+			regex = translate_end_anchor(pattern.regex.pattern)
 			regex = translate_regex_flags(
-				translate_end_anchor(pattern.regex.pattern),
+				regex,
 				get_regex_flags(pattern.regex),
 			)
 

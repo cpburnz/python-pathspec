@@ -65,10 +65,10 @@ class Re2PsBackend(_Backend):
 			raise TypeError(f"{patterns[0]=!r} must be a RegexPattern.")
 
 		if has_unsupported_flags(patterns):
-			raise ValueError(
-				"The re2 backend cannot preserve these regex compile flags. "
+			raise ValueError((
+				"The re2 backend cannot preserve the regex compile flags. "
 				"Use backend='simple'."
-			)
+			))
 
 		use_patterns = dict(enumerate_patterns(
 			patterns, filter=True, reverse=False,

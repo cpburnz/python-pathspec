@@ -69,8 +69,8 @@ def make_gitignore_backend(
 	if name == 'best':
 		name = _BEST_BACKEND
 		if name != 'simple' and has_unsupported_flags(patterns):
-			# Only the simple backend can keep the compile flags of the
-			# patterns it was given.
+			# Only the simple backend can keep the compile flags of the patterns it
+			# was given.
 			name = 'simple'
 
 	if name == 'hyperscan':
@@ -101,8 +101,8 @@ def make_pathspec_backend(
 	if name == 'best':
 		name = _BEST_BACKEND
 		if name != 'simple' and has_unsupported_flags(patterns):
-			# Only the simple backend can keep the compile flags of the
-			# patterns it was given.
+			# Only the simple backend can keep the compile flags of the patterns it
+			# was given.
 			name = 'simple'
 
 	if name == 'hyperscan':

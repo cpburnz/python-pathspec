@@ -37,6 +37,7 @@ Bug fixes:
 - `Issue #146`_: pattern_to_regex raises on three lines git accepts (bare '!', '! ', lone '\').
 - `Pull #147`_: Match directory entries with directory-only patterns. `PathSpec.match_entries()` and `.match_tree_entries()` will now match directory entries as directory paths (i.e., with a trailing `/`), instead of as file paths (no trailing `/`).
 - `Pull #149`_: Handle directory-open errors through on_error during tree walks.
+- `Pull #151`_: Preserve externally compiled regex flags during backend selection.
 - `Pull #152`_: Anchor gitignore filename matches at the actual end of the path.
 - `Pull #156`_: Avoid following symbolic link targets when checking file types in `iter_tree_files(follow_links=False)` / `iter_tree_entries(follow_links=False)`.
 - `Pull #157`_: Handle backslash escapes in gitignore bracket expressions.
@@ -62,6 +63,7 @@ Bug fixes:
 .. _`Pull #147`: https://github.com/cpburnz/python-pathspec/pull/147
 .. _`Pull #149`: https://github.com/cpburnz/python-pathspec/pull/149
 .. _`Pull #150`: https://github.com/cpburnz/python-pathspec/pull/150
+.. _`Pull #151`: https://github.com/cpburnz/python-pathspec/pull/151
 .. _`Pull #152`: https://github.com/cpburnz/python-pathspec/pull/152
 .. _`Pull #156`: https://github.com/cpburnz/python-pathspec/pull/156
 .. _`Pull #157`: https://github.com/cpburnz/python-pathspec/pull/157

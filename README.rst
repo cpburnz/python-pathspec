@@ -117,15 +117,10 @@ be significantly faster than "simple", and 3 times faster than "hyperscan" at
 high pattern counts.
 
 When a pattern is a precompiled ``re.Pattern``, the "re2" and "hyperscan"
-backends translate its compile flags to the global inline flags ``(?ims)`` that
-both engines understand. The flags that can't be translated -- ``re.VERBOSE``
-(RE2 has no "verbose" mode), ``re.LOCALE``, and ``re.ASCII`` combined with
-``re.IGNORECASE`` -- are only supported by the "simple" backend: "best" uses
-"simple" for those patterns, and explicitly selecting "re2" or "hyperscan"
-raises ``ValueError``. ``re.UNICODE`` gets no prefix because neither engine
-accepts ``(?u)``: both match ``\w``, ``\d``, ``\s``, and ``\b`` as ASCII
-regardless, which is the same difference the native backends already have for
-the patterns they generate themselves.
+backends translate its compile flags to the global inline flags ``(?ims)``. The
+``re.LOCALE``, ``re.VERBOSE``, and ``re.ASCII`` combined with ``re.IGNORECASE``
+flags are only supported by the "simple" backend. The ``re.UNICODE`` flag is
+ignored.
 
 See `benchmarks_backends.md`_ for comparisons between native Python regular
 expressions and the optional backends.
