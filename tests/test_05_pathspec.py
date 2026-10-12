@@ -1410,3 +1410,59 @@ class PathSpecIssue150Test(PathSpecMixin, TestCase):
 					self.assertTrue(spec.match_file(name))
 					self.assertFalse(spec.match_file('foo/'))
 					self.assertFalse(spec.match_file('foo/other'))
+
+
+class SuffixPattern(Pattern):
+	def match_file(self, file: str) -> Optional[str]:
+		return file if file.endswith('.secret') else None
+
+
+class CustomPatternBackendTest(TestCase):
+	"""
+	Automatic backend selection must preserve custom matching implementations.
+	"""
+
+	def test_custom_pattern(self):
+		for preferred in ('simple', 're2', 'hyperscan'):
+			for backend in (None, 'best'):
+				with self.subTest(preferred=preferred, backend=backend):
+					with patch('pathspec._backends.agg._BEST_BACKEND', preferred):
+						spec = PathSpec([SuffixPattern(True)], backend=backend)
+					self.assertEqual(list(spec.match_files(['public.txt', 'key.secret'])), ['key.secret'])
+					self.assertEqual(list(spec.match_files(['public.txt', 'key.secret'], negate=True)), ['public.txt'])
+					self.assertEqual(spec.check_file('key.secret').index, 0)
+
+	def test_custom_pattern_factory(self):
+		for preferred in ('simple', 're2', 'hyperscan'):
+			with self.subTest(preferred=preferred):
+				with patch('pathspec._backends.agg._BEST_BACKEND', preferred):
+					spec = PathSpec.from_lines(lambda line: SuffixPattern(True), ['secrets'])
+				self.assertTrue(spec.match_file('key.secret'))
+				self.assertFalse(spec.match_file('public.txt'))
+
+	def test_mixed_patterns(self):
+		for preferred in ('simple', 're2', 'hyperscan'):
+			for include in (False, True):
+				patterns = [
+					RegexPattern(re.compile('.*'), include=not include),
+					Pattern(None),
+					SuffixPattern(include),
+				]
+				with self.subTest(preferred=preferred, include=include):
+					with patch('pathspec._backends.agg._BEST_BACKEND', preferred):
+						spec = PathSpec(patterns)
+					result = spec.check_file('key.secret')
+					self.assertEqual((result.include, result.index), (include, 2))
+					self.assertEqual(spec.match_file('public.txt'), not include)
+
+	def test_add_custom_pattern(self):
+		spec = PathSpec.from_lines('gitignore', ['*'])
+		other = PathSpec([SuffixPattern(False)], backend='simple')
+		combined = spec + other
+		self.assertTrue(spec.match_file('key.secret'))
+		self.assertFalse(combined.match_file('key.secret'))
+		original = spec
+		spec += other
+		self.assertIs(spec, original)
+		self.assertFalse(spec.match_file('key.secret'))
+		self.assertTrue(spec.match_file('public.txt'))
