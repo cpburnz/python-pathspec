@@ -767,10 +767,10 @@ class GitIgnoreSpecPatternTest(TestCase):
 			('[[:blank:]]', '[\\t ]'),
 			('[[:cntrl:]]', '[\\x00-\\x1f\\x7f]'),
 			('[[:digit:]]', '[0-9]'),
-			('[[:graph:]]', '[\\x21-\\x7e]'),
+			('[[:graph:]]', '[\\x21-\\x2e\\x30-\\x7e]'),
 			('[[:lower:]]', '[a-z]'),
-			('[[:print:]]', '[\\x20-\\x7e]'),
-			('[[:punct:]]', '[!-/:-@\\[-`{-~]'),
+			('[[:print:]]', '[\\x20-\\x2e\\x30-\\x7e]'),
+			('[[:punct:]]', '[!-.:-@\\[-`{-~]'),
 			('[[:space:]]', '[\\t\\n\\r ]'),
 			('[[:upper:]]', '[A-Z]'),
 			('[[:xdigit:]]', '[0-9A-Fa-f]'),
@@ -1123,11 +1123,11 @@ class GitIgnoreSpecPatternIssue93Test(TestCase):
 		Test patterns with valid range notation.
 		"""
 		for raw_pattern, regex in [
-			('[!a-z]', f'^(?s:.+/)?[^a-z]{_DIR_MARK_OPT}'),
-			('[^a-z]', f'^(?s:.+/)?[^a-z]{_DIR_MARK_OPT}'),
+			('[!a-z]', f'^(?s:.+/)?[^/a-z]{_DIR_MARK_OPT}'),
+			('[^a-z]', f'^(?s:.+/)?[^/a-z]{_DIR_MARK_OPT}'),
 			('[a-z]', f'^(?s:.+/)?[a-z]{_DIR_MARK_OPT}'),
-			('a[!a-z]', f'^(?s:.+/)?a[^a-z]{_DIR_MARK_OPT}'),
-			('a[^a-z]', f'^(?s:.+/)?a[^a-z]{_DIR_MARK_OPT}'),
+			('a[!a-z]', f'^(?s:.+/)?a[^/a-z]{_DIR_MARK_OPT}'),
+			('a[^a-z]', f'^(?s:.+/)?a[^/a-z]{_DIR_MARK_OPT}'),
 			('a[a-z]', f'^(?s:.+/)?a[a-z]{_DIR_MARK_OPT}'),
 		]:
 			with self.subTest(f"p={raw_pattern!r}"):

@@ -15,19 +15,23 @@ from pathspec._typing import (
 	AnyStr)  # Removed in 3.18.
 
 _BRACKET_TOKEN_REGEX = re.compile((
+	# Range, including escaped endpoints, but not the start of a POSIX class.
+	r'(\\.|[^\\])-(?!\[:)(\\.|[^\\])'
 	# Escaped character.
-	r'\\(.)'
+	r'|\\(.)'
 	# POSIX class.
 	r'|\[:(\^?)([^:\]]*):\]'
 ), re.DOTALL)
 """
 Matches tokens inside a bracket expression:
 
-- A backslash escaped character (group 1).
+- A character range (groups 1 and 2).
+
+- A backslash escaped character (group 3).
 
 -	Matches a POSIX bracket character class token such as ``[:alpha:]`` inside a
-	bracket expression. Group 2 captures a leading caret (unsupported by git);
-	group 3 captures the class name.
+	bracket expression. Group 4 captures a leading caret (unsupported by git);
+	group 5 captures the class name.
 """
 
 _BYTES_ENCODING = 'latin1'
@@ -46,17 +50,17 @@ _POSIX_CLASS_TO_REGEX: dict[str, str] = {
 	'blank': '\\t ',
 	'cntrl': '\\x00-\\x1f\\x7f',
 	'digit': '0-9',
-	'graph': '\\x21-\\x7e',
+	'graph': '\\x21-\\x2e\\x30-\\x7e',
 	'lower': 'a-z',
-	'print': '\\x20-\\x7e',
-	'punct': '!-/:-@\\[-`{-~',
+	'print': '\\x20-\\x2e\\x30-\\x7e',
+	'punct': '!-.:-@\\[-`{-~',
 	'space': '\\t\\n\\r ',
 	'upper': 'A-Z',
 	'xdigit': '0-9A-Fa-f',
 }
 """
-Maps each POSIX bracket character class name to the ASCII regex range that
-reproduces git's wildmatch behavior.
+Maps each POSIX bracket character class name to ASCII regex ranges, excluding
+the directory separator as required by git's wildmatch behavior.
 """
 
 
@@ -97,14 +101,21 @@ def _strip_trailing_ws(pattern: str) -> str:
 def _sub_bracket_token(match: re.Match[str]) -> str:
 	"""
 	Translate a single token matched by :data:`_BRACKET_TOKEN_REGEX`. A token can
-	be a backslash escaped character (group 1), a POSIX bracket character class
-	(groups 2 and 3).
+	be a range (groups 1 and 2), a backslash escaped character (group 3), or a
+	POSIX bracket character class (groups 4 and 5).
 
 	*match* (:class:`re.Match`) is the match object.
 
 	Returns the replacement string (:class:`str`).
 	"""
-	escape_char, class_negated, class_name = match.groups()
+	range_start, range_end, escape_char, class_negated, class_name = match.groups()
+
+	# Character range. A bracket expression cannot match a directory separator.
+	if range_start is not None:
+		range_start, range_end = range_start[-1], range_end[-1]
+		if range_start < '/' < range_end:
+			return re.escape(range_start) + '-.0-' + re.escape(range_end)
+		return re.escape(range_start) + '-' + re.escape(range_end)
 
 	# Backslash escaped character.
 	if escape_char:
@@ -333,7 +344,7 @@ class _GitIgnoreBasePattern(RegexPattern):
 					# broken regex that silently mismatches (and warns about a nested
 					# set).
 					try:
-						body = _BRACKET_TOKEN_REGEX.sub(_sub_bracket_token, pattern[i:j])
+						body = _BRACKET_TOKEN_REGEX.sub(_sub_bracket_token, pattern[i:j - 1])
 					except _PosixClassError:
 						if errors == 'raise':
 							# EDGE CASE: Git discards patterns with an invalid range notation
@@ -345,7 +356,13 @@ class _GitIgnoreBasePattern(RegexPattern):
 							i = j
 							continue
 
-					expr += body
+					if expr == '[^':
+						# Negated expressions must also exclude the directory separator.
+						# Preserve literal ']' and '-' when inserting '/' ahead of them.
+						if body.startswith((']', '-')):
+							body = '\\' + body
+						expr += '/'
+					expr += body + ']'
 
 					if errors == 'raise':
 						try:
