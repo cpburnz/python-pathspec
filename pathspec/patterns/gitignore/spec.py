@@ -69,6 +69,8 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 	def __normalize_segments(
 		is_dir_pattern: bool,
 		pattern_segs: list[str],
+		*,
+		requires_dir_descendant: bool = False,
 	) -> tuple[Optional[list[str]], Optional[str]]:
 		"""
 		Normalize the pattern segments to make processing easier.
@@ -78,6 +80,10 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 		*pattern_segs* (:class:`list` of :class:`str`) contains the pattern
 		segments. This may be modified in place.
+
+		*requires_dir_descendant* (:class:`bool`) indicates whether a terminal
+		directory globstar must consume a descendant segment before the directory
+		marker.
 
 		Raises :exc:`ValueError` if the pattern normalizes to nothing.
 
@@ -151,6 +157,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			and pattern_segs[0] == '**'
 			and pattern_segs[1] == '*'
 			and pattern_segs[2] == '**'
+			and not requires_dir_descendant
 		):
 			# The pattern "*/" will be normalized to "**/*/**" which will match every
 			# file not in the root directory. Special case this pattern for
@@ -264,11 +271,21 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		# Check whether the pattern is specifically a directory pattern before
 		# normalization.
 		is_dir_pattern = not orig_segs[-1]
+		# A terminal directory globstar with a concrete prefix must consume a
+		# descendant segment before the directory marker. Keep this semantic bit
+		# separate from normalized segments, which collapse adjacent ``**``.
+		requires_dir_descendant = (
+			is_dir_pattern
+			and len(orig_segs) > 2
+			and orig_segs[-2] == '**'
+			and any(seg not in ('', '**') for seg in orig_segs[:-2])
+		)
 
 		# Normalize pattern to make processing easier.
 		try:
 			pattern_segs, override_regex = cls.__normalize_segments(
 				is_dir_pattern, orig_segs,
+				requires_dir_descendant=requires_dir_descendant,
 			)
 		except ValueError as e:
 			raise GitIgnorePatternError((
@@ -284,6 +301,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			try:
 				regex_parts = cls.__translate_segments(
 					seg_errors, is_dir_pattern, pattern_segs,
+					requires_dir_descendant=requires_dir_descendant,
 				)
 			except (_PosixClassError, _RangeNotationError) as e:
 				if errors == 'raise':
@@ -325,6 +343,8 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		errors: Literal['literal', 'raise'],
 		is_dir_pattern: bool,
 		pattern_segs: list[str],
+		*,
+		requires_dir_descendant: bool = False,
 	) -> list[str]:
 		"""
 		Translate the pattern segments to regular expressions.
@@ -341,6 +361,10 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 		*pattern_segs* (:class:`list` of :class:`str`) contains the pattern
 		segments.
+
+		*requires_dir_descendant* (:class:`bool`) indicates whether a terminal
+		directory globstar must consume a descendant segment before the directory
+		marker.
 
 		Raises :exc:`._PosixClassError` when an invalid POXIS class is found and
 		*errors* is ``'literal'``.
@@ -375,6 +399,8 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 					# A normalized pattern ending with double-asterisks ('**') will match
 					# nonempty trailing path segments, not the parent directory itself.
 					if is_dir_pattern:
+						if requires_dir_descendant:
+							out_parts.append('(?s:/.+)')
 						out_parts.append(_DIR_MARK_CG)
 					else:
 						out_parts.append('/[^/]')

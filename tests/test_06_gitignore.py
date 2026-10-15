@@ -1074,6 +1074,107 @@ class GitIgnoreSpecIssue137Test(GitIgnoreSpecMixin, TestCase):
 					"vendor/.cache/y.txt",
 				}, debug)
 
+	def test_c(self):
+		"""
+		Test that terminal directory globstars require a descendant directory.
+		"""
+		cases = [
+			(
+				"d/**/",
+				{"d/", "d/top.txt"},
+				{
+					"d/child/",
+					"d/child/file.txt",
+					"d/child/grandchild/deep.txt",
+					"d/\nchild/",
+					"d/\nchild/file.txt",
+				},
+			),
+			(
+				"**/**/",
+				{"top.txt"},
+				{"d/", "d/file.txt", "a/b/deep.txt"},
+			),
+			(
+				"/d/**/",
+				{"d/top.txt"},
+				{"d/child/", "d/child/file.txt"},
+			),
+			(
+				"**/d/**/",
+				{"d/top.txt", "x/d/top.txt"},
+				{"d/child/file.txt", "x/d/child/file.txt"},
+			),
+			(
+				"a/**/**/",
+				{"a/top.txt"},
+				{"a/child/", "a/child/file.txt", "a/b/top.txt"},
+			),
+			(
+				"a/**/x/**/",
+				{"a/x/top.txt"},
+				{"a/x/child/file.txt", "a/b/x/child/file.txt"},
+			),
+			(
+				"*/**/",
+				{"d/top.txt"},
+				{"d/child/file.txt", "a/b/top.txt", "x/d/child/file.txt"},
+			),
+			(
+				"**/*/**/",
+				{"d/top.txt", "child/file.txt"},
+				{"d/child/file.txt", "a/x/child/file.txt", "child/grand/deep.txt"},
+			),
+		]
+		for pattern, unignored, ignored in cases:
+			for sub_test in self.parameterize_from_lines([pattern]):
+				with sub_test() as spec:
+					with self.subTest(pattern=pattern):
+						for path in unignored:
+							with self.subTest(path=path):
+								self.assertFalse(spec.match_file(path))
+						for path in ignored:
+							with self.subTest(path=path):
+								self.assertTrue(spec.match_file(path))
+
+	def test_d(self):
+		"""
+		Document terminal-globstar negation behavior without changing resolution.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			"d/**/",
+			"!d/child/",
+		]):
+			with sub_test() as spec:
+				# PathSpec leaves the bare pattern-root directory unmatched so a
+				# traversal can still reach its direct files.
+				self.assertFalse(spec.match_file("d/"))
+				self.assertFalse(spec.match_file("d/top.txt"))
+				self.assertFalse(spec.match_file("d/child/"))
+				self.assertFalse(spec.match_file("d/child/top.txt"))
+				self.assertTrue(spec.match_file("d/child/grand/"))
+				# Existing flat last-match resolution lets the negated directory
+				# pattern match this descendant too. Git's ancestor-sensitive result
+				# differs, but changing that separate behavior is outside this fix.
+				self.assertFalse(spec.match_file("d/child/grand/deep.txt"))
+
+		for sub_test in self.parameterize_from_lines(["!d/**/"]):
+			with sub_test() as spec:
+				# The terminal-descendant rule applies to negated patterns too.
+				for path in ("d/", "d/top.txt"):
+					result = spec.check_file(path)
+					self.assertIsNone(result.include)
+					self.assertIsNone(result.index)
+				for path in (
+					"d/child/",
+					"d/child/file.txt",
+					"d/child/grand/deep.txt",
+				):
+					with self.subTest(negated_pattern_path=path):
+						result = spec.check_file(path)
+						self.assertFalse(result.include)
+						self.assertEqual(result.index, 0)
+
 
 class GitIgnoreSpecIssue139Test(GitIgnoreSpecMixin, TestCase):
 	"""
