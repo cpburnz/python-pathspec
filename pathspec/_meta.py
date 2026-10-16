@@ -84,5 +84,6 @@ __credits__ = [
 	"kokotatan <https://github.com/kokotatan>",
 	"Gyanu Mayank <https://github.com/gyanu2507>",
 	"Norna <https://github.com/Master-Norna>",
+	"Luochenchen <https://github.com/harbinresearcher>",
 ]
 __license__ = "MPL 2.0"
