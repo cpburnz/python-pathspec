@@ -41,6 +41,7 @@ Bug fixes:
 - `Pull #157`_: Handle backslash escapes in gitignore bracket expressions.
 - `Pull #158`_: Ignore unmatched exclusions in `detailed_match_files()`.
 - `Pull #159`_: Preserve PathSpec state when backend reconstruction fails.
+- `Pull #160`_: Handle entry inspection errors when walking files.
 - `Issue #161`_ / `Pull #162`_: Preserve custom patterns during automatic backend selection.
 
 
@@ -68,6 +69,7 @@ Bug fixes:
 .. _`Pull #157`: https://github.com/cpburnz/python-pathspec/pull/157
 .. _`Pull #158`: https://github.com/cpburnz/python-pathspec/pull/158
 .. _`Pull #159`: https://github.com/cpburnz/python-pathspec/pull/159
+.. _`Pull #160`: https://github.com/cpburnz/python-pathspec/pull/160
 .. _`Issue #161`: https://github.com/cpburnz/python-pathspec/issues/161
 .. _`Pull #162`: https://github.com/cpburnz/python-pathspec/pull/162
 

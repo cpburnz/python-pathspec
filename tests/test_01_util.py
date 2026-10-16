@@ -189,39 +189,6 @@ class IterTreeTest(unittest.TestCase):
 		"""
 		shutil.rmtree(self.temp_dir)
 
-	def test_file_inspection_error(self):
-		"""Route errors inspecting an entry through the configured error handler."""
-		for operation in ('is_dir', 'is_file', 'is_symlink'):
-			for handling in ('ignore', 'collect', 'raise'):
-				with self.subTest(operation=operation, handling=handling):
-					error = PermissionError(errno.EACCES, 'Permission denied', 'blocked')
-					blocked = MagicMock(name='blocked entry')
-					blocked.name = 'blocked'
-					blocked.is_dir.return_value = False
-					blocked.is_file.return_value = False
-					getattr(blocked, operation).side_effect = error
-					file = MagicMock(name='readable entry')
-					file.name = 'readable.txt'
-					file.is_dir.return_value = False
-					file.is_file.return_value = True
-					scan = MagicMock()
-					scan.__iter__.return_value = iter([blocked, file])
-					errors = []
-					def on_error(exc):
-						if handling == 'raise':
-							raise exc
-						errors.append(exc)
-					with patch('pathspec.util.os.scandir', return_value=scan):
-						files = iter_tree_files(
-							self.temp_dir, follow_links=False, on_error=None if handling == 'ignore' else on_error)
-						if handling == 'raise':
-							with self.assertRaises(PermissionError) as caught:
-								list(files)
-							self.assertIs(caught.exception, error)
-						else:
-							self.assertEqual(list(files), ['readable.txt'])
-							self.assertEqual(errors, [error] if handling == 'collect' else [])
-
 	def test_01_files_1_entries(self):
 		"""
 		Tests to make sure all files are found.
@@ -839,6 +806,90 @@ class IterTreeTest(unittest.TestCase):
 					paths = get_paths_from_entries(results) if walk is iter_tree_entries else set(results)
 					self.assertIn('kept.txt', paths)
 					self.assertEqual(errors, [error] if record else [])
+
+	def test_05_entry_inspection_error(self):
+		"""
+		Route errors inspecting an entry through the configured error handler.
+		"""
+		for operation in ('is_dir', 'is_file', 'is_symlink'):
+			for handling in ('ignore', 'collect', 'raise'):
+				with self.subTest(operation=operation, handling=handling):
+					error = PermissionError(errno.EACCES, 'Permission denied', 'blocked')
+					blocked = MagicMock(name='blocked entry')
+					blocked.name = 'blocked'
+					blocked.is_dir.return_value = False
+					blocked.is_file.return_value = False
+					getattr(blocked, operation).side_effect = error
+					file = MagicMock(name='readable entry')
+					file.name = 'readable.txt'
+					file.is_dir.return_value = False
+					file.is_file.return_value = True
+					scan = MagicMock()
+					scan.__iter__.return_value = iter([blocked, file])
+					errors = []
+
+					def on_error(exc):
+						if handling == 'raise':
+							raise exc
+						errors.append(exc)
+
+					with patch('pathspec.util.os.scandir', return_value=scan):
+						entries = iter_tree_entries(
+							root=self.temp_dir,
+							follow_links=False,
+							on_error=None if handling == 'ignore' else on_error,
+						)
+
+						if handling == 'raise':
+							with self.assertRaises(PermissionError) as caught:
+								list(get_paths_from_entries(entries))
+							self.assertIs(caught.exception, error)
+						else:
+							self.assertEqual(list(get_paths_from_entries(entries)), [
+								'readable.txt',
+							])
+							self.assertEqual(errors, [error] if handling == 'collect' else [])
+
+	def test_05_file_inspection_error(self):
+		"""
+		Route errors inspecting an entry through the configured error handler.
+		"""
+		for operation in ('is_dir', 'is_file', 'is_symlink'):
+			for handling in ('ignore', 'collect', 'raise'):
+				with self.subTest(operation=operation, handling=handling):
+					error = PermissionError(errno.EACCES, 'Permission denied', 'blocked')
+					blocked = MagicMock(name='blocked entry')
+					blocked.name = 'blocked'
+					blocked.is_dir.return_value = False
+					blocked.is_file.return_value = False
+					getattr(blocked, operation).side_effect = error
+					file = MagicMock(name='readable entry')
+					file.name = 'readable.txt'
+					file.is_dir.return_value = False
+					file.is_file.return_value = True
+					scan = MagicMock()
+					scan.__iter__.return_value = iter([blocked, file])
+					errors = []
+
+					def on_error(exc):
+						if handling == 'raise':
+							raise exc
+						errors.append(exc)
+
+					with patch('pathspec.util.os.scandir', return_value=scan):
+						files = iter_tree_files(
+							root=self.temp_dir,
+							follow_links=False,
+							on_error=None if handling == 'ignore' else on_error,
+						)
+
+						if handling == 'raise':
+							with self.assertRaises(PermissionError) as caught:
+								list(files)
+							self.assertIs(caught.exception, error)
+						else:
+							self.assertEqual(list(files), ['readable.txt'])
+							self.assertEqual(errors, [error] if handling == 'collect' else [])
 
 
 class MatchFileTest(unittest.TestCase):
