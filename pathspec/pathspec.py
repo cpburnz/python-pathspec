@@ -76,6 +76,8 @@ class PathSpec(Generic[TPattern_co]):
 		matching backend to use. Default is :data:`None` for "best" to use the best
 		available backend. Priority of backends is: "re2", "hyperscan", "simple".
 		The "simple" backend is always available.
+		Automatic selection uses "simple" when any pattern is not a
+		:class:`.RegexPattern`. Native backends only support regular expressions.
 		"""
 		if isinstance(patterns, Sequence):
 			use_patterns = patterns
