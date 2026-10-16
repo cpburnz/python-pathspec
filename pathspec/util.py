@@ -475,16 +475,25 @@ def _iter_tree_files_next(
 		for node_ent in scan_iter:
 			node_rel = os.path.join(dir_rel, node_ent.name)
 
-			if node_ent.is_dir(follow_symlinks=follow_links):
+			try:
+				is_dir = node_ent.is_dir(follow_symlinks=follow_links)
+				is_file = not is_dir and node_ent.is_file(follow_symlinks=follow_links)
+				is_symlink = not follow_links and not is_dir and not is_file and node_ent.is_symlink()
+			except OSError as e:
+				if on_error is not None:
+					on_error(e)
+				continue
+
+			if is_dir:
 				# Child node is a directory, recurse into it and yield its descendant
 				# files.
 				yield from _iter_tree_files_next(root_full, node_rel, memo, on_error, follow_links)
 
-			elif node_ent.is_file(follow_symlinks=follow_links):
+			elif is_file:
 				# Child node is a file, yield it.
 				yield node_rel
 
-			elif not follow_links and node_ent.is_symlink():
+			elif is_symlink:
 				# Child node is an unfollowed link, yield it.
 				yield node_rel
 
