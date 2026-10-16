@@ -997,11 +997,11 @@ class GitIgnoreBasicPatternIssue93Test(TestCase):
 		Test patterns with valid range notation.
 		"""
 		for raw_pattern, regex in [
-			('[!a-z]', f'^(?s:.+/)?[^a-z]{_DIR_OPT}'),
-			('[^a-z]', f'^(?s:.+/)?[^a-z]{_DIR_OPT}'),
+			('[!a-z]', f'^(?s:.+/)?[^/a-z]{_DIR_OPT}'),
+			('[^a-z]', f'^(?s:.+/)?[^/a-z]{_DIR_OPT}'),
 			('[a-z]', f'^(?s:.+/)?[a-z]{_DIR_OPT}'),
-			('a[!a-z]', f'^(?s:.+/)?a[^a-z]{_DIR_OPT}'),
-			('a[^a-z]', f'^(?s:.+/)?a[^a-z]{_DIR_OPT}'),
+			('a[!a-z]', f'^(?s:.+/)?a[^/a-z]{_DIR_OPT}'),
+			('a[^a-z]', f'^(?s:.+/)?a[^/a-z]{_DIR_OPT}'),
 			('a[a-z]', f'^(?s:.+/)?a[a-z]{_DIR_OPT}'),
 		]:
 			with self.subTest(f"p={raw_pattern!r}"):
