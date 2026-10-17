@@ -69,8 +69,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 	def __normalize_segments(
 		is_dir_pattern: bool,
 		pattern_segs: list[str],
-		*,
-		requires_dir_descendant: bool = False,
+		requires_dir_descendant: bool,
 	) -> tuple[Optional[list[str]], Optional[str]]:
 		"""
 		Normalize the pattern segments to make processing easier.
@@ -284,8 +283,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		# Normalize pattern to make processing easier.
 		try:
 			pattern_segs, override_regex = cls.__normalize_segments(
-				is_dir_pattern, orig_segs,
-				requires_dir_descendant=requires_dir_descendant,
+				is_dir_pattern, orig_segs, requires_dir_descendant,
 			)
 		except ValueError as e:
 			raise GitIgnorePatternError((
@@ -300,8 +298,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			# Build regular expression from pattern.
 			try:
 				regex_parts = cls.__translate_segments(
-					seg_errors, is_dir_pattern, pattern_segs,
-					requires_dir_descendant=requires_dir_descendant,
+					seg_errors, is_dir_pattern, pattern_segs, requires_dir_descendant,
 				)
 			except (_PosixClassError, _RangeNotationError) as e:
 				if errors == 'raise':
@@ -343,8 +340,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		errors: Literal['literal', 'raise'],
 		is_dir_pattern: bool,
 		pattern_segs: list[str],
-		*,
-		requires_dir_descendant: bool = False,
+		requires_dir_descendant: bool,
 	) -> list[str]:
 		"""
 		Translate the pattern segments to regular expressions.
