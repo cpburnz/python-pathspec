@@ -20,6 +20,7 @@ New features:
 
 Bug fixes:
 
+- `Pull #164`_: Keep direct files included for directory-only terminal globstar patterns such as ``d/**/``.
 - Hyperscan backend no longer fails on multibyte UTF-8 characters.
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
 - `Pull #128`_: Support POSIX character classes (e.g. `[[:alpha:]]`) in gitignore bracket expressions.
@@ -198,3 +199,5 @@ Improvements:
 .. _`google-re2`: https://pypi.org/project/google-re2/
 .. _`hyperscan`: https://pypi.org/project/hyperscan/
 .. _`typing-extensions`: https://pypi.org/project/typing-extensions/
+
+.. _`Pull #164`: https://github.com/cpburnz/python-pathspec/pull/164
