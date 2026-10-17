@@ -94,6 +94,37 @@ You do not specify the style of pattern for ``GitIgnoreSpec`` because it should
 always use ``GitIgnoreSpecPattern`` internally.
 
 
+Auditing pattern complexity
+---------------------------
+
+Applications processing patterns from external sources can apply their own
+complexity policy before regular expressions are compiled. Subclass
+``GitIgnoreSpecPattern`` (or ``GitIgnoreBasicPattern`` for ``PathSpec``) and
+override ``_audit_segments()``. Pass that subclass as the ``pattern_factory``::
+
+	>>> from pathspec.patterns.gitignore.spec import GitIgnoreSpecPattern
+	>>> class LimitedPattern(GitIgnoreSpecPattern):
+	...     @classmethod
+	...     def _audit_segments(cls, segments: tuple[str, ...]) -> None:
+	...         if segments.count('**') > 3:
+	...             raise ValueError('Too many recursive wildcards')
+	...
+	>>> spec = GitIgnoreSpec.from_lines(['src/**/generated/**'], pattern_factory=LimitedPattern)
+
+The limit above is an application example; the standard pattern classes impose
+no complexity limits. Auditing is specific to the supplied subclass and works
+with every matching backend. It receives an immutable tuple of normalized
+segments, with adjacent ``**`` segments collapsed and implicit recursive
+wildcards included. Byte patterns are decoded first. The hook is also called
+for patterns handled by a regular-expression override, such as ``*`` or ``**``.
+Empty patterns, comments and precompiled regular expressions are not audited.
+
+Exceptions from the hook propagate unchanged, including when ``errors='null'``
+or ``errors='literal'`` is used for invalid pattern notation. Auditing can reject
+patterns before compilation; a wildcard-count limit alone does not guarantee
+that matching will take bounded time.
+
+
 Performance
 -----------
 
