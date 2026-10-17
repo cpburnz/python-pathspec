@@ -1,5 +1,5 @@
-# Hyperscan does not have a wheel for Python 3.15 yet.
-# Hyperscan does not have wheels for PyPy 3.9 and 3.11.
+# Google-RE2 does not have a wheel for Python 3.15 yet.
+# Hyperscan does not have wheels for PyPy 3.9, 3.11, and 3.12.
 env_list = [
 	"py39",
 	"py310",
@@ -14,17 +14,21 @@ env_list = [
 	"py312-hyperscan",
 	"py313-hyperscan",
 	"py314-hyperscan",
+	"py315-hyperscan",
 	"py39-re2",
 	"py310-re2",
 	"py311-re2",
 	"py312-re2",
 	"py313-re2",
 	"py314-re2",
+	"py315-re2",
 	"pypy39",
 	"pypy310",
 	"pypy311",
+	"pypy312",
 	"pypy310-hyperscan",
 	"pypy311-hyperscan",
+	"pypy312-hyperscan",
 	"docs"
 ]
 
@@ -98,6 +102,14 @@ install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=hypers
 extras = ["re2"]
 install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=google-re2", "{opts}", "{packages}"]
 
+[env.py315-hyperscan]
+extras = ["hyperscan"]
+install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=hyperscan", "{opts}", "{packages}"]
+
+#[env.py315-re2]
+#extras = ["re2"]
+#install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=google-re2", "{opts}", "{packages}"]
+
 ## Compiling hyperscan fails on PyPy 3.9.
 #[env.pypy39-hyperscan]
 #extras = ["hyperscan"]
@@ -107,5 +119,9 @@ install_command = ["python", "-I", "-m", "pip", "install", "--only-binary=google
 extras = ["hyperscan"]
 
 [env.pypy311-hyperscan]
+# Compile hyperscan.
+extras = ["hyperscan"]
+
+[env.pypy312-hyperscan]
 # Compile hyperscan.
 extras = ["hyperscan"]
