@@ -38,7 +38,10 @@ jobs:
           - os: windows
             python: '3.9'
             backend: hyperscan
-          # Hyperscan does not have wheels for PyPy 3.9 and 3.11.
+          # Re2 does not have wheels for Python 3.15 yet as of 2026-10-17.
+          - python: '3.15'
+            backend: re2
+          # Hyperscan does not have wheels for PyPy 3.9, 3.11, and 3.12.
           - python: 'pypy-3.9'
             backend: hyperscan
           - python: 'pypy-3.11'
@@ -79,7 +82,7 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: Install tox
-        run: python -m pip install tox
+        run: python -m pip install tox -c tox-ci-constraints.txt
 
       - name: Run tests
         if: matrix.python != '3.9' && matrix.python != 'pypy-3.9'

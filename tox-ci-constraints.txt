@@ -1,0 +1,3 @@
+# PyPy 3.9's stat module lacks IO_REPARSE_TAG_MOUNT_POINT on Windows, which
+# virtualenv 21.14.9+ imports at module level.
+virtualenv<=21.14.8; platform_python_implementation == "PyPy" and python_version == "3.9" and sys_platform == "win32"
