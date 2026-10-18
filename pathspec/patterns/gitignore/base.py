@@ -22,7 +22,7 @@ _BRACKET_TOKEN_REGEX = re.compile((
 	# POSIX class.
 	r'|\[:(\^?)([^:\]]*):\]'
 	# Literal characters reserved for future regex set operations.
-	r'|(\[|&|~|\|)'
+	r'|([-\[&~|])'
 ), re.DOTALL)
 """
 Matches tokens inside a bracket expression:

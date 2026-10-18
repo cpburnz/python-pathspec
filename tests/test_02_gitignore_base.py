@@ -2,14 +2,47 @@
 This script tests :class:`._GitIgnoreBasePattern`.
 """
 
-import unittest
+import re
 from itertools import (
 	product)
+from unittest import (
+	TestCase)
 
+from pathspec import (
+	GitIgnoreSpec,
+	PathSpec)
 from pathspec.patterns.gitignore.base import (
 	_BYTES_ENCODING,
 	_GitIgnoreBasePattern,
 	_strip_trailing_ws)
+from pathspec.patterns.gitignore.basic import (
+	GitIgnoreBasicPattern)
+from pathspec.patterns.gitignore.spec import (
+	GitIgnoreSpecPattern)
+
+from .util import (
+	require_backend)
+
+BRACKET_LITERAL_CASES = (
+	('[[]draft].md', ('[draft].md',), ('draft.md', 'adraft].md')),
+	('[a&&b].pdf', ('a.pdf', '&.pdf', 'b.pdf'), ('c.pdf', 'ab.pdf')),
+	('[a||b].pdf', ('a.pdf', '|.pdf', 'b.pdf'), ('c.pdf', 'ab.pdf')),
+	('[a~~b].pdf', ('a.pdf', '~.pdf', 'b.pdf'), ('c.pdf', 'ab.pdf')),
+	('[![]draft].md', ('adraft].md',), ('[draft].md', 'draft.md')),
+	('[!a&&b].pdf', ('c.pdf',), ('a.pdf', '&.pdf', 'b.pdf')),
+	('[^a||b].pdf', ('c.pdf',), ('a.pdf', '|.pdf', 'b.pdf')),
+	('[!a~~b].pdf', ('c.pdf',), ('a.pdf', '~.pdf', 'b.pdf')),
+	('[[:digit:]&&a-c].pdf', ('0.pdf', '&.pdf', 'b.pdf'), ('d.pdf', 'x.pdf')),
+	(r'[\[\&\|\~].pdf', ('[.pdf', '&.pdf', '|.pdf', '~.pdf'), ('a.pdf',)),
+	('[--0].pdf', ('-.pdf', '..pdf', '0.pdf'), ('1.pdf', '/.pdf')),
+	('[a-c--].pdf', ('a.pdf', 'c.pdf', '-.pdf'), ('d.pdf', '+.pdf')),
+	('[!a-c--].pdf', ('d.pdf', '+.pdf'), ('a.pdf', 'c.pdf', '-.pdf')),
+	('[[:digit:]--].pdf', ('0.pdf', '-.pdf'), ('a.pdf', '+.pdf')),
+	('[a-c--e].pdf', ('a.pdf', '-.pdf', '..pdf', 'e.pdf'), ('f.pdf', '+.pdf')),
+)
+"""
+Bracket literal test cases.
+"""
 
 BS = '\\'
 """
@@ -17,7 +50,7 @@ Backslash character.
 """
 
 
-class GitIgnoreBasePatternTest(unittest.TestCase):
+class GitIgnoreBasePatternTest(TestCase):
 	"""
 	The :class:`GitIgnoreBasePatternTest` class tests the :class:`_GitIgnoreBasePattern`
 	implementation.
@@ -87,3 +120,43 @@ class GitIgnoreBasePatternTest(unittest.TestCase):
 		):
 			with self.subTest(wc=wc, ending=ending):
 				self.assertEqual(_strip_trailing_ws(f'foo{wc}{ending}'), f'foo{wc}')
+
+
+class BracketLiteralTest(TestCase):
+	"""
+	Test literal regex set operators in gitignore bracket expressions.
+	"""
+
+	def test_pattern_literals(self):
+		for factory in (GitIgnoreBasicPattern, GitIgnoreSpecPattern):
+			for line, matches, misses in BRACKET_LITERAL_CASES:
+				for as_bytes in (False, True):
+					for errors in (None, 'literal', 'null', 'raise'):
+						with self.subTest(factory=factory, line=line, as_bytes=as_bytes, errors=errors):
+							re.purge()
+							pattern = factory(line.encode() if as_bytes else line, errors=errors)
+
+							for paths, expected in ((matches, True), (misses, False)):
+								for path in paths:
+									self.assertEqual(
+										bool(pattern.match_file(path.encode() if as_bytes else path)),
+										expected, path,
+									)
+
+	def test_spec_literals(self):
+		for backend in ('simple', 're2', 'hyperscan'):
+			with self.subTest(backend=backend):
+				require_backend(backend)
+				for line, matches, misses in BRACKET_LITERAL_CASES:
+					for style in ('gitignore', None):
+						with self.subTest(line=line, style=style):
+							re.purge()
+							if style is None:
+								spec = GitIgnoreSpec.from_lines([line], backend=backend)
+							else:
+								spec = PathSpec.from_lines(style, [line], backend=backend)
+
+							for prefix in ('', 'docs/'):
+								for paths, expected in ((matches, True), (misses, False)):
+									for path in paths:
+										self.assertEqual(spec.match_file(prefix + path), expected, path)

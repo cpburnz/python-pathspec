@@ -21,7 +21,6 @@ New features:
 
 Bug fixes:
 
-- Escape literal regex set operators in gitignore bracket expressions so valid patterns compile when FutureWarning is treated as an error.
 - Hyperscan backend no longer fails on multibyte UTF-8 characters.
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
 - `Pull #128`_: Support POSIX character classes (e.g. `[[:alpha:]]`) in gitignore bracket expressions.
@@ -47,6 +46,7 @@ Bug fixes:
 - `Pull #163`_: Keep gitignore bracket expressions within path segments.
 - `Pull #164`_: Keep direct files included for directory-only terminal globstar patterns such as ``d/**/``.
 - `Pull #165`_: Directory negations no longer re-include descendants of an excluded ancestor.
+- `Pull #166`_: Escape literal regex set operators in gitignore bracket expressions so valid patterns compile when FutureWarning is treated as an error.
 
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
@@ -79,6 +79,7 @@ Bug fixes:
 .. _`Pull #163`: https://github.com/cpburnz/python-pathspec/pull/163
 .. _`Pull #164`: https://github.com/cpburnz/python-pathspec/pull/164
 .. _`Pull #165`: https://github.com/cpburnz/python-pathspec/pull/165
+.. _`Pull #166`: https://github.com/cpburnz/python-pathspec/pull/166
 
 
 1.1.1 (2026-04-26)
