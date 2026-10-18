@@ -1139,7 +1139,7 @@ class GitIgnoreSpecIssue137Test(GitIgnoreSpecMixin, TestCase):
 
 	def test_d(self):
 		"""
-		Document terminal-globstar negation behavior without changing resolution.
+		Test terminal-globstar negation with excluded ancestor directories.
 		"""
 		for sub_test in self.parameterize_from_lines([
 			"d/**/",
@@ -1153,10 +1153,8 @@ class GitIgnoreSpecIssue137Test(GitIgnoreSpecMixin, TestCase):
 				self.assertFalse(spec.match_file("d/child/"))
 				self.assertFalse(spec.match_file("d/child/top.txt"))
 				self.assertTrue(spec.match_file("d/child/grand/"))
-				# Existing flat last-match resolution lets the negated directory
-				# pattern match this descendant too. Git's ancestor-sensitive result
-				# differs, but changing that separate behavior is outside this fix.
-				self.assertFalse(spec.match_file("d/child/grand/deep.txt"))
+				# Re-including child does not re-include the excluded grand directory.
+				self.assertTrue(spec.match_file("d/child/grand/deep.txt"))
 
 		for sub_test in self.parameterize_from_lines(["!d/**/"]):
 			with sub_test() as spec:
