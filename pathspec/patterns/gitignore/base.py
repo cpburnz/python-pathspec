@@ -21,6 +21,8 @@ _BRACKET_TOKEN_REGEX = re.compile((
 	r'|\\(.)'
 	# POSIX class.
 	r'|\[:(\^?)([^:\]]*):\]'
+	# Literal characters reserved for future regex set operations.
+	r'|(\[|&|~|\|)'
 ), re.DOTALL)
 """
 Matches tokens inside a bracket expression:
@@ -32,6 +34,8 @@ Matches tokens inside a bracket expression:
 -	Matches a POSIX bracket character class token such as ``[:alpha:]`` inside a
 	bracket expression. Group 4 captures a leading caret (unsupported by git);
 	group 5 captures the class name.
+
+- A literal character requiring regex escaping (group 6).
 """
 
 _BYTES_ENCODING = 'latin1'
@@ -102,13 +106,14 @@ def _sub_bracket_token(match: re.Match[str]) -> str:
 	"""
 	Translate a single token matched by :data:`_BRACKET_TOKEN_REGEX`. A token can
 	be a range (groups 1 and 2), a backslash escaped character (group 3), or a
-	POSIX bracket character class (groups 4 and 5).
+	POSIX bracket character class (groups 4 and 5), or a literal regex set
+	operator character (group 6).
 
 	*match* (:class:`re.Match`) is the match object.
 
 	Returns the replacement string (:class:`str`).
 	"""
-	range_start, range_end, escape_char, class_negated, class_name = match.groups()
+	range_start, range_end, escape_char, class_negated, class_name, literal_char = match.groups()
 
 	# Character range. A bracket expression cannot match a directory separator.
 	if range_start is not None:
@@ -120,6 +125,8 @@ def _sub_bracket_token(match: re.Match[str]) -> str:
 	# Backslash escaped character.
 	if escape_char:
 		return re.escape(escape_char)
+	elif literal_char:
+		return re.escape(literal_char)
 
 	# POSIX bracket character class.
 	class_regex = _POSIX_CLASS_TO_REGEX.get(class_name)

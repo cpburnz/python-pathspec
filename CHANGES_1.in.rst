@@ -21,6 +21,7 @@ New features:
 
 Bug fixes:
 
+- Escape literal regex set operators in gitignore bracket expressions so valid patterns compile when FutureWarning is treated as an error.
 - Hyperscan backend no longer fails on multibyte UTF-8 characters.
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
 - `Pull #128`_: Support POSIX character classes (e.g. `[[:alpha:]]`) in gitignore bracket expressions.
