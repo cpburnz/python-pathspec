@@ -8,6 +8,7 @@ import os.path
 import shutil
 import tempfile
 import unittest
+import warnings
 from collections.abc import (
 	Iterable)
 from functools import (
@@ -18,6 +19,8 @@ from pathlib import (
 from typing import (
 	ClassVar,
 	Optional)  # Replaced by `X | None` in 3.10.
+from unittest import (
+	TestCase)
 from unittest.mock import (
 	MagicMock,
 	patch)
@@ -43,7 +46,7 @@ from tests.util import (
 	ospath)
 
 
-class CheckMatchFileTest(unittest.TestCase):
+class CheckMatchFileTest(TestCase):
 	"""
 	The :class:`CheckMatchFileTest` class tests the :meth:`.check_match_file`
 	function.
@@ -119,8 +122,18 @@ class CheckMatchFileTest(unittest.TestCase):
 		})
 
 
-class DetailedMatchFilesTest(unittest.TestCase):
-	"""Test inclusion and exclusion bookkeeping for detailed matches."""
+class DetailedMatchFilesTest(TestCase):
+	"""
+	Test inclusion and exclusion bookkeeping for detailed matches.
+	"""
+
+	def setUp(self):
+		# Suppress deprecation warnings from usage of deprecated functions in
+		# `detailed_match_files()`.
+		catcher = warnings.catch_warnings()
+		catcher.__enter__()
+		self.addCleanup(catcher.__exit__, None, None, None)
+		warnings.simplefilter('ignore', DeprecationWarning)
 
 	def test_negation_without_previous_match(self):
 		patterns = list(map(GitIgnoreBasicPattern, ['*.txt', '!*.log']))
@@ -143,7 +156,7 @@ class DetailedMatchFilesTest(unittest.TestCase):
 		self.assertEqual(detailed_match_files(patterns, ['notes.txt']), {})
 
 
-class IterTreeTest(unittest.TestCase):
+class IterTreeTest(TestCase):
 	"""
 	The :class:`IterTreeTest` class tests :meth:`.iter_tree_entries` and
 	:meth:`.iter_tree_files` functions.
@@ -894,7 +907,7 @@ class IterTreeTest(unittest.TestCase):
 							self.assertEqual(errors, [error] if handling == 'collect' else [])
 
 
-class MatchFileTest(unittest.TestCase):
+class MatchFileTest(TestCase):
 	"""
 	The :class:`MatchFileTest` class tests the :meth:`.match_file`
 	function.
@@ -966,7 +979,24 @@ class MatchFileTest(unittest.TestCase):
 		})
 
 
-class NormalizeFileTest(unittest.TestCase):
+class ModuleAttrDeprecationTest(TestCase):
+	"""
+	Test that module-level deprecated attributes do not have a broken
+	implementation.
+	"""
+
+	def test_01_unknown_attribute(self):
+		"""
+		Test unknown attributes still raise :exc:`AttributeError`.
+		"""
+		with self.assertRaises(AttributeError):
+			pathspec.util.NoSuchThing
+
+		with self.assertRaises(AttributeError):
+			pathspec.NoSuchThing
+
+
+class NormalizeFileTest(TestCase):
 	"""
 	The :class:`NormalizeFileTest` class tests the :meth:`.normalize_file`
 	function.
@@ -981,7 +1011,7 @@ class NormalizeFileTest(unittest.TestCase):
 		self.assertEqual(first_spec, second_spec)
 
 
-class RecursionErrorDeprecationTest(unittest.TestCase):
+class RecursionErrorDeprecationTest(TestCase):
 	"""
 	Test the :class:`pathspec.util.RecursionError` deprecations.
 	"""
@@ -1006,3 +1036,23 @@ class RecursionErrorDeprecationTest(unittest.TestCase):
 
 		self.assertIs(cls, RecursivePathError)
 		self.assertEqual(context.filename, __file__)
+
+	def test_03_from_import(self):
+		"""
+		Test `from pathspec import RecursionError` warns and returns the new class.
+		"""
+		with self.assertWarns(DeprecationWarning):
+			from pathspec import RecursionError as cls
+
+		self.assertIs(cls, RecursivePathError)
+
+	def test_04_star_import(self):
+		"""
+		Test `from pathspec import *` does not warn, and does not shadow the
+		built-in :exc:`RecursionError`.
+		"""
+		namespace = {}
+		exec("from pathspec import *", namespace)
+
+		self.assertNotIn('RecursionError', namespace)
+		self.assertNotIn('RecursionError', pathspec.__all__)
