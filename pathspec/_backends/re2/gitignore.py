@@ -164,7 +164,7 @@ class Re2GiBackend(Re2PsBackend):
 		"""
 		Implements :meth:`match_file`. *check_ancestors* (:class:`bool`) is
 		whether to ask if an ancestor directory of *file* is excluded; see
-		:meth:`_ancestor_excluded` for why it can be skipped.
+		:meth:`_match_ancestor` for why it can be skipped.
 		"""
 		# Find best match.
 		match_ids: Optional[list[int]] = self._set.Match(file)  # type: ignore[assignment]
@@ -197,9 +197,14 @@ class Re2GiBackend(Re2PsBackend):
 				file_index = index
 
 		assert dir_index != -1 or file_index != -1, (dir_index, file_index)
-		if dir_include and check_ancestors and self._ancestor_excluded(file):
-			return (dir_include, dir_index)
-		elif file_include is not None:
+		if check_ancestors and (dir_include is not None or file_include is not None):
+			# Neither file nor directory negations override an excluded ancestor.
+			# Some patterns (e.g. "a/**") match without a directory marker.
+			ancestor_index = self._match_ancestor(file)
+			if ancestor_index is not None:
+				return (True, ancestor_index)
+
+		if file_include is not None:
 			return (file_include, file_index)
 		elif dir_include:
 			# An ancestor matched an exclude pattern, but the spec as a whole
@@ -208,11 +213,11 @@ class Re2GiBackend(Re2PsBackend):
 		else:
 			return (dir_include, dir_index)
 
-	def _ancestor_excluded(self, file: str) -> bool:
+	def _match_ancestor(self, file: str) -> Optional[int]:
 		"""
-		Whether any strict ancestor directory of *file* is excluded. Git stops
-		descending at the first excluded directory, so the ancestors are asked
-		outermost first, each as a directory query (trailing slash included).
+		Return the excluding pattern index for a strict ancestor, or :data:`None`.
+		Git stops descending at the first excluded directory, so the ancestors are
+		asked outermost first, each as a directory query (trailing slash included).
 		By the time an ancestor is asked, every ancestor above it is known not to
 		be excluded, so it is matched without checking its own ancestors again;
 		otherwise each level re-asks all the levels above it and the work grows
@@ -220,11 +225,11 @@ class Re2GiBackend(Re2PsBackend):
 		"""
 		index = file.find('/')
 		while index != -1 and index + 1 < len(file):
-			ancestor_include, _ancestor_index = self._match(
+			ancestor_include, ancestor_index = self._match(
 				file[:index + 1], check_ancestors=False,
 			)
 			if ancestor_include:
-				return True
+				return ancestor_index
 			index = file.find('/', index + 1)
 
-		return False
+		return None

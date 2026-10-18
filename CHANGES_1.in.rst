@@ -20,6 +20,8 @@ New features:
 
 Bug fixes:
 
+- Directory negations no longer re-include descendants of an excluded ancestor.
+  All backends return the excluding ancestor's pattern index from ``check_file``.
 - Hyperscan backend no longer fails on multibyte UTF-8 characters.
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
 - `Pull #128`_: Support POSIX character classes (e.g. `[[:alpha:]]`) in gitignore bracket expressions.
