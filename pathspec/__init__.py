@@ -2,8 +2,7 @@
 The *pathspec* package provides pattern matching for file paths. So far this
 only includes Git's *gitignore* patterns.
 
-The following classes are imported and made available from the root of the
-`pathspec` package:
+The following classes are exposed from the root of the `pathspec` package:
 
 -	:class:`pathspec.gitignore.GitIgnoreSpec`
 
@@ -15,22 +14,24 @@ The following classes are imported and made available from the root of the
 
 -	:class:`pathspec.util.RecursivePathError`
 
-The following functions are also imported:
+The following functions are also exposed:
 
 -	:func:`pathspec.util.lookup_pattern`
 
-The following deprecated classes are imported to maintain backward
+The following deprecated classes are exposed to maintain backward
 compatibility:
 
--	:class:`pathspec.util.RecursionError`
+-	`pathspec.util.RecursionError`
 
-The following deprecated functions are also imported to maintain backward
+The following deprecated functions are also exposed to maintain backward
 compatibility:
 
 -	:func:`pathspec.util.iter_tree`
 
 -	:func:`pathspec.util.match_files`
 """
+
+import warnings
 
 from .gitignore import (
 	GitIgnoreSpec)
@@ -40,7 +41,6 @@ from .pattern import (
 	Pattern,
 	RegexPattern)
 from .util import (
-	RecursionError,  # Deprecated since 1.2.0.
 	RecursivePathError,
 	iter_tree,  # Deprecated since 0.10.0.
 	lookup_pattern,
@@ -72,3 +72,19 @@ __all__ = [
 	'__version__',
 	'lookup_pattern',
 ]
+
+
+def __getattr__(name: str):
+	"""
+	Look up a deprecated module-level attribute.
+	"""
+	if name == 'RecursionError':
+		# Deprecated since 1.2.0. It conflicts with Python 3.5's built-in
+		# RecursionError.
+		warnings.warn((
+			"pathspec.util.RecursionError is deprecated, use RecursivePathError "
+			"instead."
+		), DeprecationWarning, stacklevel=2)
+		return RecursivePathError
+
+	raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

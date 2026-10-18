@@ -8,6 +8,7 @@ import os.path
 import pathlib
 import posixpath
 import stat
+import warnings
 from collections.abc import (
 	Collection,
 	Iterable,
@@ -792,11 +793,6 @@ class RecursivePathError(Exception):
 		return self.args[2]
 
 
-# DEPRECATED: Deprecated since 1.2.0. It conflicts with Python 3.5's built-in
-# RecursionError.
-RecursionError = RecursivePathError
-
-
 @dataclass(frozen=True)
 class CheckResult(Generic[TStrPath]):
 	"""
@@ -953,3 +949,19 @@ class TreeEntry(object):
 			follow_links = True
 
 		return self._stat if follow_links else self._lstat
+
+
+def __getattr__(name: str):
+	"""
+	Look up a deprecated module-level attribute.
+	"""
+	if name == 'RecursionError':
+		# Deprecated since 1.2.0. It conflicts with Python 3.5's built-in
+		# RecursionError.
+		warnings.warn((
+			"pathspec.util.RecursionError is deprecated, use RecursivePathError "
+			"instead."
+		), DeprecationWarning, stacklevel=2)
+		return RecursivePathError
+
+	raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

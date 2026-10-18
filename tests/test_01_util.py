@@ -22,6 +22,8 @@ from unittest.mock import (
 	MagicMock,
 	patch)
 
+import pathspec
+import pathspec.util
 from pathspec.patterns.gitignore.basic import (
 	GitIgnoreBasicPattern)
 from pathspec.util import (
@@ -977,3 +979,30 @@ class NormalizeFileTest(unittest.TestCase):
 		first_spec = normalize_file(PurePath('a.txt'))
 		second_spec = normalize_file('a.txt')
 		self.assertEqual(first_spec, second_spec)
+
+
+class RecursionErrorDeprecationTest(unittest.TestCase):
+	"""
+	Test the :class:`pathspec.util.RecursionError` deprecations.
+	"""
+
+	def test_01_package_attribute(self):
+		"""
+		Test accessing `pathspec.RecursionError` warns and returns the new class.
+		"""
+		with self.assertWarns(DeprecationWarning) as context:
+			cls = pathspec.RecursionError
+
+		self.assertIs(cls, RecursivePathError)
+		self.assertEqual(context.filename, __file__)
+
+	def test_02_util_attribute(self):
+		"""
+		Test accessing `pathspec.util.RecursionError` warns and returns the new
+		class.
+		"""
+		with self.assertWarns(DeprecationWarning) as context:
+			cls = pathspec.util.RecursionError
+
+		self.assertIs(cls, RecursivePathError)
+		self.assertEqual(context.filename, __file__)
