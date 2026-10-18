@@ -297,7 +297,7 @@ class _GitIgnoreBasePattern(RegexPattern):
 						# Skip over an escaped character so an escaped closing bracket
 						# ("\]") does not end the bracket expression.
 						j += 2
-					elif pattern[j] == '[' and j + 1 < end and pattern[j + 1] == ':':
+					elif pattern[j:j+2] == '[:':
 						# Skip over a POSIX character class token ("[:name:]") so its
 						# internal closing bracket is not mistaken for the end of the whole
 						# bracket expression.
@@ -319,10 +319,12 @@ class _GitIgnoreBasePattern(RegexPattern):
 					#
 					j += 1
 					expr = '['
+					is_expr_negated = False
 
 					if pattern[i] == '!':
 						# Bracket expression needs to be negated.
 						expr += '^'
+						is_expr_negated = True
 						i += 1
 					elif pattern[i] == '^':
 						# POSIX declares that the regex bracket expression negation "[^...]"
@@ -331,6 +333,7 @@ class _GitIgnoreBasePattern(RegexPattern):
 						# caret for negation. Maintain consistency with Git because that is
 						# the expected behavior.
 						expr += '^'
+						is_expr_negated = True
 						i += 1
 
 					# Build regex bracket expression.
@@ -356,12 +359,13 @@ class _GitIgnoreBasePattern(RegexPattern):
 							i = j
 							continue
 
-					if expr == '[^':
+					if is_expr_negated:
 						# Negated expressions must also exclude the directory separator.
 						# Preserve literal ']' and '-' when inserting '/' ahead of them.
 						if body.startswith((']', '-')):
 							body = '\\' + body
 						expr += '/'
+
 					expr += body + ']'
 
 					if errors == 'raise':

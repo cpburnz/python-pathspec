@@ -42,6 +42,7 @@ Bug fixes:
 - `Pull #159`_: Preserve PathSpec state when backend reconstruction fails.
 - `Pull #160`_: Handle entry inspection errors when walking files.
 - `Issue #161`_ / `Pull #162`_: Preserve custom patterns during automatic backend selection.
+- `Pull #163`_: Keep gitignore bracket expressions within path segments.
 - `Pull #164`_: Keep direct files included for directory-only terminal globstar patterns such as ``d/**/``.
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
@@ -71,6 +72,7 @@ Bug fixes:
 .. _`Pull #160`: https://github.com/cpburnz/python-pathspec/pull/160
 .. _`Issue #161`: https://github.com/cpburnz/python-pathspec/issues/161
 .. _`Pull #162`: https://github.com/cpburnz/python-pathspec/pull/162
+.. _`Pull #163`: https://github.com/cpburnz/python-pathspec/pull/163
 .. _`Pull #164`: https://github.com/cpburnz/python-pathspec/pull/164
 
 
