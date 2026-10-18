@@ -34,6 +34,10 @@ jobs:
           - hyperscan
           - re2
         exclude:
+          # PyPy 3.12 is not available from actions/setup-python for Ubuntu yet
+          # as of 2026-10-17.
+          - os: ubuntu
+            python: 'pypy3.12'
           # Hyperscan does hot have wheels for Python 3.9 on Windows.
           - os: windows
             python: '3.9'
