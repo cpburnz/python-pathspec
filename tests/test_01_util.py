@@ -25,7 +25,7 @@ from unittest.mock import (
 from pathspec.patterns.gitignore.basic import (
 	GitIgnoreBasicPattern)
 from pathspec.util import (
-	RecursionError,
+	RecursivePathError,
 	check_match_file,
 	detailed_match_files,
 	iter_tree_entries,
@@ -443,7 +443,7 @@ class IterTreeTest(unittest.TestCase):
 		self.make_links([
 			('Dir/Self', 'Dir'),
 		])
-		with self.assertRaises(RecursionError) as context:
+		with self.assertRaises(RecursivePathError) as context:
 			set(iter_tree_entries(self.temp_dir))
 
 		self.assertEqual(context.exception.first_path, 'Dir')
@@ -463,7 +463,7 @@ class IterTreeTest(unittest.TestCase):
 		self.make_links([
 			('Dir/Self', 'Dir'),
 		])
-		with self.assertRaises(RecursionError) as context:
+		with self.assertRaises(RecursivePathError) as context:
 			set(iter_tree_files(self.temp_dir))
 
 		self.assertEqual(context.exception.first_path, 'Dir')
@@ -489,7 +489,7 @@ class IterTreeTest(unittest.TestCase):
 			('B/Cx', 'C'),
 			('C/Ax', 'A'),
 		])
-		with self.assertRaises(RecursionError) as context:
+		with self.assertRaises(RecursivePathError) as context:
 			set(iter_tree_entries(self.temp_dir))
 
 		self.assertIn(context.exception.first_path, ('A', 'B', 'C'))
@@ -519,7 +519,7 @@ class IterTreeTest(unittest.TestCase):
 			('B/Cx', 'C'),
 			('C/Ax', 'A'),
 		])
-		with self.assertRaises(RecursionError) as context:
+		with self.assertRaises(RecursivePathError) as context:
 			set(iter_tree_files(self.temp_dir))
 
 		self.assertIn(context.exception.first_path, ('A', 'B', 'C'))

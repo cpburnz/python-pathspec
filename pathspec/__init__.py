@@ -13,11 +13,16 @@ The following classes are imported and made available from the root of the
 
 -	:class:`pathspec.pattern.RegexPattern`
 
--	:class:`pathspec.util.RecursionError`
+-	:class:`pathspec.util.RecursivePathError`
 
 The following functions are also imported:
 
 -	:func:`pathspec.util.lookup_pattern`
+
+The following deprecated classes are imported to maintain backward
+compatibility:
+
+-	:class:`pathspec.util.RecursionError`
 
 The following deprecated functions are also imported to maintain backward
 compatibility:
@@ -35,7 +40,8 @@ from .pattern import (
 	Pattern,
 	RegexPattern)
 from .util import (
-	RecursionError,
+	RecursionError,  # Deprecated since 1.2.0.
+	RecursivePathError,
 	iter_tree,  # Deprecated since 0.10.0.
 	lookup_pattern,
 	match_files)  # Deprecated since 0.10.0.
@@ -57,7 +63,7 @@ __all__ = [
 	'GitIgnoreSpec',
 	'PathSpec',
 	'Pattern',
-	'RecursionError',
+	'RecursivePathError',
 	'RegexPattern',
 	'__author__',
 	'__copyright__',

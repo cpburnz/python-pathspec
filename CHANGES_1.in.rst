@@ -8,10 +8,11 @@ Major changes:
 
 API changes:
 
-- TODO: Deprecated: `pathspec.util.RecursionError` is now an alias for `pathspec.util.RecursivePathError`. Python has had a built-in named `RecursionError` since 3.4.
+- Deprecated: `pathspec.util.RecursionError` is now an alias for `pathspec.util.RecursivePathError`. Python has had a built-in named `RecursionError` since 3.4. A `from pathspec import *` or `from pathspec.util import *` will no longer shadow Python's built-in `RecursionError`.
 - `TreeEntry.stat` will no longer be the `os.stat_result` of the linked node when using `iter_tree_entries(follow_links=False)`.
 - Patterns no longer match file names with a trailing newline unless the pattern explicitly matches it.
-- Many obscure edge cases have been fixed which may subtly change results.
+- Fixed many obscure edge cases to more closely match Git's behavior. Most were in `GitIgnoreSpec` / `GitIgnoreSpecPattern`, and some in `GitIgnoreBasicPattern`. Results may change subtly.
+
 
 New features:
 

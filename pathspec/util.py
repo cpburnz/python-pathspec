@@ -264,7 +264,7 @@ def iter_tree_entries(
 	treated as relative to *root*. If an absolute path, it must be a descendant of
 	*root*. Default is :data:`None` to search the entire *root* directory tree.
 
-	Raises :exc:`.RecursionError` if recursion is detected.
+	Raises :exc:`.RecursivePathError` if recursion is detected.
 
 	Returns an :class:`~collections.abc.Iterator` yielding each file or directory
 	entry (:class:`.TreeEntry`) relative to *root*.
@@ -320,7 +320,9 @@ def _iter_tree_entries_next(
 	if dir_real not in memo:
 		memo[dir_real] = dir_rel
 	else:
-		raise RecursionError(real_path=dir_real, first_path=memo[dir_real], second_path=dir_rel)
+		raise RecursivePathError(
+			real_path=dir_real, first_path=memo[dir_real], second_path=dir_rel,
+		)
 
 	try:
 		scan_iter = os.scandir(dir_full)
@@ -407,7 +409,7 @@ def iter_tree_files(
 	treated as relative to *root*. If an absolute path, it must be a descendant of
 	*root*. Default is :data:`None` to search the entire *root* directory tree.
 
-	Raises :exc:`.RecursionError` if recursion is detected.
+	Raises :exc:`.RecursivePathError` if recursion is detected.
 
 	Returns an :class:`~collections.abc.Iterator` yielding the path to each file
 	(:class:`str`) relative to *root*.
@@ -463,7 +465,9 @@ def _iter_tree_files_next(
 	if dir_real not in memo:
 		memo[dir_real] = dir_rel
 	else:
-		raise RecursionError(real_path=dir_real, first_path=memo[dir_real], second_path=dir_rel)
+		raise RecursivePathError(
+			real_path=dir_real, first_path=memo[dir_real], second_path=dir_rel,
+		)
 
 	try:
 		scan_iter = os.scandir(dir_full)
@@ -730,11 +734,9 @@ class AlreadyRegisteredError(Exception):
 		return self.args[1]
 
 
-# TODO: Rename to RecursivePathError because RecursionError is a built-in
-# exception as of Python 3.5. Keep RecursionError as a deprecated alias.
-class RecursionError(Exception):
+class RecursivePathError(Exception):
 	"""
-	The :exc:`RecursionError` exception is raised when recursion is detected.
+	The :exc:`RecursivePathError` exception is raised when recursion is detected.
 	"""
 
 	def __init__(
@@ -744,7 +746,7 @@ class RecursionError(Exception):
 		second_path: str,
 	) -> None:
 		"""
-		Initializes the :exc:`RecursionError` instance.
+		Initializes the :exc:`RecursivePathError` instance.
 
 		*real_path* (:class:`str`) is the real path that recursion was encountered
 		on.
@@ -759,7 +761,7 @@ class RecursionError(Exception):
 	def first_path(self) -> str:
 		"""
 		*first_path* (:class:`str`) is the first path encountered for
-		:attr:`self.real_path <RecursionError.real_path>`.
+		:attr:`self.real_path <RecursivePathError.real_path>`.
 		"""
 		return self.args[1]
 
@@ -785,9 +787,14 @@ class RecursionError(Exception):
 	def second_path(self) -> str:
 		"""
 		*second_path* (:class:`str`) is the second path encountered for
-		:attr:`self.real_path <RecursionError.real_path>`.
+		:attr:`self.real_path <RecursivePathError.real_path>`.
 		"""
 		return self.args[2]
+
+
+# DEPRECATED: Deprecated since 1.2.0. It conflicts with Python 3.5's built-in
+# RecursionError.
+RecursionError = RecursivePathError
 
 
 @dataclass(frozen=True)
