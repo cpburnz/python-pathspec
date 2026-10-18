@@ -87,5 +87,6 @@ __credits__ = [
 	"Muneeb Sheikh <https://github.com/muneikh>",
 	"blouirts123 <https://github.com/blouirts123>",
 	"Jared Ji <https://github.com/xingzhao-ji>",
+	"guoxiaojia <https://github.com/asnlsxx>",
 ]
 __license__ = "MPL 2.0"

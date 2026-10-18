@@ -47,6 +47,8 @@ Bug fixes:
 - `Issue #161`_ / `Pull #162`_: Preserve custom patterns during automatic backend selection.
 - `Pull #163`_: Keep gitignore bracket expressions within path segments.
 - `Pull #164`_: Keep direct files included for directory-only terminal globstar patterns such as ``d/**/``.
+- `Pull #165`_: Directory negations no longer re-include descendants of an excluded ancestor.
+
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
 .. _`Pull #123`: https://github.com/cpburnz/python-pathspec/pull/123
@@ -77,6 +79,7 @@ Bug fixes:
 .. _`Pull #162`: https://github.com/cpburnz/python-pathspec/pull/162
 .. _`Pull #163`: https://github.com/cpburnz/python-pathspec/pull/163
 .. _`Pull #164`: https://github.com/cpburnz/python-pathspec/pull/164
+.. _`Pull #165`: https://github.com/cpburnz/python-pathspec/pull/165
 
 
 1.1.1 (2026-04-26)
