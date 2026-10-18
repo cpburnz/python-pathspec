@@ -51,7 +51,6 @@ __credits__ = [
 	"Anıl Karagenç <https://github.com/karagenc>",
 	"Yannic Schröder <https://github.com/yschroeder>",
 	"axesider <https://github.com/axesider>",
-	"TomRuk <https://github.com/tomruk>",
 	"Oleh Prypin <https://github.com/oprypin>",
 	"Lumina <https://github.com/lumina37>",
 	"Kurt McKee <https://github.com/kurtmckee>",
