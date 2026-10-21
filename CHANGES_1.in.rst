@@ -21,6 +21,7 @@ New features:
 
 Bug fixes:
 
+- A gitignore pattern segment made of three or more asterisks (e.g., `***/x`) is now treated as a double-asterisk, matching Git.
 - Hyperscan backend no longer fails on multibyte UTF-8 characters.
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
 - `Pull #128`_: Support POSIX character classes (e.g. `[[:alpha:]]`) in gitignore bracket expressions.
