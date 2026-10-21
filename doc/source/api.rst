@@ -93,6 +93,7 @@ pathspec.patterns.gitignore.basic
 
 	.. autoclass:: GitIgnoreBasicPattern
 		:members:
+		:private-members: _audit_segments
 		:inherited-members:
 		:show-inheritance:
 
@@ -104,6 +105,7 @@ pathspec.patterns.gitignore.spec
 
 	.. autoclass:: GitIgnoreSpecPattern
 		:members:
+		:private-members: _audit_segments
 		:inherited-members:
 		:show-inheritance:
 
