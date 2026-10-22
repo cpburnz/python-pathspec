@@ -148,6 +148,29 @@ the files to keep, and exclude files like *.gitignore*, you need to set
 	>>> ignore_files = set(spec.match_tree_files('path/to/directory'))
 
 
+2. Why does a directory-only pattern not match my directory path?
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+``match_file()`` and ``match_files()`` match the supplied paths without checking
+the filesystem. A trailing slash identifies a directory, so a pattern such as
+``build/`` matches ``build/`` and its descendants, but not the bare path
+``build``::
+
+	>>> from pathspec import GitIgnoreSpec
+	>>> spec = GitIgnoreSpec.from_lines(['build/'])
+	>>> spec.match_file('build')
+	False
+	>>> spec.match_file('build/')
+	True
+	>>> spec.match_file('build/output.txt')
+	True
+
+Append ``/`` to paths that you know are directories before passing them to these
+methods. A ``pathlib.Path`` does not preserve a trailing slash, so append it to
+the string representation instead. The entry-based methods, such as
+``match_tree_entries()``, add directory markers automatically.
+
+
 License
 -------
 
