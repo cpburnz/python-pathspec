@@ -25,7 +25,7 @@ jobs:
           - windows
         python:
           - '3.9'
-          - '3.15'
+          - '3.14'
         backend:
           - base
           - hyperscan
