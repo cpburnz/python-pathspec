@@ -15,7 +15,7 @@ on:
 jobs:
   test:
     name: Test / ${{ matrix.python }} (${{ matrix.backend }}) / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.runner || format('{0}-latest', matrix.os) }}
     strategy:
       fail-fast: false
       matrix:
@@ -26,6 +26,11 @@ jobs:
           - '3.14'
         backend:
           - base
+        include:
+          # Pin Python 3.9 on Ubuntu to 24.04.
+          - os: ubuntu
+            python: '3.9'
+            runner: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1 from 2026-07-20.
