@@ -288,6 +288,17 @@ class _GitIgnoreBasePattern(RegexPattern):
 			elif char == '*':
 				# Multi-character wildcard. Match any string (except slashes), including
 				# an empty string.
+				while i < end and pattern[i] == '*':
+					i += 1
+				regex += '[^/]*'
+
+			elif char == '*':
+				# Multi-character wildcard. Match any string (except slashes), including
+				# an empty string. Consecutive asterisks within a segment are equivalent
+				# to one. Collapse them.
+				while i < end and pattern[i] == '*':
+					i += 1
+
 				regex += '[^/]*'
 
 			elif char == '?':

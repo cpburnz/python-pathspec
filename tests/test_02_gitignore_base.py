@@ -56,8 +56,22 @@ STAR_RUN_CASES: list[tuple[str, list[str], list[str]]] = [
 	('a/***', ['a/b', 'a/b/c'], ['a', 'b/a', 'b/a/c']),
 	('a/***/b', ['a/b', 'a/x/b', 'a/x/y/b'], ['a/x', 'b/x/b']),
 	('***', ['a', 'a/b', 'a/b/c'], []),
-	# A run of asterisks inside a segment is still a single asterisk.
-	('a***b', ['ab', 'axxb'], ['a/b', 'a/x/b']),
+	# A run of asterisks inside a segment is a single asterisk, which does not
+	# match a slash.
+	('a**b', ['ab', 'axb', 'axxb'], ['a/b', 'a/x/b']),
+	('a***b', ['ab', 'axb', 'axxb'], ['a/b', 'a/x/b']),
+	('a***', ['a', 'ab', 'abc', 'q/a'], ['b', 'ba', 'xab']),
+	('***b', ['b', 'ab', 'x/xb'], ['a', 'ba', 'abc']),
+	('a***b***c', ['abc', 'abxc', 'axbxc'], ['ab', 'axc', 'a/b/c']),
+	('***a***', ['a', 'ab', 'ba', 'xab'], ['b', 'x', 'b/x/b']),
+	('x/***b', ['x/b', 'x/ab', 'x/xb'], ['b', 'q/x/b', 'x/y']),
+	('***b/c', ['ab/c', 'xb/c'], ['q/xb/c', 'b/a/c']),
+	# An escaped asterisk is literal and is not part of a run.
+	(r'a\***b', ['a*b', 'a*xb'], ['ab', 'axb']),
+	(r'a***\*b', ['a*b'], ['ab', 'axb']),
+	(r'\***', ['*', '*x'], ['x', 'x*']),
+	# A question mark between asterisks still requires one character.
+	('a*?*b', ['axb', 'axxb', 'abb'], ['ab', 'a/b']),
 ]
 """
 Each case is (pattern, paths that Git matches, paths that Git does not match).

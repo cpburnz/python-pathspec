@@ -1084,7 +1084,7 @@ class GitIgnoreSpecPatternIssue93Test(TestCase):
 		"""
 		pattern = GitIgnoreSpecPattern('foo**')
 		self.assertIs(pattern.include, True)
-		self.assertEqual(pattern.regex.pattern, f'^(?s:.+/)?foo[^/]*[^/]*{_DIR_MARK_OPT}')
+		self.assertEqual(pattern.regex.pattern, f'^(?s:.+/)?foo[^/]*{_DIR_MARK_OPT}')
 		self.assertTrue(pattern.match_file('foosrodah'))
 
 	def test_a_2(self):
@@ -1093,7 +1093,7 @@ class GitIgnoreSpecPatternIssue93Test(TestCase):
 		"""
 		pattern = GitIgnoreSpecPattern('foo**/bar')
 		self.assertIs(pattern.include, True)
-		self.assertEqual(pattern.regex.pattern, f'^foo[^/]*[^/]*/bar{_DIR_MARK_OPT}')
+		self.assertEqual(pattern.regex.pattern, f'^foo[^/]*/bar{_DIR_MARK_OPT}')
 		self.assertFalse(pattern.match_file('foobar'))
 		self.assertTrue(pattern.match_file('foosrodah/bar'))
 
