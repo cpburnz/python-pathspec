@@ -2,6 +2,7 @@
 This script tests :class:`.GitIgnoreSpec`.
 """
 
+import io
 import itertools
 from collections.abc import (
 	Iterable,
@@ -34,6 +35,8 @@ from pathspec.gitignore import (
 	GitIgnoreSpec)
 from pathspec.pattern import (
 	Pattern)
+from pathspec.patterns.gitignore.spec import (
+	GitIgnoreSpecPattern)
 from pathspec._typing import (
 	AnyStr)  # Removed in 3.18.
 
@@ -177,6 +180,93 @@ class GitIgnoreSpecMixin(object):
 					raise Exception("Subtest failed.")
 
 			yield _sub_test
+
+
+class GitIgnoreSpecBomTest(GitIgnoreSpecMixin, TestCase):
+	"""
+	Test Git's handling of a UTF-8 byte order mark at the start of an ignore file.
+	"""
+
+	def test_pattern(self):
+		for sub_test in self.parameterize_from_lines(['\ufeff*.log\n']):
+			with sub_test() as spec:
+				self.assertTrue(spec.match_file('test.log'))
+				self.assertTrue(spec.match_file('dir/test.log'))
+				self.assertFalse(spec.match_file('test.txt'))
+
+	def test_comment(self):
+		for sub_test in self.parameterize_from_lines(['\ufeff# comment\n', '*.log\n']):
+			with sub_test() as spec:
+				self.assertFalse(spec.match_file('\ufeff# comment'))
+				self.assertTrue(spec.match_file('test.log'))
+
+	def test_negation(self):
+		for sub_test in self.parameterize_from_lines(['\ufeff!keep.log\n']):
+			with sub_test() as spec:
+				self.assertIs(spec.check_file('keep.log').include, False)
+
+	def test_root_directory(self):
+		for sub_test in self.parameterize_from_lines(['\ufeff/build/\n']):
+			with sub_test() as spec:
+				self.assertTrue(spec.match_file('build/output.txt'))
+				self.assertFalse(spec.match_file('dir/build/output.txt'))
+
+	def test_bom_only_line(self):
+		for sub_test in self.parameterize_from_lines(['\ufeff\n', '*.log\n']):
+			with sub_test() as spec:
+				self.assertFalse(spec.match_file('\ufeff'))
+				self.assertTrue(spec.match_file('test.log'))
+
+	def test_later_bom_is_literal(self):
+		for lines in (['\n', '\ufeff*.log\n'], ['', '\ufeff*.log\n']):
+			for sub_test in self.parameterize_from_lines(lines):
+				with sub_test() as spec:
+					self.assertFalse(spec.match_file('test.log'))
+					self.assertTrue(spec.match_file('\ufefftest.log'))
+
+	def test_strip_only_one_bom(self):
+		for sub_test in self.parameterize_from_lines(['\ufeff\ufeff*.log\n']):
+			with sub_test() as spec:
+				self.assertFalse(spec.match_file('test.log'))
+				self.assertTrue(spec.match_file('\ufefftest.log'))
+
+	def test_stream_and_iterator(self):
+		for ending in ('\n', '\r\n'):
+			content = f'\ufeff*.log{ending}!keep.log{ending}'
+			for lines in (io.StringIO(content), iter(content.splitlines(keepends=True))):
+				with self.subTest(ending=ending, lines=lines):
+					spec = GitIgnoreSpec.from_lines(lines, backend='simple')
+					self.assertTrue(spec.match_file('test.log'))
+					self.assertFalse(spec.match_file('keep.log'))
+
+	def test_bytes(self):
+		for lines, expected in (
+			([b'\xef\xbb\xbf*.log\n'], [b'*.log\n']),
+			([b'\n', b'\xef\xbb\xbf*.log\n'], [b'\n', b'\xef\xbb\xbf*.log\n']),
+			([b'\xef\xbb\xbf\xef\xbb\xbf*.log\n'], [b'\xef\xbb\xbf*.log\n']),
+		):
+			with self.subTest(lines=lines):
+				spec = GitIgnoreSpec.from_lines(lines, backend='simple')
+				patterns = [GitIgnoreSpecPattern(line) for line in expected]
+				self.assertEqual(spec.patterns, patterns)
+
+	def test_reversed_args(self):
+		for factory in ('gitignore', GitIgnoreSpecPattern):
+			with self.subTest(factory=factory):
+				spec = GitIgnoreSpec.from_lines(factory, ['\ufeff*.log'], backend='simple')
+				self.assertTrue(spec.match_file('test.log'))
+
+	def test_empty_input(self):
+		for lines in ([], iter([]), io.StringIO('')):
+			with self.subTest(lines=lines):
+				spec = GitIgnoreSpec.from_lines(lines, backend='simple')
+				self.assertEqual(spec.patterns, [])
+
+	def test_invalid_lines(self):
+		for lines in (None, '*.log', b'*.log'):
+			with self.subTest(lines=lines):
+				with self.assertRaises(TypeError):
+					GitIgnoreSpec.from_lines(lines, backend='simple')
 
 
 class GitIgnoreSpecTest(GitIgnoreSpecMixin, TestCase):

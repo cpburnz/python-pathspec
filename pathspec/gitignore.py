@@ -10,6 +10,8 @@ from __future__ import annotations
 from collections.abc import (
 	Iterable,
 	Sequence)
+from itertools import (
+	chain)
 from typing import (
 	Callable,  # Replaced by `collections.abc.Callable` in 3.9.2.
 	Optional,  # Replaced by `X | None` in 3.10.
@@ -107,7 +109,8 @@ class GitIgnoreSpec(PathSpec[GitIgnoreSpecPattern]):
 		*lines* (:class:`~collections.abc.Iterable`) yields each uncompiled pattern
 		(:class:`str`). This simply has to yield each line, so it can be a
 		:class:`io.TextIOBase` (e.g., from :func:`open` or :class:`io.StringIO`) or
-		the result from :meth:`str.splitlines`.
+		the result from :meth:`str.splitlines`. A UTF-8 byte order mark at the
+		beginning of the first line is ignored, as in Git.
 
 		*pattern_factory* does not need to be set for :class:`GitIgnoreSpec`. If
 		set, it should be either ``"gitignore"`` or :class:`.GitIgnoreSpecPattern`.
@@ -146,6 +149,18 @@ class GitIgnoreSpec(PathSpec[GitIgnoreSpecPattern]):
 				f"cannot be {GitIgnoreBasicPattern} because it will give unexpected "
 				f"results."
 			))  # TypeError
+
+		if _is_iterable(lines):
+			# A BOM belongs to the ignore file, not to each individual pattern.
+			# Preserve it on later lines and strip at most one from the first line.
+			line_iter = iter(lines)
+			first_line = next(line_iter, None)
+			if first_line is not None:
+				if isinstance(first_line, str):
+					first_line = first_line.removeprefix('\ufeff')
+				elif isinstance(first_line, bytes):
+					first_line = first_line.removeprefix(b'\xef\xbb\xbf')
+				lines = chain((first_line,), line_iter)
 
 		self = super().from_lines(use_factory, lines, backend=backend, _test_backend_factory=_test_backend_factory)  # type: ignore[arg-type,type-var]
 		return self  # type: ignore[return-value]

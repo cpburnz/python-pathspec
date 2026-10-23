@@ -21,6 +21,7 @@ New features:
 
 Bug fixes:
 
+- `GitIgnoreSpec.from_lines()` now ignores a UTF-8 byte order mark at the beginning of the first line, matching Git's handling of BOM-prefixed ignore files.
 - Hyperscan backend no longer fails on multibyte UTF-8 characters.
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
 - `Pull #128`_: Support POSIX character classes (e.g. `[[:alpha:]]`) in gitignore bracket expressions.
