@@ -1,5 +1,6 @@
 """
-This script tests :class:`._GitIgnoreBasePattern`.
+This script tests :class:`._GitIgnoreBasePattern`, and well as shared behavior
+of :class:`.GitIgnoreBasicPattern` and :class:`.GitIgnoreSpecPattern`.
 """
 
 import re
@@ -23,23 +24,23 @@ from pathspec.patterns.gitignore.spec import (
 from .util import (
 	require_backend)
 
-BRACKET_LITERAL_CASES = (
-	('[[]draft].md', ('[draft].md',), ('draft.md', 'adraft].md')),
-	('[a&&b].pdf', ('a.pdf', '&.pdf', 'b.pdf'), ('c.pdf', 'ab.pdf')),
-	('[a||b].pdf', ('a.pdf', '|.pdf', 'b.pdf'), ('c.pdf', 'ab.pdf')),
-	('[a~~b].pdf', ('a.pdf', '~.pdf', 'b.pdf'), ('c.pdf', 'ab.pdf')),
-	('[![]draft].md', ('adraft].md',), ('[draft].md', 'draft.md')),
-	('[!a&&b].pdf', ('c.pdf',), ('a.pdf', '&.pdf', 'b.pdf')),
-	('[^a||b].pdf', ('c.pdf',), ('a.pdf', '|.pdf', 'b.pdf')),
-	('[!a~~b].pdf', ('c.pdf',), ('a.pdf', '~.pdf', 'b.pdf')),
-	('[[:digit:]&&a-c].pdf', ('0.pdf', '&.pdf', 'b.pdf'), ('d.pdf', 'x.pdf')),
-	(r'[\[\&\|\~].pdf', ('[.pdf', '&.pdf', '|.pdf', '~.pdf'), ('a.pdf',)),
-	('[--0].pdf', ('-.pdf', '..pdf', '0.pdf'), ('1.pdf', '/.pdf')),
-	('[a-c--].pdf', ('a.pdf', 'c.pdf', '-.pdf'), ('d.pdf', '+.pdf')),
-	('[!a-c--].pdf', ('d.pdf', '+.pdf'), ('a.pdf', 'c.pdf', '-.pdf')),
-	('[[:digit:]--].pdf', ('0.pdf', '-.pdf'), ('a.pdf', '+.pdf')),
-	('[a-c--e].pdf', ('a.pdf', '-.pdf', '..pdf', 'e.pdf'), ('f.pdf', '+.pdf')),
-)
+BRACKET_LITERAL_CASES: list[tuple[str, list[str], list[str]]] = [
+	('[[]draft].md', ['[draft].md'], ['draft.md', 'adraft].md']),
+	('[a&&b].pdf', ['a.pdf', '&.pdf', 'b.pdf'], ['c.pdf', 'ab.pdf']),
+	('[a||b].pdf', ['a.pdf', '|.pdf', 'b.pdf'], ['c.pdf', 'ab.pdf']),
+	('[a~~b].pdf', ['a.pdf', '~.pdf', 'b.pdf'], ['c.pdf', 'ab.pdf']),
+	('[![]draft].md', ['adraft].md'], ['[draft].md', 'draft.md']),
+	('[!a&&b].pdf', ['c.pdf'], ['a.pdf', '&.pdf', 'b.pdf']),
+	('[^a||b].pdf', ['c.pdf'], ['a.pdf', '|.pdf', 'b.pdf']),
+	('[!a~~b].pdf', ['c.pdf'], ['a.pdf', '~.pdf', 'b.pdf']),
+	('[[:digit:]&&a-c].pdf', ['0.pdf', '&.pdf', 'b.pdf'], ['d.pdf', 'x.pdf']),
+	(r'[\[\&\|\~].pdf', ['[.pdf', '&.pdf', '|.pdf', '~.pdf'], ['a.pdf']),
+	('[--0].pdf', ['-.pdf', '..pdf', '0.pdf'], ['1.pdf', '/.pdf']),
+	('[a-c--].pdf', ['a.pdf', 'c.pdf', '-.pdf'], ['d.pdf', '+.pdf']),
+	('[!a-c--].pdf', ['d.pdf', '+.pdf'], ['a.pdf', 'c.pdf', '-.pdf']),
+	('[[:digit:]--].pdf', ['0.pdf', '-.pdf'], ['a.pdf', '+.pdf']),
+	('[a-c--e].pdf', ['a.pdf', '-.pdf', '..pdf', 'e.pdf'], ['f.pdf', '+.pdf']),
+]
 """
 Bracket literal test cases.
 """
@@ -49,11 +50,25 @@ BS = '\\'
 Backslash character.
 """
 
+STAR_RUN_CASES: list[tuple[str, list[str], list[str]]] = [
+	('***/x', ['x', 'a/x', 'a/b/x'], ['xx', 'a/xx']),
+	('****/x', ['x', 'a/x', 'a/b/x'], ['xx',]),
+	('a/***', ['a/b', 'a/b/c'], ['a', 'b/a', 'b/a/c']),
+	('a/***/b', ['a/b', 'a/x/b', 'a/x/y/b'], ['a/x', 'b/x/b']),
+	('***', ['a', 'a/b', 'a/b/c'], []),
+	# A run of asterisks inside a segment is still a single asterisk.
+	('a***b', ['ab', 'axxb'], ['a/b', 'a/x/b']),
+]
+"""
+Each case is (pattern, paths that Git matches, paths that Git does not match).
+Git's wildmatch treats a run of asterisks that spans a whole path segment as a
+single globstar (``**``).
+"""
+
 
 class GitIgnoreBasePatternTest(TestCase):
 	"""
-	The :class:`GitIgnoreBasePatternTest` class tests the :class:`_GitIgnoreBasePattern`
-	implementation.
+	Tests the :class:`_GitIgnoreBasePattern` implementation.
 	"""
 
 	def test_01_escape_bytes(self):
@@ -160,3 +175,35 @@ class BracketLiteralTest(TestCase):
 								for paths, expected in ((matches, True), (misses, False)):
 									for path in paths:
 										self.assertEqual(spec.match_file(prefix + path), expected, path)
+
+
+class StarRunTest(TestCase):
+	"""
+	Tests asterisk runs against Git's behavior.
+	"""
+
+	def test_pattern_classes(self):
+		"""
+		Tests that both gitignore pattern classes treat a segment of asterisks
+		like a double-asterisk.
+		"""
+		for factory in (GitIgnoreBasicPattern, GitIgnoreSpecPattern):
+			for line, matches, misses in STAR_RUN_CASES:
+				with self.subTest(factory=factory.__name__, line=line):
+					pattern = factory(line)
+					for path in matches:
+						self.assertTrue(pattern.match_file(path), path)
+					for path in misses:
+						self.assertFalse(pattern.match_file(path), path)
+
+	def test_gitignore_spec(self):
+		"""
+		Tests that :class:`.GitIgnoreSpec` matches the same paths as Git.
+		"""
+		for line, matches, misses in STAR_RUN_CASES:
+			with self.subTest(line=line):
+				spec = GitIgnoreSpec.from_lines([line])
+				for path in matches:
+					self.assertTrue(spec.match_file(path), path)
+				for path in misses:
+					self.assertFalse(spec.match_file(path), path)
