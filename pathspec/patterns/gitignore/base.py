@@ -68,6 +68,22 @@ the directory separator as required by git's wildmatch behavior.
 """
 
 
+def _collapse_star_runs(segments: list[str]) -> list[str]:
+	"""
+	Replace each pattern segment that consists only of three or more asterisks
+	(e.g., ``***``) with a double-asterisk (``**``). Git's wildmatch treats a run
+	of asterisks as a single globstar when it spans a whole path segment.
+
+	*segments* (:class:`list` of :class:`str`) are the pattern segments.
+
+	Returns the modified segments (:class:`list` of :class:`str`).
+	"""
+	return [
+		'**' if len(seg) > 2 and seg.count('*') == len(seg) else seg
+		for seg in segments
+	]
+
+
 def _strip_trailing_ws(pattern: str) -> str:
 	"""
 	Strip trailing spaces and line endings from the pattern while considering
@@ -100,22 +116,6 @@ def _strip_trailing_ws(pattern: str) -> str:
 
 	# Strip trailing whitespace.
 	return pattern[:last_ws]
-
-
-def _collapse_star_runs(segments: list[str]) -> list[str]:
-	"""
-	Replace each pattern segment that consists only of three or more asterisks
-	(e.g., ``***``) with a double-asterisk (``**``). Git's wildmatch treats a run
-	of asterisks as a single globstar when it spans a whole path segment.
-
-	*segments* (:class:`list` of :class:`str`) are the pattern segments.
-
-	Returns the modified segments (:class:`list` of :class:`str`).
-	"""
-	return [
-		'**' if len(seg) > 2 and seg.count('*') == len(seg) else seg
-		for seg in segments
-	]
 
 
 def _sub_bracket_token(match: re.Match[str]) -> str:
