@@ -23,6 +23,7 @@ from .base import (
 	_PosixClassError,
 	_RangeNotationError,
 	_TrailingBackslashError,
+	_collapse_star_runs,
 	_strip_trailing_ws)
 
 
@@ -221,7 +222,7 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 			return (None, None)
 
 		# Split pattern into segments.
-		orig_segs = pattern_str.split('/')
+		orig_segs = _collapse_star_runs(pattern_str.split('/'))
 
 		# Check whether the pattern is specifically a directory pattern before
 		# normalization.
