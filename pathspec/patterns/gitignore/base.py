@@ -84,6 +84,13 @@ def _collapse_star_runs(segments: list[str]) -> list[str]:
 	]
 
 
+def _ends_with_escape(pattern: str) -> bool:
+	"""
+	Return whether *pattern* ends with an unpaired backslash.
+	"""
+	return (len(pattern) - len(pattern.rstrip('\\'))) % 2 == 1
+
+
 def _strip_trailing_ws(pattern: str) -> str:
 	"""
 	Strip trailing spaces and line endings from the pattern while considering
@@ -234,6 +241,26 @@ class _GitIgnoreBasePattern(RegexPattern):
 			return out_bytes  # type: ignore[return-value]
 		else:
 			return out_string  # type: ignore[return-value]
+
+	@classmethod
+	def _translate_segment(
+		cls,
+		pattern: str,
+		errors: Literal['literal', 'raise'],
+		has_separator: bool,
+	) -> str:
+		"""
+		Translate a segment, allowing a final backslash to escape the following
+		separator when *has_separator* is true.
+		"""
+		if has_separator and _ends_with_escape(pattern):
+			pattern = pattern[:-1]
+			if len(pattern) > 1 and pattern.count('*') == len(pattern):
+				# Git's globstar can cross directories before an escaped slash, but
+				# unlike "**/", that slash must still be matched.
+				return '(?s:.*)'
+
+		return cls._translate_segment_glob(pattern, errors)
 
 	@staticmethod
 	def _translate_segment_glob(
