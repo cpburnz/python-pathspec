@@ -24,6 +24,7 @@ from .base import (
 	_RangeNotationError,
 	_TrailingBackslashError,
 	_collapse_star_runs,
+	_ends_with_escape,
 	_strip_trailing_ws)
 
 
@@ -228,6 +229,13 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 		# normalization.
 		is_dir_pattern = not orig_segs[-1]
 
+		if is_dir_pattern and _ends_with_escape(orig_segs[-2]):
+			# Git removes a terminal slash before matching, leaving an invalid
+			# trailing backslash when that slash was escaped.
+			if errors == 'raise':
+				raise GitIgnorePatternError(f"Invalid git pattern: {original_pattern!r}")
+			return (None, None)
+
 		if pattern_str == '/':
 			# EDGE CASE: A single slash ('/') is not addressed by the gitignore
 			# documentation. Git treats it as a no-op (does not match any files). The
@@ -368,7 +376,7 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 					# Match segment glob pattern.
 					# - EDGE CASE: The gitignore docs defer to *fnmatch(3)* which treats
 					#   invalid range notation as a literal.
-					out_parts.append(cls._translate_segment_glob(seg, errors))
+					out_parts.append(cls._translate_segment(seg, errors, i < end))
 
 				if i == end:
 					if seg == '*':
