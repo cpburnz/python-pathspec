@@ -157,15 +157,15 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			and pattern_segs[0] == '**'
 			and pattern_segs[1] == '*'
 			and pattern_segs[2] == '**'
+			and is_dir_pattern
 			and not requires_dir_descendant
 		):
 			# The pattern "*/" will be normalized to "**/*/**" which will match every
-			# file not in the root directory. Special case this pattern for
-			# efficiency.
-			if is_dir_pattern:
-				return (None, _DIR_MARK_CG)
-			else:
-				return (None, '/')
+			# directory. Special case this pattern for efficiency. An explicit
+			# "**/*/**" (without a trailing slash) is not equivalent: it requires a
+			# descendant segment after the "*", so it must go through translation to
+			# keep directories such as "a/" from matching.
+			return (None, _DIR_MARK_CG)
 
 		# No regular expression override, return modified pattern segments.
 		return (pattern_segs, None)
