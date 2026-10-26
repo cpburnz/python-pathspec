@@ -1125,6 +1125,11 @@ class GitIgnoreSpecIssue137Test(GitIgnoreSpecMixin, TestCase):
 				{"d/top.txt", "child/file.txt"},
 				{"d/child/file.txt", "a/x/child/file.txt", "child/grand/deep.txt"},
 			),
+			(
+				"**/*/**",
+				{"top.txt", "d/"},
+				{"d/top.txt", "d/child/", "a/b/deep.txt"},
+			),
 		]
 		for pattern, unignored, ignored in cases:
 			for sub_test in self.parameterize_from_lines([pattern]):
@@ -1265,3 +1270,38 @@ class GitIgnoreSpecIssue150Test(GitIgnoreSpecMixin, TestCase):
 					self.assertTrue(spec.match_file(name))
 					self.assertFalse(spec.match_file('foo/'))
 					self.assertFalse(spec.match_file('foo/other'))
+
+
+class GitIgnoreSpecGlobstarStarGlobstarTest(GitIgnoreSpecMixin, TestCase):
+	"""
+	The :class:`GitIgnoreSpecGlobstarStarGlobstarTest` class tests that an
+	explicit ``**/*/**`` pattern requires a descendant segment after the ``*``.
+	Unlike ``*/``, it must not match a top-level directory itself, so a negation
+	can still re-include a file below such a directory (Git stages the file).
+	"""
+
+	def test_1_no_dir_descendant(self):
+		"""
+		Test that "**/*/**" leaves top-level directories and files unmatched.
+		"""
+		for sub_test in self.parameterize_from_lines(["**/*/**"]):
+			with sub_test() as spec:
+				self.assertFalse(spec.match_file("top.txt"))
+				self.assertFalse(spec.match_file("d/"))
+				self.assertTrue(spec.match_file("d/top.txt"))
+				self.assertTrue(spec.match_file("d/child/"))
+				self.assertTrue(spec.match_file("a/b/deep.txt"))
+
+	def test_2_negation_reinclusion(self):
+		"""
+		Test that a negation re-includes a file below a directory which
+		"**/*/**" does not itself exclude.
+		"""
+		for sub_test in self.parameterize_from_lines([
+			"**/*/**",
+			"!a/keep.txt",
+		]):
+			with sub_test() as spec:
+				self.assertFalse(spec.match_file("a/"))
+				self.assertFalse(spec.match_file("a/keep.txt"))
+				self.assertTrue(spec.match_file("a/other.txt"))
