@@ -1010,6 +1010,27 @@ class NormalizeFileTest(TestCase):
 		second_spec = normalize_file('a.txt')
 		self.assertEqual(first_spec, second_spec)
 
+	def test_repeated_current_directory_prefixes(self):
+		for file in ('./a.txt', '././a.txt', './././a.txt', '/././a.txt'):
+			with self.subTest(file=file):
+				self.assertEqual(normalize_file(file), 'a.txt')
+
+	def test_current_directory_prefix_with_custom_separator(self):
+		self.assertEqual(normalize_file('.\\.\\a.txt', separators=('\\',)), 'a.txt')
+
+	def test_preserve_other_dotted_paths(self):
+		for file in ('.hidden', '../a.txt', '.../a.txt', 'dir/../a.txt'):
+			with self.subTest(file=file):
+				self.assertEqual(normalize_file(file), file)
+
+	def test_repeated_prefixes_with_anchored_patterns(self):
+		for spec_class in (pathspec.PathSpec, pathspec.GitIgnoreSpec):
+			with self.subTest(spec_class=spec_class):
+				spec = spec_class.from_lines('gitignore', ['/build/'], backend='simple')
+				file = '././build/output.txt'
+				self.assertTrue(spec.match_file(file))
+				self.assertEqual(list(spec.match_files([file])), [file])
+
 
 class RecursionErrorDeprecationTest(TestCase):
 	"""
