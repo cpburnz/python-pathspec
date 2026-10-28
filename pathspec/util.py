@@ -613,9 +613,11 @@ def normalize_file(
 		# Make path relative.
 		norm_file = norm_file[1:]
 
-	elif norm_file.startswith('./'):
-		# Remove current directory prefix.
-		norm_file = norm_file[2:]
+	# Remove all leading current directory prefixes without resolving '..'.
+	prefix_length = 0
+	while norm_file.startswith('./', prefix_length):
+		prefix_length += 2
+	norm_file = norm_file[prefix_length:]
 
 	return norm_file
 
