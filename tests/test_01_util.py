@@ -822,6 +822,73 @@ class IterTreeTest(TestCase):
 					self.assertIn('kept.txt', paths)
 					self.assertEqual(errors, [error] if record else [])
 
+	def test_04_scan_iteration_error(self):
+		"""
+		Errors advancing a directory scan honor the handler and close the scan.
+		"""
+		self.make_files(['readable.txt'])
+		with os.scandir(self.temp_dir) as scan:
+			entry = next(scan)
+
+		for walk in (iter_tree_entries, iter_tree_files):
+			for mode in ('ignore', 'record', 'raise'):
+				with self.subTest(walk=walk.__name__, mode=mode):
+					error = OSError(errno.EIO, 'directory read failed', str(self.temp_dir))
+					errors = []
+
+					def read_entries():
+						yield entry
+						raise error
+
+					def on_error(exc):
+						errors.append(exc)
+						if mode == 'raise':
+							raise exc
+
+					scan = MagicMock()
+					scan.__iter__.return_value = read_entries()
+					with patch('pathspec.util.os.scandir', return_value=scan):
+						results = walk(self.temp_dir, on_error=None if mode == 'ignore' else on_error)
+						first = next(results)
+						self.assertEqual(first.path if walk is iter_tree_entries else first, 'readable.txt')
+						if mode == 'raise':
+							with self.assertRaises(OSError) as caught:
+								list(results)
+							self.assertIs(caught.exception, error)
+						else:
+							self.assertEqual(list(results), [])
+					self.assertEqual(errors, [] if mode == 'ignore' else [error])
+					scan.__exit__.assert_called_once()
+
+	def test_04_scan_iteration_error_keeps_siblings(self):
+		"""
+		A read failure in a child scan leaves healthy sibling directories walkable.
+		"""
+		self.make_dirs(['blocked', 'healthy'])
+		self.make_files(['healthy/kept.txt'])
+		scandir = os.scandir
+		error = OSError(errno.EIO, 'directory read failed', 'blocked')
+
+		def read_entries():
+			raise error
+			yield  # Make this a generator that raises when advanced.
+
+		for walk in (iter_tree_entries, iter_tree_files):
+			with self.subTest(walk=walk.__name__):
+				blocked = MagicMock()
+				blocked.__iter__.return_value = read_entries()
+
+				def scan(path):
+					return blocked if os.path.basename(path) == 'blocked' else scandir(path)
+
+				errors = []
+				with patch('pathspec.util.os.scandir', side_effect=scan):
+					results = list(walk(self.temp_dir, on_error=errors.append))
+				paths = get_paths_from_entries(results) if walk is iter_tree_entries else set(results)
+				self.assertIn(ospath('healthy/kept.txt'), paths)
+				self.assertEqual(errors, [error])
+				blocked.__exit__.assert_called_once()
+
 	def test_05_entry_inspection_error(self):
 		"""
 		Route errors inspecting an entry through the configured error handler.
