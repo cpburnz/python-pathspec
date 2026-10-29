@@ -26,6 +26,7 @@ from .base import (
 	_RangeNotationError,
 	_TrailingBackslashError,
 	_collapse_star_runs,
+	_ends_with_escape,
 	_strip_trailing_ws)
 
 _DIR_MARK = 'ps_d'
@@ -271,6 +272,13 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		# Check whether the pattern is specifically a directory pattern before
 		# normalization.
 		is_dir_pattern = not orig_segs[-1]
+		if is_dir_pattern and _ends_with_escape(orig_segs[-2]):
+			# Git removes a terminal slash before matching, leaving an invalid
+			# trailing backslash when that slash was escaped.
+			if errors == 'raise':
+				raise GitIgnorePatternError(f"Invalid git pattern: {original_pattern!r}")
+			return (None, None)
+
 		# A terminal directory globstar with a concrete prefix must consume a
 		# descendant segment before the directory marker. Keep this semantic bit
 		# separate from normalized segments, which collapse adjacent ``**``.
@@ -418,7 +426,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 				else:
 					# Match segment glob pattern.
 					# - EDGE CASE: Git discards patterns with invalid range notation.
-					out_parts.append(cls._translate_segment_glob(seg, errors))
+					out_parts.append(cls._translate_segment(seg, errors, i < end))
 
 				if i == end:
 					# A pattern ending without a slash ('/') will match a file or a
