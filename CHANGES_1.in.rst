@@ -21,6 +21,7 @@ New features:
 
 Bug fixes:
 
+- Preserve slashes inside gitignore bracket expressions while excluding path separators from their matches.
 - Match escaped internal path separators in gitignore patterns without treating them as trailing backslashes.
 - Hyperscan backend no longer fails on multibyte UTF-8 characters.
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
