@@ -7,6 +7,7 @@ import os
 import os.path
 import pathlib
 import posixpath
+import re
 import stat
 import warnings
 from collections.abc import (
@@ -61,6 +62,8 @@ separators that need to be normalized to the POSIX separator for the current
 operating system. The separators are determined by examining :data:`os.sep` and
 :data:`os.altsep`.
 """
+
+_NORMALIZE_INTERIOR_PATH = re.compile(r'/(?:/|\./)+')
 
 _registered_patterns: dict[str, Callable[[Union[str, bytes]], Pattern]] = {}
 """
@@ -585,6 +588,8 @@ def normalize_file(
 	"""
 	Normalizes the file path to use the POSIX path separator (i.e., ``"/"``), and
 	make the paths relative (remove leading ``"/"``).
+	Redundant interior separators and current-directory components are removed.
+	Parent-directory components and a trailing separator are preserved.
 
 	*file* (:class:`str` or :class:`os.PathLike`) is the file path.
 
@@ -592,7 +597,7 @@ def normalize_file(
 	:data:`None`) optionally contains the path separators to normalize. This does
 	not need to include the POSIX path separator (``"/"``), but including it will
 	not affect the results. Default is ``None`` for :data:`.NORMALIZE_PATH_SEPS`.
-	To prevent normalization, pass an empty container (e.g., an empty tuple
+	To prevent separator replacement, pass an empty container (e.g., an empty tuple
 	``()``).
 
 	Returns the normalized file path (:class:`str`).
@@ -616,6 +621,9 @@ def normalize_file(
 	elif norm_file.startswith('./'):
 		# Remove current directory prefix.
 		norm_file = norm_file[2:]
+
+	if '//' in norm_file or '/./' in norm_file:
+		norm_file = _NORMALIZE_INTERIOR_PATH.sub('/', norm_file)
 
 	return norm_file
 
