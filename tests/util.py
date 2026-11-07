@@ -13,8 +13,11 @@ from random import (
 	Random)
 from typing import (
 	Any,
+	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
 	cast)
+from typing_extensions import (
+	TypeAlias)  # Added in 3.10.
 from unittest import (
 	SkipTest)
 
@@ -39,6 +42,11 @@ from pathspec.util import (
 	CheckResult,
 	TStrPath,
 	TreeEntry)
+
+GitIgnoreErrorHint: TypeAlias = Optional[Literal['literal', 'null', 'raise']]
+"""
+Type hint for the "errors" argument.
+"""
 
 
 def debug_includes(spec: PathSpec, files: set[str], includes: set[str]) -> str:
