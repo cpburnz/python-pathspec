@@ -229,6 +229,35 @@ def _is_iterable(value: Any) -> bool:
 	return isinstance(value, Iterable) and not isinstance(value, (str, bytes))
 
 
+def _iter_scandir_entries(
+	scan: Iterable[os.DirEntry[str]],
+	on_error: Optional[Callable[[OSError], None]],
+) -> Iterator[os.DirEntry[str]]:
+	"""
+	Advance a directory scan, routing read errors through *on_error*. Only
+	advancement is guarded: errors raised by the handler or by callers processing
+	an entry must propagate without being handled a second time.
+
+	*scan* is the ``os.scandir()`` iterator.
+
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`) optionally is
+	the error handler for file-system exceptions.
+
+	Yields each entry (:class:`os.DirEntry`).
+	"""
+	entries = iter(scan)
+	while True:
+		try:
+			entry = next(entries)
+		except StopIteration:
+			return
+		except OSError as e:
+			if on_error is not None:
+				on_error(e)
+			return
+		yield entry
+
+
 @deprecated((
 	"pathspec.util.iter_tree() is deprecated. Use iter_tree_files() instead."
 ))
@@ -285,29 +314,6 @@ def iter_tree_entries(
 		dir_rel = ''
 
 	yield from _iter_tree_entries_next(root_abs, dir_rel, {}, on_error, follow_links)
-
-
-def _iter_scandir_entries(
-	scan: Iterable[os.DirEntry[str]],
-	on_error: Optional[Callable[[OSError], None]],
-) -> Iterator[os.DirEntry[str]]:
-	"""
-	Advance a directory scan, routing read errors through *on_error*.
-
-	Only advancement is guarded: errors raised by the handler or by callers
-	processing an entry must propagate without being handled a second time.
-	"""
-	entries = iter(scan)
-	while True:
-		try:
-			entry = next(entries)
-		except StopIteration:
-			return
-		except OSError as e:
-			if on_error is not None:
-				on_error(e)
-			return
-		yield entry
 
 
 def _iter_tree_entries_next(
