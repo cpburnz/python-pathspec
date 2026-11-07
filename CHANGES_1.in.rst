@@ -31,7 +31,7 @@ Bug fixes:
 - `Issue #137`_ / `Pull #138`_: Patterns ending in `/**` no longer match their bare parent directory, preserving traversal to re-included children.
 - `Issue #137`_ / `Pull #144`_: The excluded directory rule no longer applies to an ancestor directory which the spec itself re-includes.
 - `Pull #139`_: Match newline characters in paths with `*` and `**`.
-- `Pull #142`_ / `Pull #150`_: Fix trailing-space trimming after escaped backslashes.
+- `Pull #142`_ / `Pull #150`_ / `Pull #181`_: Fix trailing-space trimming after escaped backslashes.
 - `Issue #146`_: pattern_to_regex raises on three lines git accepts (bare '!', '! ', lone '\').
 - `Pull #147`_: Match directory entries with directory-only patterns. `PathSpec.match_entries()` and `.match_tree_entries()` will now match directory entries as directory paths (i.e., with a trailing `/`), instead of as file paths (no trailing `/`).
 - `Pull #149`_: Handle directory-open errors through on_error during tree walks.
@@ -48,7 +48,9 @@ Bug fixes:
 - `Pull #165`_: Directory negations no longer re-include descendants of an excluded ancestor.
 - `Pull #166`_: Escape literal regex set operators in gitignore bracket expressions so valid patterns compile when FutureWarning is treated as an error.
 - `Pull #167`_: - A gitignore pattern segment made of three or more asterisks (e.g., `***/x`) is now treated as a double-asterisk, matching Git.
+- `Pull #170`_: Match escaped internal path separators in gitignore patterns without treating them as trailing backslashes.
 - `Pull #171`_: An explicit `**/*/**` pattern no longer matches top-level directories, so a negation can re-include files below them.
+- `Pull #174`_: Tree walks now honor `on_error` for errors reading an open directory scan, preserving yielded entries and continuing with sibling directories.
 
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
@@ -83,7 +85,10 @@ Bug fixes:
 .. _`Pull #165`: https://github.com/cpburnz/python-pathspec/pull/165
 .. _`Pull #166`: https://github.com/cpburnz/python-pathspec/pull/166
 .. _`Pull #167`: https://github.com/cpburnz/python-pathspec/pull/167
+.. _`Pull #170`: https://github.com/cpburnz/python-pathspec/pull/170
 .. _`Pull #171`: https://github.com/cpburnz/python-pathspec/pull/171
+.. _`Pull #174`: https://github.com/cpburnz/python-pathspec/pull/174
+.. _`Pull #181`: https://github.com/cpburnz/python-pathspec/pull/181
 
 
 1.1.1 (2026-04-26)

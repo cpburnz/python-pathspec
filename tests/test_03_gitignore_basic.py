@@ -18,9 +18,42 @@ from pathspec.patterns.gitignore.basic import (
 from pathspec.util import (
 	lookup_pattern)
 
+from .util import (
+	GitIgnoreErrorHint)
+
 _DIR_OPT = r'(?:/|\Z)'
 """
 Optional directory ending.
+"""
+
+ESCAPED_SLASH_FAIL_CASES: list[tuple[
+	str,
+	list[GitIgnoreErrorHint],
+	list[GitIgnoreErrorHint],
+]] = [
+	('\\', [None, 'literal', 'null'], ['raise']),
+	('a\\', [None, 'literal', 'null'], ['raise']),
+	('**\\', [None, 'literal', 'null'], ['raise']),
+]
+"""
+Escaped slash failure test cases.
+"""
+
+ESCAPED_SLASH_PATTERN_CASES: list[tuple[str, list[str], list[str]]] = [
+	(r'a\/b', ['a/b', 'a/b/child'], ['a', 'ab', 'x/a/b']),
+	(r'/a\/b', ['a/b', 'a/b/child'], ['ab', 'x/a/b']),
+	(r'a\/b\/c', ['a/b/c', 'a/b/c/child'], ['a/b', 'x/a/b/c']),
+	(r'a\/b/', ['a/b/', 'a/b/child'], ['a/b', 'x/a/b/child']),
+	(r'a\/b*.py', ['a/b.py', 'a/beta.py'], ['a/b.txt', 'x/a/b.py']),
+	(r'a\/[bc].py', ['a/b.py', 'a/c.py'], ['a/d.py', 'x/a/b.py']),
+	(r'a\/*/b', ['a/x/b'], ['a/b', 'a/x/y/b']),
+	(r'a\/**/b', ['a/b', 'a/x/b', 'a/x/y/b'], ['x/a/b', 'a/c']),
+	(r'**\/b', ['a/b', 'a/x/b', 'a/b/child', 'b'], ['a/c']),
+	(r'***\/b', ['a/b', 'a/x/b', 'b'], ['a/c']),
+	(r'a/**\/b', ['a/b', 'a/x/b', 'a/x/y/b'], ['x/a/x/b']),
+]
+"""
+Escaped slash pattern test cases.
 """
 
 
@@ -619,8 +652,8 @@ class GitIgnoreBasicPatternTest(TestCase):
 		for errors in ('literal', 'null'):
 			with self.subTest(f"{errors=}"):
 				pattern = GitIgnoreBasicPattern('\\', errors=errors)
-				self.assertIsNone(pattern.include)
-				self.assertIsNone(pattern.regex)
+				self.assertIsNone(pattern.regex, pattern)
+				self.assertIsNone(pattern.include, pattern)
 
 		with self.subTest('errors=raise'):
 			with self.assertRaises(GitIgnorePatternError):
@@ -633,8 +666,8 @@ class GitIgnoreBasicPatternTest(TestCase):
 		for errors in ('literal', 'null', 'raise'):
 			with self.subTest(f"{errors=}"):
 				pattern = GitIgnoreBasicPattern('!', errors=errors)
-				self.assertIsNone(pattern.include)
 				self.assertIsNone(pattern.regex)
+				self.assertIsNone(pattern.include)
 
 	def test_10_escape_asterisk_end(self):
 		"""
@@ -1105,3 +1138,50 @@ class GitIgnoreBasicPatternIssue150Test(TestCase):
 			for ending in ('', '\n', '\r\n'):
 				with self.subTest(raw=raw, ending=ending):
 					self.assertTrue(GitIgnoreBasicPattern(raw + ending).match_file(name))
+
+
+class EscapedSlashTest(TestCase):
+	"""
+	Tests escaped slashes against Git's behavior.
+	"""
+
+	def test_backslash_parity(self):
+		for count in (1, 2, 3, 4):
+			line = 'a' + '\\' * count + '/b'
+			path = 'a' + '\\' * (count // 2) + '/b'
+			other = 'a' + '\\' * (count // 2 + 1) + '/b'
+			with self.subTest(count=count, line=line):
+				pattern = GitIgnoreBasicPattern(line)
+				self.assertIsNotNone(pattern.match_file(path), path)
+				self.assertIsNone(pattern.match_file(other), other)
+
+	def test_failures(self):
+		for line, null_errors, raise_errors in ESCAPED_SLASH_FAIL_CASES:
+			for errors in null_errors:
+				with self.subTest(line=line, errors=errors):
+					pattern = GitIgnoreBasicPattern(line, errors=errors)
+					self.assertIsNone(pattern.regex)
+					self.assertIsNone(pattern.include)
+
+			for errors in raise_errors:
+				with self.subTest(line=line, errors=errors):
+					with self.assertRaises(GitIgnorePatternError):
+						GitIgnoreBasicPattern(line, errors=errors)
+
+	def test_leading_and_terminal_slashes(self):
+		for line in [r'\/a', r'a\/', r'a/**\/', r'a\/b\/']:
+			for errors in (None, 'literal', 'null', 'raise',):
+					pattern = GitIgnoreBasicPattern(line, errors=errors)
+					self.assertIsNotNone(pattern.regex)
+
+	def test_pattern_matching(self):
+		for line, included, excluded in ESCAPED_SLASH_PATTERN_CASES:
+			with self.subTest(line=line):
+				pattern = GitIgnoreBasicPattern(line)
+				for path in included + excluded:
+					with self.subTest(path=path):
+						self.assertEqual(
+							bool(pattern.match_file(path)),
+							path in included,
+							path,
+						)

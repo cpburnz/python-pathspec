@@ -24,6 +24,7 @@ from .base import (
 	_RangeNotationError,
 	_TrailingBackslashError,
 	_collapse_star_runs,
+	_strip_ending_escape,
 	_strip_trailing_ws)
 
 
@@ -58,6 +59,9 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 
 		- The regular expression override (:class:`str` or :data:`None`).
 		"""
+		# Normalize multi-asterisk segments down to 2.
+		pattern_segs[:] = _collapse_star_runs(pattern_segs)
+
 		if not pattern_segs[0]:
 			# A pattern beginning with a slash ('/') should match relative to the root
 			# directory. Remove the empty first segment to make the pattern relative
@@ -222,7 +226,7 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 			return (None, None)
 
 		# Split pattern into segments.
-		orig_segs = _collapse_star_runs(pattern_str.split('/'))
+		orig_segs = pattern_str.split('/')
 
 		# Check whether the pattern is specifically a directory pattern before
 		# normalization.
@@ -331,6 +335,10 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 		need_slash = False
 		end = len(pattern_segs) - 1
 		for i, seg in enumerate(pattern_segs):
+			# Remove a backslash escape that was paired with a slash (`\/`).
+			if i < end:
+				seg = _strip_ending_escape(seg)
+
 			if seg == '**':
 				if i == 0:
 					# A normalized pattern beginning with double-asterisks ('**') will
@@ -349,7 +357,10 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 					assert i == end, (i, end)
 					# A normalized pattern ending with double-asterisks ('**') will match
 					# nonempty trailing path segments, not the parent directory itself.
-					out_parts.append('/' if is_dir_pattern else '/[^/]')
+					if is_dir_pattern:
+						out_parts.append('/')
+					else:
+						out_parts.append('/[^/]')
 
 			else:
 				# Match path segment.

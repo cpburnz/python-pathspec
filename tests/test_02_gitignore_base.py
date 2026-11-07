@@ -50,6 +50,23 @@ BS = '\\'
 Backslash character.
 """
 
+TRAILING_WS_CASES: list[tuple[str, str]] = [
+	('probe \n', 'probe'),
+	('probe \r \n', 'probe \r'),
+	('probe \r', 'probe'),
+	('probe \r\n', 'probe'),
+	('probe\n', 'probe'),
+	('probe\r \n', 'probe\r'),
+	('probe\r \r\n', 'probe\r'),
+	('probe\r', 'probe'),
+	('probe\r\n', 'probe'),
+	('probe\r\r \n', 'probe\r\r'),
+	('probe\r\r\n', 'probe\r'),
+]
+"""
+Trailing whitespace test cases.
+"""
+
 STAR_RUN_CASES: list[tuple[str, list[str], list[str]]] = [
 	('***/x', ['x', 'a/x', 'a/b/x'], ['xx', 'a/xx']),
 	('****/x', ['x', 'a/x', 'a/b/x'], ['xx',]),
@@ -111,31 +128,25 @@ class GitIgnoreBasePatternTest(TestCase):
 
 	def test_02_strip_trailing_ws_1_even_bs(self):
 		"""
-		Tests that trailing whitespace preceded by an even number of backslashes is
+		Tests that trailing spaces preceded by an even number of backslashes is
 		unescaped and stripped.
 		"""
-		for n, wc in product(
-			[0, 2, 4],
-			[' ', '\n', '\r'],
-		):
-			with self.subTest(n=n, wc=wc):
+		for n in (0, 2, 4):
+			with self.subTest(n=n):
 				bs = BS*n
-				ws = wc*n
+				ws = ' '*n
 				val = _strip_trailing_ws(f' foo{bs}{ws}')
 				self.assertEqual(val, f' foo{bs}')
 
 	def test_02_strip_trailing_ws_2_odd_bs(self):
 		"""
-		Tests that trailing whitespace preceded by an odd number of backslashes is
+		Tests that trailing spaces preceded by an odd number of backslashes is
 		escaped and stripped.
 		"""
-		for n, wc in product(
-			[0, 1, 3],
-			[' ', '\n', '\r'],
-		):
-			with self.subTest(n=n, wc=wc):
+		for n in (0, 1, 3):
+			with self.subTest(n=n):
 				bs = BS*n
-				ws = wc*n
+				ws = ' '*n
 				val = _strip_trailing_ws(f' foo{bs}{ws}')
 				self.assertEqual(val, f' foo{bs}{ws[:1]}')
 
@@ -145,7 +156,7 @@ class GitIgnoreBasePatternTest(TestCase):
 		"""
 		for wc, ending in product(
 			['\t', '\v', '\f', '\x85', '\xa0', '\u2003'],
-			['', ' ', '\n', '\r\n'],
+			['', ' ', ' \n', ' \r', ' \r\n', '\n', '\r', '\r\n'],
 		):
 			with self.subTest(wc=wc, ending=ending):
 				self.assertEqual(_strip_trailing_ws(f'foo{wc}{ending}'), f'foo{wc}')
@@ -221,3 +232,32 @@ class StarRunTest(TestCase):
 					self.assertTrue(spec.match_file(path), path)
 				for path in misses:
 					self.assertFalse(spec.match_file(path), path)
+
+
+class TrailingWsTest(TestCase):
+	"""
+	Tests trailing whitespace stripping against Git's behavior.
+	"""
+
+	def test_line_ending_before_spaces(self):
+		for line, expected in TRAILING_WS_CASES + [
+			('probe\\ \n', 'probe\\ '),
+			('probe\\ \r', 'probe\\ '),
+			('probe\\ \r\n', 'probe\\ '),
+			('probe\\\n', 'probe\\'),
+			('probe\\\r\n', 'probe\\'),
+		]:
+			with self.subTest(line=line):
+				self.assertEqual(_strip_trailing_ws(line), expected)
+
+	def test_pattern_matching(self):
+		for factory in (GitIgnoreBasicPattern, GitIgnoreSpecPattern):
+			for line, filename in TRAILING_WS_CASES:
+				if filename == 'probe':
+					continue
+
+				for errors in (None, 'literal', 'null', 'raise'):
+					with self.subTest(factory=factory.__name__, line=line, errors=errors):
+						pattern = factory(line, errors=errors)
+						self.assertIsNotNone(pattern.match_file(filename), filename)
+						self.assertIsNone(pattern.match_file('probe'))

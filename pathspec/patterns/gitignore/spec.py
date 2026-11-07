@@ -26,6 +26,8 @@ from .base import (
 	_RangeNotationError,
 	_TrailingBackslashError,
 	_collapse_star_runs,
+	_has_ending_escape,
+	_strip_ending_escape,
 	_strip_trailing_ws)
 
 _DIR_MARK = 'ps_d'
@@ -93,6 +95,9 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 		- The regular expression override (:class:`str` or :data:`None`).
 		"""
+		# Normalize multi-asterisk segments down to 2.
+		pattern_segs[:] = _collapse_star_runs(pattern_segs)
+
 		if not pattern_segs[0]:
 			# A pattern beginning with a slash ('/') should match relative to the root
 			# directory. Remove the empty first segment to make the pattern relative
@@ -266,11 +271,26 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			return (None, None)
 
 		# Split pattern into segments.
-		orig_segs = _collapse_star_runs(pattern_str.split('/'))
+		orig_segs = pattern_str.split('/')
 
 		# Check whether the pattern is specifically a directory pattern before
 		# normalization.
 		is_dir_pattern = not orig_segs[-1]
+
+		if orig_segs[0] == '\\':
+			# Git treats a starting escaped slash as a no match (i.e., `\/...`).
+			if errors == 'raise':
+				raise GitIgnorePatternError(f"Invalid git pattern: {original_pattern!r}")
+			else:
+				return (None, None)
+
+		if is_dir_pattern and _has_ending_escape(orig_segs[-2]):
+			# Git treats an ending escaped slash as a no match (i.e., `...\/`).
+			if errors == 'raise':
+				raise GitIgnorePatternError(f"Invalid git pattern: {original_pattern!r}")
+			else:
+				return (None, None)
+
 		# A terminal directory globstar with a concrete prefix must consume a
 		# descendant segment before the directory marker. Keep this semantic bit
 		# separate from normalized segments, which collapse adjacent ``**``.
@@ -379,6 +399,11 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		need_slash = False
 		end = len(pattern_segs) - 1
 		for i, seg in enumerate(pattern_segs):
+			if i < end and seg != '**\\':
+				# Remove a backslash escape that was paired with a slash (`\/`). Except
+				# `**\` which needs to be special-cased.
+				seg = _strip_ending_escape(seg)
+
 			if seg == '**':
 				if i == 0:
 					# A normalized pattern beginning with double-asterisks ('**') will
@@ -414,6 +439,11 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 				if seg == '*':
 					# Match whole path segment.
 					out_parts.append('[^/]+')
+
+				elif seg == '**\\':
+					# EDGE CASE: Git does not match a root path with `**\` like it does
+					# `**`.
+					out_parts.append('(?s:.+)')
 
 				else:
 					# Match segment glob pattern.
