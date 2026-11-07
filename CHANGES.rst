@@ -34,7 +34,7 @@ Bug fixes:
 - `Issue #137`_ / `Pull #138`_: Patterns ending in `/**` no longer match their bare parent directory, preserving traversal to re-included children.
 - `Issue #137`_ / `Pull #144`_: The excluded directory rule no longer applies to an ancestor directory which the spec itself re-includes.
 - `Pull #139`_: Match newline characters in paths with `*` and `**`.
-- `Pull #142`_ / `Pull #150`_: Fix trailing-space trimming after escaped backslashes.
+- `Pull #142`_ / `Pull #150`_ / `Pull #181`_: Fix trailing-space trimming after escaped backslashes.
 - `Issue #146`_: pattern_to_regex raises on three lines git accepts (bare '!', '! ', lone '\').
 - `Pull #147`_: Match directory entries with directory-only patterns. `PathSpec.match_entries()` and `.match_tree_entries()` will now match directory entries as directory paths (i.e., with a trailing `/`), instead of as file paths (no trailing `/`).
 - `Pull #149`_: Handle directory-open errors through on_error during tree walks.
@@ -87,6 +87,7 @@ Bug fixes:
 .. _`Pull #166`: https://github.com/cpburnz/python-pathspec/pull/166
 .. _`Pull #167`: https://github.com/cpburnz/python-pathspec/pull/167
 .. _`Pull #170`: https://github.com/cpburnz/python-pathspec/pull/170
+.. _`Pull #181`: https://github.com/cpburnz/python-pathspec/pull/181
 
 
 1.1.1 (2026-04-26)

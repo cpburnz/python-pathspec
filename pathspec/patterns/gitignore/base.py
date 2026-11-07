@@ -117,8 +117,8 @@ def _strip_trailing_ws(pattern: str) -> str:
 
 	Returns the modified pattern (:class:`str`).
 	"""
-	# Git removes the LF and one terminal CR before trimming spaces. A CR
-	# before those spaces belongs to the filename, even when it is escaped.
+	# Git removes the LF and one terminal CR before trimming spaces. A CR before
+	# those spaces belongs to the filename, even when it is escaped.
 	pattern = pattern.removesuffix('\n').removesuffix('\r')
 
 	i = len(pattern) - 1
