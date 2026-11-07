@@ -16,8 +16,6 @@ from typing import (
 	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
 	cast)
-from typing_extensions import (
-	TypeAlias)  # Added in 3.10.
 from unittest import (
 	SkipTest)
 
@@ -43,7 +41,7 @@ from pathspec.util import (
 	TStrPath,
 	TreeEntry)
 
-GitIgnoreErrorHint: TypeAlias = Optional[Literal['literal', 'null', 'raise']]
+GitIgnoreErrorHint = Optional[Literal['literal', 'null', 'raise']]
 """
 Type hint for the "errors" argument.
 """
