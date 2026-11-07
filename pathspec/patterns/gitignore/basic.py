@@ -25,7 +25,7 @@ from .base import (
 	_RangeNotationError,
 	_TrailingBackslashError,
 	_collapse_star_runs,
-	_ends_with_escape,
+	_strip_ending_escape,
 	_split_pattern,
 	_strip_trailing_ws)
 
@@ -61,6 +61,9 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 
 		- The regular expression override (:class:`str` or :data:`None`).
 		"""
+		# Normalize multi-asterisk segments down to 2.
+		pattern_segs[:] = _collapse_star_runs(pattern_segs)
+
 		if not pattern_segs[0]:
 			# A pattern beginning with a slash ('/') should match relative to the root
 			# directory. Remove the empty first segment to make the pattern relative
@@ -225,18 +228,11 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 			return (None, None)
 
 		# Split pattern into segments.
-		orig_segs = _collapse_star_runs(_split_pattern(pattern_str))
+		orig_segs = _split_pattern(pattern_str)
 
 		# Check whether the pattern is specifically a directory pattern before
 		# normalization.
 		is_dir_pattern = not orig_segs[-1]
-
-		if is_dir_pattern and _ends_with_escape(orig_segs[-2]):
-			# Git removes a terminal slash before matching, leaving an invalid
-			# trailing backslash when that slash was escaped.
-			if errors == 'raise':
-				raise GitIgnorePatternError(f"Invalid git pattern: {original_pattern!r}")
-			return (None, None)
 
 		if pattern_str == '/':
 			# EDGE CASE: A single slash ('/') is not addressed by the gitignore
@@ -344,6 +340,10 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 		need_slash = False
 		end = len(pattern_segs) - 1
 		for i, seg in enumerate(pattern_segs):
+			# Remove a backslash escape that was paired with a slash (`\/`).
+			if i < end:
+				seg = _strip_ending_escape(seg)
+
 			if seg == '**':
 				if i == 0:
 					# A normalized pattern beginning with double-asterisks ('**') will
@@ -362,7 +362,10 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 					assert i == end, (i, end)
 					# A normalized pattern ending with double-asterisks ('**') will match
 					# nonempty trailing path segments, not the parent directory itself.
-					out_parts.append('/' if is_dir_pattern else '/[^/]')
+					if is_dir_pattern:
+						out_parts.append('/')
+					else:
+						out_parts.append('/[^/]')
 
 			else:
 				# Match path segment.
@@ -381,7 +384,7 @@ class GitIgnoreBasicPattern(_GitIgnoreBasePattern):
 					# Match segment glob pattern.
 					# - EDGE CASE: The gitignore docs defer to *fnmatch(3)* which treats
 					#   invalid range notation as a literal.
-					out_parts.append(cls._translate_segment(seg, errors, i < end))
+					out_parts.append(cls._translate_segment_glob(seg, errors))
 
 				if i == end:
 					if seg == '*':

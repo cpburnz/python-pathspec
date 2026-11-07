@@ -54,7 +54,7 @@ class BracketSeparatorTest(TestCase):
 						PathSpec.from_lines('gitignore', [line], backend=backend),
 					):
 						with self.subTest(line=line, spec=type(spec)):
-							self.assertEqual(set(spec.match_files(included + excluded)), set(included))
+							self.assertEqual(set(spec.match_files(included + excluded, separators=())), set(included))
 
 	def test_negated_rule(self):
 		for backend in ('simple', 're2', 'hyperscan'):

@@ -37,6 +37,8 @@ from pathspec.pattern import (
 from pathspec._typing import (
 	AnyStr)  # Removed in 3.18.
 
+from .test_04_gitignore_spec import (
+	ESCAPED_SLASH_PATTERN_CASES)
 from .util import (
 	debug_results,
 	get_includes,
@@ -1265,3 +1267,29 @@ class GitIgnoreSpecIssue150Test(GitIgnoreSpecMixin, TestCase):
 					self.assertTrue(spec.match_file(name))
 					self.assertFalse(spec.match_file('foo/'))
 					self.assertFalse(spec.match_file('foo/other'))
+
+
+class EscapedSlashTest(GitIgnoreSpecMixin, TestCase):
+	"""
+	Tests escaped slashes against Git's behavior.
+	"""
+
+	def test_spec_matching(self):
+		for line, included, excluded in ESCAPED_SLASH_PATTERN_CASES:
+			for sub_test in self.parameterize_from_lines(
+				[line],
+				sub_params=dict(line=line),
+			):
+				with sub_test() as spec:
+					self.assertEqual(set(spec.match_files(included + excluded)), set(included))
+
+	def test_negated_rule(self):
+		for sub_test in self.parameterize_from_lines([
+			'a/*.txt',
+			r'!a\/keep.txt',
+		]):
+			with sub_test() as spec:
+				self.assertTrue(spec.match_file('a/drop.txt'))
+				result = spec.check_file('a/keep.txt')
+				self.assertIs(result.include, False)
+				self.assertEqual(result.index, 1)

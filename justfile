@@ -46,6 +46,10 @@ test-all: _test_all
 [group('Development')]
 test-docs: _test_docs
 
+# Run tests using the CPython virtual environment, and fail on first error.
+[group('Development')]
+test-ff: _test_primary_ff
+
 # Create the CPython venv.
 [group('Development')]
 venv-cpy-create: _venv_cpy_create
@@ -116,6 +120,9 @@ _test_docs:
 
 _test_primary:
 	{{cpy_run}} python -m unittest -v
+
+_test_primary_ff:
+	{{cpy_run}} python -m unittest -f -v
 
 _venv_cpy_create:
 	{{cpy_bin}} -m venv --clear dev/venv-cpy

@@ -90,5 +90,6 @@ __credits__ = [
 	"guoxiaojia <https://github.com/asnlsxx>",
 	"Jacky Hsu <https://github.com/JackyHsu-X>",
 	"Manoj <https://github.com/manoj-1407>",
+	"KennySimpson <https://github.com/KennyMcSimpson>",
 ]
 __license__ = "MPL 2.0"

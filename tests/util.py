@@ -13,6 +13,7 @@ from random import (
 	Random)
 from typing import (
 	Any,
+	Literal,
 	Optional,  # Replaced by `X | None` in 3.10.
 	cast)
 from unittest import (
@@ -39,6 +40,11 @@ from pathspec.util import (
 	CheckResult,
 	TStrPath,
 	TreeEntry)
+
+GitIgnoreErrorHint = Optional[Literal['literal', 'null', 'raise']]
+"""
+Type hint for the "errors" argument.
+"""
 
 
 def debug_includes(spec: PathSpec, files: set[str], includes: set[str]) -> str:

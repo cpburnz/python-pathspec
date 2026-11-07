@@ -52,6 +52,7 @@ Bug fixes:
 - `Pull #165`_: Directory negations no longer re-include descendants of an excluded ancestor.
 - `Pull #166`_: Escape literal regex set operators in gitignore bracket expressions so valid patterns compile when FutureWarning is treated as an error.
 - `Pull #167`_: - A gitignore pattern segment made of three or more asterisks (e.g., `***/x`) is now treated as a double-asterisk, matching Git.
+- `Pull #170`_: Match escaped internal path separators in gitignore patterns without treating them as trailing backslashes.
 
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
@@ -86,6 +87,7 @@ Bug fixes:
 .. _`Pull #165`: https://github.com/cpburnz/python-pathspec/pull/165
 .. _`Pull #166`: https://github.com/cpburnz/python-pathspec/pull/166
 .. _`Pull #167`: https://github.com/cpburnz/python-pathspec/pull/167
+.. _`Pull #170`: https://github.com/cpburnz/python-pathspec/pull/170
 
 
 1.1.1 (2026-04-26)

@@ -55,6 +55,8 @@ from pathspec.util import (
 	TPattern_co,
 	iter_tree_entries)
 
+from .test_03_gitignore_basic import (
+	ESCAPED_SLASH_PATTERN_CASES)
 from .util import (
 	CheckResult,
 	debug_includes,
@@ -1466,3 +1468,30 @@ class CustomPatternBackendTest(TestCase):
 		self.assertIs(spec, original)
 		self.assertFalse(spec.match_file('key.secret'))
 		self.assertTrue(spec.match_file('public.txt'))
+
+
+class EscapedSlashTest(PathSpecMixin, TestCase):
+	"""
+	Tests escaped slashes against Git's behavior.
+	"""
+
+	def test_spec_matching(self):
+		for line, included, excluded in ESCAPED_SLASH_PATTERN_CASES:
+			for sub_test in self.parameterize_from_lines(
+				'gitignore',
+				[line],
+				sub_params=dict(line=line),
+			):
+				with sub_test() as spec:
+					self.assertEqual(set(spec.match_files(included + excluded)), set(included))
+
+	def test_negated_rule(self):
+		for sub_test in self.parameterize_from_lines('gitignore', [
+			'a/*.txt',
+			r'!a\/keep.txt',
+		]):
+			with sub_test() as spec:
+				self.assertTrue(spec.match_file('a/drop.txt'))
+				result = spec.check_file('a/keep.txt')
+				self.assertIs(result.include, False)
+				self.assertEqual(result.index, 1)
