@@ -110,21 +110,25 @@ def _strip_ending_escape(pattern: str) -> str:
 
 def _strip_trailing_ws(pattern: str) -> str:
 	"""
-	Strip trailing spaces and line endings from the pattern while considering
-	that they can be escaped. Other whitespace is part of the filename.
+	Remove one line ending, then strip unescaped trailing spaces. Other
+	whitespace is part of the filename.
 
 	*pattern* (:class:`str`) is the pattern.
 
 	Returns the modified pattern (:class:`str`).
 	"""
+	# Git removes the LF and one terminal CR before trimming spaces. A CR
+	# before those spaces belongs to the filename, even when it is escaped.
+	pattern = pattern.removesuffix('\n').removesuffix('\r')
+
 	i = len(pattern) - 1
-	if i == -1 or pattern[i] not in ' \r\n':
-		# Fast path: pattern does not end with a space or line ending.
+	if i == -1 or pattern[i] != ' ':
+		# Fast path: pattern does not end with a space.
 		return pattern
 
-	# Scan past spaces and line endings.
+	# Scan past spaces.
 	i -= 1
-	while i >= 0 and pattern[i] in ' \r\n':
+	while i >= 0 and pattern[i] == ' ':
 		i -= 1
 
 	last_ws = i + 1

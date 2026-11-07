@@ -111,31 +111,25 @@ class GitIgnoreBasePatternTest(TestCase):
 
 	def test_02_strip_trailing_ws_1_even_bs(self):
 		"""
-		Tests that trailing whitespace preceded by an even number of backslashes is
+		Tests that trailing spaces preceded by an even number of backslashes is
 		unescaped and stripped.
 		"""
-		for n, wc in product(
-			[0, 2, 4],
-			[' ', '\n', '\r'],
-		):
-			with self.subTest(n=n, wc=wc):
+		for n in (0, 2, 4):
+			with self.subTest(n=n):
 				bs = BS*n
-				ws = wc*n
+				ws = ' '*n
 				val = _strip_trailing_ws(f' foo{bs}{ws}')
 				self.assertEqual(val, f' foo{bs}')
 
 	def test_02_strip_trailing_ws_2_odd_bs(self):
 		"""
-		Tests that trailing whitespace preceded by an odd number of backslashes is
+		Tests that trailing spaces preceded by an odd number of backslashes is
 		escaped and stripped.
 		"""
-		for n, wc in product(
-			[0, 1, 3],
-			[' ', '\n', '\r'],
-		):
-			with self.subTest(n=n, wc=wc):
+		for n in (0, 1, 3):
+			with self.subTest(n=n):
 				bs = BS*n
-				ws = wc*n
+				ws = ' '*n
 				val = _strip_trailing_ws(f' foo{bs}{ws}')
 				self.assertEqual(val, f' foo{bs}{ws[:1]}')
 
