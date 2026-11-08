@@ -51,6 +51,11 @@ TStrPath = TypeVar('TStrPath', bound=StrPath)
 Type variable for :class:`str` or :class:`os.PathLike`.
 """
 
+_NORMALIZE_INTERIOR_PATH = re.compile(r'/(?:/|\./)+')
+"""
+Regular expression to normalize redundant path components and separators.
+"""
+
 NORMALIZE_PATH_SEPS = [
 	cast(str, __sep)
 	for __sep in [os.sep, os.altsep]
@@ -62,8 +67,6 @@ separators that need to be normalized to the POSIX separator for the current
 operating system. The separators are determined by examining :data:`os.sep` and
 :data:`os.altsep`.
 """
-
-_NORMALIZE_INTERIOR_PATH = re.compile(r'/(?:/|\./)+')
 
 _registered_patterns: dict[str, Callable[[Union[str, bytes]], Pattern]] = {}
 """
@@ -640,21 +643,23 @@ def normalize_file(
 	# Convert path object to string.
 	norm_file: str = os.fspath(file)
 
+	# Convert path separators.
 	for sep in separators:
 		norm_file = norm_file.replace(sep, posixpath.sep)
 
-	if norm_file.startswith('/'):
-		# Make path relative.
-		norm_file = norm_file[1:]
+	# Normalize interior path.
+	if '//' in norm_file or '/./' in norm_file:
+		norm_file = _NORMALIZE_INTERIOR_PATH.sub('/', norm_file)
 
-	# Remove all leading current directory prefixes without resolving '..'.
+	# Remove all leading current directory prefixes.
 	prefix_length = 0
 	while norm_file.startswith('./', prefix_length):
 		prefix_length += 2
 	norm_file = norm_file[prefix_length:]
 
-	if '//' in norm_file or '/./' in norm_file:
-		norm_file = _NORMALIZE_INTERIOR_PATH.sub('/', norm_file)
+	# Make absolute path relative.
+	if norm_file.startswith('/'):
+		norm_file = norm_file[1:]
 
 	return norm_file
 

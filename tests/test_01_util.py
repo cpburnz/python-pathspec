@@ -156,6 +156,45 @@ class DetailedMatchFilesTest(TestCase):
 		self.assertEqual(detailed_match_files(patterns, ['notes.txt']), {})
 
 
+class InteriorPathNormalizationTest(TestCase):
+
+	def test_1_normalize_components(self):
+		cases = {
+			'data//private.txt': 'data/private.txt',
+			'data/./private.txt': 'data/private.txt',
+			'data///././/private.txt': 'data/private.txt',
+			'data//child/./private.txt': 'data/child/private.txt',
+			'data//./': 'data/',
+			'data/././': 'data/',
+			'data/private.txt': 'data/private.txt',
+			'data/.hidden': 'data/.hidden',
+			'data/..hidden/file': 'data/..hidden/file',
+			'data/../private.txt': 'data/../private.txt',
+			'data/.': 'data/.',
+			'data/': 'data/',
+			'': '',
+		}
+		for path, expected in cases.items():
+			with self.subTest(path=path):
+				self.assertEqual(normalize_file(path), expected)
+
+	def test_2_custom_separator(self):
+		cases = {
+			r'data\\.\private.txt': 'data/private.txt',
+		}
+		for path, expected in cases.items():
+			with self.subTest(path=path):
+				self.assertEqual(normalize_file(path, separators=('\\',)), expected)
+
+	def test_3_parent_components(self):
+		cases = {
+			'data//../file.txt': 'data/../file.txt',
+		}
+		for path, expected in cases.items():
+			with self.subTest(path=path):
+				self.assertEqual(normalize_file(path), expected)
+
+
 class IterTreeTest(TestCase):
 	"""
 	The :class:`IterTreeTest` class tests :meth:`.iter_tree_entries` and
