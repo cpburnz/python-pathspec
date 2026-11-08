@@ -21,8 +21,6 @@ New features:
 
 Bug fixes:
 
-- Treat a negated root-only gitignore pattern (``!/``) as a no-op instead of re-including directories.
-
 - Match escaped internal path separators in gitignore patterns without treating them as trailing backslashes.
 - Hyperscan backend no longer fails on multibyte UTF-8 characters.
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
@@ -56,6 +54,7 @@ Bug fixes:
 - `Pull #173`_: Strip repeated './' prefixes before matching paths.
 - `Pull #174`_: Tree walks now honor `on_error` for errors reading an open directory scan, preserving yielded entries and continuing with sibling directories.
 - `Issue #176`_: Normalize redundant interior separators and current-directory components in matching paths, preserving original paths in matching results.
+- `Pull #180`_: - Treat a negated root-only gitignore pattern (``!/``) as a no-op instead of re-including directories.
 
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116
@@ -95,6 +94,7 @@ Bug fixes:
 .. _`Pull #173`: https://github.com/cpburnz/python-pathspec/pull/173
 .. _`Pull #174`: https://github.com/cpburnz/python-pathspec/pull/174
 .. _`Issue #176`: https://github.com/cpburnz/python-pathspec/issues/176
+.. _`Pull #180`: https://github.com/cpburnz/python-pathspec/pull/180
 .. _`Pull #181`: https://github.com/cpburnz/python-pathspec/pull/181
 
 

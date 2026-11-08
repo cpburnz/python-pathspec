@@ -125,6 +125,16 @@ class GitIgnoreSpecPatternTest(TestCase):
 		self.assertIsNone(include)
 		self.assertIsNone(regex)
 
+	def test_01_absolute_root_2_negate(self):
+		"""
+		Tests a single root absolute path pattern that's negated
+
+		This should NOT match any file (according to git check-ignore v2.43.0).
+		"""
+		regex, include = GitIgnoreSpecPattern.pattern_to_regex('!/')
+		self.assertIsNone(include)
+		self.assertIsNone(regex)
+
 	def test_01_absolute_root_2_double_asterisk(self):
 		"""
 		Tests the root path patterns:

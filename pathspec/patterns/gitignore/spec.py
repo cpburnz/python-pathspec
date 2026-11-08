@@ -260,9 +260,12 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		else:
 			include = True
 
-		if not pattern_str or pattern_str == '/':
-			# Blank and root-only patterns are null-operations, including after
-			# removing the negation prefix (e.g., '!/').
+		if not pattern_str:
+			# Git treats a blank pattern as a no match.
+			return (None, None)
+
+		if pattern_str == '/':
+			# Git treats a single `/` (including `!/`) as a no match.
 			return (None, None)
 
 		# Split pattern into segments.
