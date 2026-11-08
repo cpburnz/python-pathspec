@@ -22,6 +22,7 @@ New features:
 Bug fixes:
 
 - Hyperscan backend no longer fails on multibyte UTF-8 characters.
+- `Issue #176`_: Normalize redundant interior separators and current-directory components in matching paths, preserving original paths in matching results.
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
 - `Pull #128`_: Support POSIX character classes (e.g. `[[:alpha:]]`) in gitignore bracket expressions.
 - `Issue #129`_ / `Pull #132`_: Fix GitIgnoreSpec re-including files under an excluded directory
@@ -90,6 +91,7 @@ Bug fixes:
 .. _`Pull #171`: https://github.com/cpburnz/python-pathspec/pull/171
 .. _`Pull #173`: https://github.com/cpburnz/python-pathspec/pull/173
 .. _`Pull #174`: https://github.com/cpburnz/python-pathspec/pull/174
+.. _`Issue #176`: https://github.com/cpburnz/python-pathspec/issues/176
 .. _`Pull #181`: https://github.com/cpburnz/python-pathspec/pull/181
 
 
