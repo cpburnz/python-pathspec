@@ -26,7 +26,8 @@ from .base import (
 	_RangeNotationError,
 	_TrailingBackslashError,
 	_collapse_star_runs,
-	_ends_with_escape,
+	_has_ending_escape,
+	_strip_ending_escape,
 	_strip_trailing_ws)
 
 _DIR_MARK = 'ps_d'
@@ -94,6 +95,9 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 		- The regular expression override (:class:`str` or :data:`None`).
 		"""
+		# Normalize multi-asterisk segments down to 2.
+		pattern_segs[:] = _collapse_star_runs(pattern_segs)
+
 		if not pattern_segs[0]:
 			# A pattern beginning with a slash ('/') should match relative to the root
 			# directory. Remove the empty first segment to make the pattern relative
@@ -158,15 +162,15 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			and pattern_segs[0] == '**'
 			and pattern_segs[1] == '*'
 			and pattern_segs[2] == '**'
+			and is_dir_pattern
 			and not requires_dir_descendant
 		):
 			# The pattern "*/" will be normalized to "**/*/**" which will match every
-			# file not in the root directory. Special case this pattern for
-			# efficiency.
-			if is_dir_pattern:
-				return (None, _DIR_MARK_CG)
-			else:
-				return (None, '/')
+			# directory. Special case this pattern for efficiency. An explicit
+			# "**/*/**" (without a trailing slash) is not equivalent: it requires a
+			# descendant segment after the "*", so it must go through translation to
+			# keep directories such as "a/" from matching.
+			return (None, _DIR_MARK_CG)
 
 		# No regular expression override, return modified pattern segments.
 		return (pattern_segs, None)
@@ -262,17 +266,25 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			return (None, None)
 
 		# Split pattern into segments.
-		orig_segs = _collapse_star_runs(pattern_str.split('/'))
+		orig_segs = pattern_str.split('/')
 
 		# Check whether the pattern is specifically a directory pattern before
 		# normalization.
 		is_dir_pattern = not orig_segs[-1]
-		if is_dir_pattern and _ends_with_escape(orig_segs[-2]):
-			# Git removes a terminal slash before matching, leaving an invalid
-			# trailing backslash when that slash was escaped.
+
+		if orig_segs[0] == '\\':
+			# Git treats a starting escaped slash as a no match (i.e., `\/...`).
 			if errors == 'raise':
 				raise GitIgnorePatternError(f"Invalid git pattern: {original_pattern!r}")
-			return (None, None)
+			else:
+				return (None, None)
+
+		if is_dir_pattern and _has_ending_escape(orig_segs[-2]):
+			# Git treats an ending escaped slash as a no match (i.e., `...\/`).
+			if errors == 'raise':
+				raise GitIgnorePatternError(f"Invalid git pattern: {original_pattern!r}")
+			else:
+				return (None, None)
 
 		# A terminal directory globstar with a concrete prefix must consume a
 		# descendant segment before the directory marker. Keep this semantic bit
@@ -382,6 +394,11 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		need_slash = False
 		end = len(pattern_segs) - 1
 		for i, seg in enumerate(pattern_segs):
+			if i < end and seg != '**\\':
+				# Remove a backslash escape that was paired with a slash (`\/`). Except
+				# `**\` which needs to be special-cased.
+				seg = _strip_ending_escape(seg)
+
 			if seg == '**':
 				if i == 0:
 					# A normalized pattern beginning with double-asterisks ('**') will
@@ -418,10 +435,15 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 					# Match whole path segment.
 					out_parts.append('[^/]+')
 
+				elif seg == '**\\':
+					# EDGE CASE: Git does not match a root path with `**\` like it does
+					# `**`.
+					out_parts.append('(?s:.+)')
+
 				else:
 					# Match segment glob pattern.
 					# - EDGE CASE: Git discards patterns with invalid range notation.
-					out_parts.append(cls._translate_segment(seg, errors, i < end))
+					out_parts.append(cls._translate_segment_glob(seg, errors))
 
 				if i == end:
 					# A pattern ending without a slash ('/') will match a file or a

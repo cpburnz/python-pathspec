@@ -44,11 +44,8 @@ The encoding to use when parsing a byte string pattern.
 """
 
 _POSIX_CLASS_TO_REGEX: dict[str, str] = {
-	# Git's wildmatch implements POSIX bracket character classes using its own
-	# ASCII (locale-independent) ``is*`` functions, so each class maps to an
-	# explicit ASCII set. These are NOT the Unicode-aware equivalents (``\w``,
-	# ``\d``, ``\s``); using those would over-match non-ASCII characters that git
-	# never matches.
+	# Git handles POSIX bracket character classes as ASCII only. Python's `re` has
+	# Unicode-aware meta-characters (e.g., ``\w``, ``\d``, ``\s``).
 	'alnum': '0-9A-Za-z',
 	'alpha': 'A-Za-z',
 	'blank': '\\t ',
@@ -64,50 +61,74 @@ _POSIX_CLASS_TO_REGEX: dict[str, str] = {
 }
 """
 Maps each POSIX bracket character class name to ASCII regex ranges, excluding
-the directory separator as required by git's wildmatch behavior.
+the directory separator.
+"""
+
+_STAR_3P = re.compile(r'\*\*\*+')
+"""
+Matches three or more asterisks.
 """
 
 
 def _collapse_star_runs(segments: list[str]) -> list[str]:
 	"""
 	Replace each pattern segment that consists only of three or more asterisks
-	(e.g., ``***``) with a double-asterisk (``**``). Git's wildmatch treats a run
-	of asterisks as a single globstar when it spans a whole path segment.
+	(e.g., ``***``) with a double-asterisk (``**``). Git treats a run of multiple
+	asterisks as a double-asterisk when it spans a whole path segment.
 
 	*segments* (:class:`list` of :class:`str`) are the pattern segments.
 
 	Returns the modified segments (:class:`list` of :class:`str`).
 	"""
-	return [
-		'**' if len(seg) > 2 and seg.count('*') == len(seg) else seg
-		for seg in segments
-	]
+	return [_STAR_3P.sub('**', seg) for seg in segments]
 
 
-def _ends_with_escape(pattern: str) -> bool:
+def _has_ending_escape(pattern: str) -> bool:
 	"""
-	Return whether *pattern* ends with an unpaired backslash.
+	Determine whether there is an unpaired backslash ending the segment.
+
+	*pattern* (:class:`str`) is the pattern segment.
+
+	Returns whether there is an ending escape (:class:`bool`).
 	"""
 	return (len(pattern) - len(pattern.rstrip('\\'))) % 2 == 1
 
 
+def _strip_ending_escape(pattern: str) -> str:
+	"""
+	Strips the last unpaired backslash from a segment if there is one.
+
+	*pattern* (:class:`str`) is the pattern segment.
+
+	Returns the modified pattern (:class:`str`).
+	"""
+	if _has_ending_escape(pattern):
+		return pattern[:-1]
+	else:
+		return pattern
+
+
 def _strip_trailing_ws(pattern: str) -> str:
 	"""
-	Strip trailing spaces and line endings from the pattern while considering
-	that they can be escaped. Other whitespace is part of the filename.
+	Remove one line ending, then strip unescaped trailing spaces. Other
+	whitespace is part of the filename.
 
 	*pattern* (:class:`str`) is the pattern.
 
 	Returns the modified pattern (:class:`str`).
 	"""
+	# Git removes the LF and one terminal CR before trimming spaces. A CR before
+	# those spaces belongs to the filename, even when it is escaped.
+	pattern = pattern.removesuffix('\n').removesuffix('\r')
+
 	i = len(pattern) - 1
-	if i == -1 or pattern[i] not in ' \r\n':
-		# Fast path: pattern does not end with a space or line ending.
+	if i == -1 or pattern[i] != ' ':
+		# Fast path: pattern does not end with a space.
 		return pattern
 
-	# Scan past spaces and line endings.
+	# Scan past spaces.
 	i -= 1
-	while i >= 0 and pattern[i] in ' \r\n':
+	while i >= 0 and pattern[i] == ' ':
 		i -= 1
 
 	last_ws = i + 1
@@ -241,26 +262,6 @@ class _GitIgnoreBasePattern(RegexPattern):
 			return out_bytes  # type: ignore[return-value]
 		else:
 			return out_string  # type: ignore[return-value]
-
-	@classmethod
-	def _translate_segment(
-		cls,
-		pattern: str,
-		errors: Literal['literal', 'raise'],
-		has_separator: bool,
-	) -> str:
-		"""
-		Translate a segment, allowing a final backslash to escape the following
-		separator when *has_separator* is true.
-		"""
-		if has_separator and _ends_with_escape(pattern):
-			pattern = pattern[:-1]
-			if len(pattern) > 1 and pattern.count('*') == len(pattern):
-				# Git's globstar can cross directories before an escaped slash, but
-				# unlike "**/", that slash must still be matched.
-				return '(?s:.*)'
-
-		return cls._translate_segment_glob(pattern, errors)
 
 	@staticmethod
 	def _translate_segment_glob(
@@ -399,14 +400,13 @@ class _GitIgnoreBasePattern(RegexPattern):
 
 					# Build regex bracket expression.
 					#
-					# A backslash escapes the next character (e.g. "[\]]" matches ']'),
-					# the same as outside of a bracket expression.
+					# A backslash escapes the next character (e.g. "[\]]" matches "]"),
+					# the same as the outside of a bracket expression.
 					#
 					# Translate POSIX character classes (e.g. "[:alpha:]") into their
-					# ASCII regex equivalents. Git's wildmatch supports these, but
-					# Python's `re` does not, so passing them through verbatim builds a
-					# broken regex that silently mismatches (and warns about a nested
-					# set).
+					# ASCII regex equivalents. Git supports these, but Python's `re` does
+					# not, so passing them through verbatim builds a broken regex that
+					# silently mismatches (and warns about a nested set).
 					try:
 						body = _BRACKET_TOKEN_REGEX.sub(_sub_bracket_token, pattern[i:j - 1])
 					except _PosixClassError:
