@@ -24,6 +24,9 @@ New features:
 
 Bug fixes:
 
+- Treat a negated root-only gitignore pattern (``!/``) as a no-op instead of re-including directories.
+
+- Match escaped internal path separators in gitignore patterns without treating them as trailing backslashes.
 - Hyperscan backend no longer fails on multibyte UTF-8 characters.
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
 - `Pull #128`_: Support POSIX character classes (e.g. `[[:alpha:]]`) in gitignore bracket expressions.

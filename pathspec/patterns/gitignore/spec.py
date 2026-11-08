@@ -250,11 +250,6 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			# a literal hash (i.e., '\#').
 			return (None, None)
 
-		elif pattern_str == '/':
-			# EDGE CASE: According to `git check-ignore` (v2.4.1), a single '/' does
-			# not match any file.
-			return (None, None)
-
 		if pattern_str.startswith('!'):
 			# A pattern starting with an exclamation mark ('!') negates the pattern
 			# (exclude instead of include). Escape the exclamation mark with a
@@ -265,9 +260,9 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 		else:
 			include = True
 
-		if not pattern_str:
-			# A blank pattern is a null-operation (neither includes nor excludes
-			# files).
+		if not pattern_str or pattern_str == '/':
+			# Blank and root-only patterns are null-operations, including after
+			# removing the negation prefix (e.g., '!/').
 			return (None, None)
 
 		# Split pattern into segments.
