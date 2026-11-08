@@ -28,8 +28,8 @@ from .base import (
 	_TrailingBackslashError,
 	_collapse_star_runs,
 	_has_ending_escape,
-	_strip_ending_escape,
 	_split_pattern,
+	_strip_ending_escape,
 	_strip_trailing_ws)
 
 _DIR_MARK = 'ps_d'
@@ -321,19 +321,18 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 				regex_parts = cls.__translate_segments(
 					seg_errors, is_dir_pattern, pattern_segs, requires_dir_descendant,
 				)
-			except _NeverMatchError:
-				# A bracket containing only slashes cannot match a path component.
-				return (None, None)
-			except (_PosixClassError, _RangeNotationError) as e:
-				if errors == 'raise':
-					raise GitIgnorePatternError((
-						f"Invalid git pattern: {original_pattern!r}"
-					)) from e  # GitIgnorePatternError
-				else:
-					return (None, None)
-			except _TrailingBackslashError as e:
+			except (
+				# EDGE CASE: A bracket containing only slashes cannot match a path
+				# component.
+				_NeverMatchError,
+				# EDGE CASE: Git discards patterns with an invalid range notation or an
+				# invalid POSIX class.
+				_PosixClassError,
+				_RangeNotationError,
 				# EDGE CASE: The gitignore docs say a trailing backlash is invalid and
 				# never matches.
+				_TrailingBackslashError,
+			) as e:
 				if errors == 'raise':
 					raise GitIgnorePatternError((
 						f"Invalid git pattern: {original_pattern!r}"

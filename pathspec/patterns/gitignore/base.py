@@ -22,7 +22,7 @@ _BRACKET_TOKEN_REGEX = re.compile((
 	# POSIX class.
 	r'|\[:(\^?)([^:\]]*):\]'
 	# Literal characters reserved for future regex set operations.
-	r'|([-\[&~|])'
+	r'|([-&\[|~])'
 ), re.DOTALL)
 """
 Matches tokens inside a bracket expression:
@@ -61,7 +61,7 @@ _POSIX_CLASS_TO_REGEX: dict[str, str] = {
 }
 """
 Maps each POSIX bracket character class name to ASCII regex ranges, excluding
-the directory separator.
+the path separator.
 """
 
 _STAR_3P = re.compile(r'\*\*\*+')
@@ -83,27 +83,47 @@ def _collapse_star_runs(segments: list[str]) -> list[str]:
 	return [_STAR_3P.sub('**', seg) for seg in segments]
 
 
+def _has_ending_escape(pattern: str) -> bool:
+	"""
+	Determine whether there is an unpaired backslash ending the segment.
+
+	*pattern* (:class:`str`) is the pattern segment.
+
+	Returns whether there is an ending escape (:class:`bool`).
+	"""
+	return (len(pattern) - len(pattern.rstrip('\\'))) % 2 == 1
+
+
 def _split_pattern(pattern: str) -> list[str]:
 	"""
-	Split path separators outside complete, unescaped bracket expressions.
+	Split the pattern by path separator (i.e., ``/``). A slash appearing in a
+	bracket expression will not be split on.
 
-	Preserve Git's root anchoring when the only nonterminal slashes occur
-	inside a bracket, by supplying an explicit leading empty segment.
+	*pattern* (:class:`str`) is the whole pattern.
+
+	Returns the segments (:class:`list` of :class:`str`).
 	"""
+	# TODO: This may be a good location to consume backslash escapes, or at least
+	# escaped slashes.
+
 	if '[' not in pattern or '/' not in pattern:
 		return pattern.split('/')
+
 	segments: list[str] = []
 	start = i = 0
 	while i < len(pattern):
 		if pattern[i] == '\\' and i + 1 < len(pattern) and pattern[i + 1] != '/':
 			i += 2
 			continue
+
 		if pattern[i] == '[':
 			j = i + 1
 			if j < len(pattern) and pattern[j] in '!^':
 				j += 1
+
 			if j < len(pattern) and pattern[j] == ']':
 				j += 1
+
 			while j < len(pattern) and pattern[j] != ']':
 				if pattern[j] == '\\':
 					j += 2
@@ -115,31 +135,26 @@ def _split_pattern(pattern: str) -> list[str]:
 					j = close + 2
 				else:
 					j += 1
+
 			if j < len(pattern):
 				i = j + 1
 				continue
+
 		if pattern[i] == '/':
 			segments.append(pattern[start:i])
 			start = i + 1
+
 		i += 1
+
 	segments.append(pattern[start:])
+
 	# Git's raw slash check anchors even slashes inside bracket expressions.
 	if '/' in segments[0] and (
 		len(segments) == 1 or (len(segments) == 2 and not segments[-1])
 	):
 		segments.insert(0, '')
+
 	return segments
-
-
-def _has_ending_escape(pattern: str) -> bool:
-	"""
-	Determine whether there is an unpaired backslash ending the segment.
-
-	*pattern* (:class:`str`) is the pattern segment.
-
-	Returns whether there is an ending escape (:class:`bool`).
-	"""
-	return (len(pattern) - len(pattern.rstrip('\\'))) % 2 == 1
 
 
 def _strip_ending_escape(pattern: str) -> str:
@@ -207,23 +222,28 @@ def _sub_bracket_token(match: re.Match[str]) -> str:
 	"""
 	range_start, range_end, escape_char, class_negated, class_name, literal_char = match.groups()
 
-	# Character range. A bracket expression cannot match a directory separator.
+	# Character range. A bracket expression cannot match a path separator (slash).
 	if range_start is not None:
+		assert range_end is not None, match
 		range_start, range_end = range_start[-1], range_end[-1]
 		if range_start == '/' and range_end == '/':
 			return ''
-		if range_start == '/':
+		elif range_start == '/':
 			range_start = '0'
-		if range_end == '/':
+		elif range_end == '/':
 			range_end = '.'
-		if range_start < '/' < range_end:
-			return re.escape(range_start) + '-.0-' + re.escape(range_end)
-		return re.escape(range_start) + '-' + re.escape(range_end)
 
-	# Backslash escaped character.
+		if range_start < '/' < range_end:
+			# Split range around slash.
+			return re.escape(range_start) + '-.0-' + re.escape(range_end)
+		else:
+			return re.escape(range_start) + '-' + re.escape(range_end)
+
 	if escape_char:
+		# Backslash escaped character.
 		return re.escape(escape_char)
 	elif literal_char:
+		# Reserved character.
 		return re.escape(literal_char)
 
 	# POSIX bracket character class.
@@ -475,8 +495,8 @@ class _GitIgnoreBasePattern(RegexPattern):
 							continue
 
 					if is_expr_negated:
-						# Negated expressions must also exclude the directory separator.
-						# Preserve literal ']' and '-' when inserting '/' ahead of them.
+						# Negated expressions must also exclude the path separator. Preserve
+						# literal ']' and '-' when inserting '/' ahead of them.
 						if body.startswith((']', '-')):
 							body = '\\' + body
 						expr += '/'
@@ -486,7 +506,8 @@ class _GitIgnoreBasePattern(RegexPattern):
 						if body.startswith('^'):
 							body = '\\' + body
 						if not body:
-							raise _NeverMatchError
+							raise _NeverMatchError()
+
 					expr += body + ']'
 
 					if errors == 'raise':
@@ -536,8 +557,11 @@ class GitIgnorePatternError(ValueError):
 	pass
 
 
-class _NeverMatchError(ValueError):
-	"""A valid bracket expression contains only the path separator."""
+class _NeverMatchError(GitIgnorePatternError):
+	"""
+	Raised internally when a bracket expression contains only the path separator
+	(slash).
+	"""
 
 
 class _PosixClassError(GitIgnorePatternError):

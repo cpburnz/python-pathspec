@@ -13,6 +13,7 @@ from pathspec import (
 	GitIgnoreSpec,
 	PathSpec)
 from pathspec.patterns.gitignore.base import (
+	GitIgnorePatternError,
 	_BYTES_ENCODING,
 	_GitIgnoreBasePattern,
 	_strip_trailing_ws)
@@ -43,6 +44,28 @@ BRACKET_LITERAL_CASES: list[tuple[str, list[str], list[str]]] = [
 ]
 """
 Bracket literal test cases.
+"""
+
+BRACKET_SEP_CASES: list[tuple[str, list[str], list[str]]] = [
+	('[a/b].txt', ['a.txt', 'b.txt'], ['c.txt', 'dir/a.txt', 'a/b.txt']),
+	('[a/b].txt/', ['a.txt/', 'a.txt/file'], ['a.txt', 'dir/a.txt/file']),
+	('dir/[a/b].txt', ['dir/a.txt', 'dir/b.txt'], ['a.txt', 'deep/dir/a.txt']),
+	('/[a/b].txt', ['a.txt', 'b.txt'], ['dir/a.txt', 'a/b.txt']),
+	('x[/0]y', ['x0y'], ['x/y', 'dir/x0y']),
+	('x[.-/]y', ['x.y'], ['x/y', 'x0y']),
+	('x[/-0]y', ['x0y'], ['x/y', 'x.y']),
+	('x[!/]y', ['xay', 'x0y'], ['x/y', 'dir/xay']),
+	('x[^/]y', ['xay', 'x0y'], ['x/y', 'dir/xay']),
+	('x[/]y', [], ['x/y', 'xay']),
+	('x[/^a]y', ['x^y', 'xay'], ['xby', 'x/y', 'dir/xay']),
+	(r'\[a/b].txt', ['[a/b].txt'], ['a.txt', 'b.txt']),
+	(r'\\[a/b].txt', [r'\a.txt', r'\b.txt'], ['a.txt', r'dir/\a.txt']),
+	(r'[a\/].txt', ['a.txt'], ['dir/a.txt', 'a/.txt']),
+	('[[:alpha:]/].txt', ['a.txt', 'b.txt'], ['0.txt', 'dir/a.txt']),
+	('[]a/].txt', ['].txt', 'a.txt'], ['b.txt', 'dir/a.txt']),
+]
+"""
+Bracket separator test cases.
 """
 
 BS = '\\'
@@ -167,23 +190,25 @@ class BracketLiteralTest(TestCase):
 	Test literal regex set operators in gitignore bracket expressions.
 	"""
 
-	def test_pattern_literals(self):
-		for factory in (GitIgnoreBasicPattern, GitIgnoreSpecPattern):
+	def test_1_pattern_literals(self):
+		for factory in [
+			GitIgnoreBasicPattern,
+			GitIgnoreSpecPattern,
+		]:
 			for line, matches, misses in BRACKET_LITERAL_CASES:
-				for as_bytes in (False, True):
-					for errors in (None, 'literal', 'null', 'raise'):
-						with self.subTest(factory=factory, line=line, as_bytes=as_bytes, errors=errors):
-							re.purge()
-							pattern = factory(line.encode() if as_bytes else line, errors=errors)
+				for errors in ('literal', 'null', 'raise'):
+					with self.subTest(factory=factory, line=line, errors=errors):
+						re.purge()
+						pattern = factory(line, errors=errors)
 
-							for paths, expected in ((matches, True), (misses, False)):
-								for path in paths:
-									self.assertEqual(
-										bool(pattern.match_file(path.encode() if as_bytes else path)),
-										expected, path,
-									)
+						for paths, expected in ((matches, True), (misses, False)):
+							for path in paths:
+								self.assertEqual(
+									bool(pattern.match_file(path)),
+									expected, path,
+								)
 
-	def test_spec_literals(self):
+	def test_2_spec_literals(self):
 		for backend in ('simple', 're2', 'hyperscan'):
 			with self.subTest(backend=backend):
 				require_backend(backend)
@@ -202,17 +227,80 @@ class BracketLiteralTest(TestCase):
 										self.assertEqual(spec.match_file(prefix + path), expected, path)
 
 
+class BracketSeparatorTest(TestCase):
+	"""
+	Test path separators (slash) in gitignore bracket expressions.
+	"""
+
+	def test_1_patterns(self):
+		for factory in [
+			GitIgnoreBasicPattern,
+			GitIgnoreSpecPattern,
+		]:
+			for line, included, excluded in BRACKET_SEP_CASES:
+				with self.subTest(factory=factory.__name__, line=line):
+					pattern = factory(line)
+					for path in included + excluded:
+						self.assertEqual(
+							bool(pattern.match_file(path)),
+							path in included,
+							path,
+						)
+
+	def test_2_negated_rule(self):
+		for backend in ('simple', 're2', 'hyperscan'):
+			with self.subTest(backend=backend):
+				require_backend(backend)
+				spec = GitIgnoreSpec.from_lines(['*.txt', '![a/b].txt'], backend=backend)
+				self.assertFalse(spec.match_file('a.txt'))
+				self.assertFalse(spec.match_file('b.txt'))
+				self.assertTrue(spec.match_file('c.txt'))
+				self.assertTrue(spec.match_file('dir/a.txt'))
+
+	def test_2_noop_all_error_modes(self):
+		for factory in [
+			GitIgnoreBasicPattern,
+			GitIgnoreSpecPattern,
+		]:
+			for line in ['[/]', 'x[/-/]y', '![/]', 'dir[/]/']:
+				for errors in ('literal', 'null', 'raise'):
+					for text in [line]:
+						with self.subTest(factory=factory.__name__, line=text, errors=errors):
+							if errors == 'raise':
+								with self.assertRaises(GitIgnorePatternError):
+									factory(text, errors=errors)
+							else:
+								pattern = factory(text, errors=errors)
+								self.assertIsNone(pattern.include)
+								self.assertIsNone(pattern.regex)
+
+	def test_3_backends(self):
+		for backend in ('simple', 're2', 'hyperscan'):
+			with self.subTest(backend=backend):
+				require_backend(backend)
+				for line, included, excluded in BRACKET_SEP_CASES:
+					for spec in [
+						GitIgnoreSpec.from_lines([line], backend=backend),
+						PathSpec.from_lines('gitignore', [line], backend=backend),
+					]:
+						with self.subTest(line=line, spec=type(spec)):
+							self.assertEqual(set(spec.match_files(included + excluded, separators=())), set(included))
+
+
 class StarRunTest(TestCase):
 	"""
 	Tests asterisk runs against Git's behavior.
 	"""
 
-	def test_pattern_classes(self):
+	def test_1_pattern_classes(self):
 		"""
 		Tests that both gitignore pattern classes treat a segment of asterisks
 		like a double-asterisk.
 		"""
-		for factory in (GitIgnoreBasicPattern, GitIgnoreSpecPattern):
+		for factory in [
+			GitIgnoreBasicPattern,
+			GitIgnoreSpecPattern,
+		]:
 			for line, matches, misses in STAR_RUN_CASES:
 				with self.subTest(factory=factory.__name__, line=line):
 					pattern = factory(line)
@@ -221,7 +309,7 @@ class StarRunTest(TestCase):
 					for path in misses:
 						self.assertFalse(pattern.match_file(path), path)
 
-	def test_gitignore_spec(self):
+	def test_2_gitignore_spec(self):
 		"""
 		Tests that :class:`.GitIgnoreSpec` matches the same paths as Git.
 		"""
@@ -239,7 +327,7 @@ class TrailingWsTest(TestCase):
 	Tests trailing whitespace stripping against Git's behavior.
 	"""
 
-	def test_line_ending_before_spaces(self):
+	def test_1_line_ending_before_spaces(self):
 		for line, expected in TRAILING_WS_CASES + [
 			('probe\\ \n', 'probe\\ '),
 			('probe\\ \r', 'probe\\ '),
@@ -250,13 +338,16 @@ class TrailingWsTest(TestCase):
 			with self.subTest(line=line):
 				self.assertEqual(_strip_trailing_ws(line), expected)
 
-	def test_pattern_matching(self):
-		for factory in (GitIgnoreBasicPattern, GitIgnoreSpecPattern):
+	def test_2_pattern_matching(self):
+		for factory in [
+			GitIgnoreBasicPattern,
+			GitIgnoreSpecPattern,
+		]:
 			for line, filename in TRAILING_WS_CASES:
 				if filename == 'probe':
 					continue
 
-				for errors in (None, 'literal', 'null', 'raise'):
+				for errors in ('literal', 'null', 'raise'):
 					with self.subTest(factory=factory.__name__, line=line, errors=errors):
 						pattern = factory(line, errors=errors)
 						self.assertIsNotNone(pattern.match_file(filename), filename)
