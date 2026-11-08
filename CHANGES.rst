@@ -24,6 +24,8 @@ New features:
 
 Bug fixes:
 
+- Preserve subclass state when shallow-copying regular expression patterns, including subclasses without an include parameter.
+
 - Preserve slashes inside gitignore bracket expressions while excluding path separators from their matches.
 - Hyperscan backend no longer fails on multibyte UTF-8 characters.
 - `Pull #123`_: Ignore invalid gitignore bracket ranges for `GitIgnoreSpec`.
