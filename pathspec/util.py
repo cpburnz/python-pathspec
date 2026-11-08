@@ -232,6 +232,35 @@ def _is_iterable(value: Any) -> bool:
 	return isinstance(value, Iterable) and not isinstance(value, (str, bytes))
 
 
+def _iter_scandir_entries(
+	scan: Iterable[os.DirEntry[str]],
+	on_error: Optional[Callable[[OSError], None]],
+) -> Iterator[os.DirEntry[str]]:
+	"""
+	Advance a directory scan, routing read errors through *on_error*. Only
+	advancement is guarded: errors raised by the handler or by callers processing
+	an entry must propagate without being handled a second time.
+
+	*scan* is the ``os.scandir()`` iterator.
+
+	*on_error* (:class:`~collections.abc.Callable` or :data:`None`) optionally is
+	the error handler for file-system exceptions.
+
+	Yields each entry (:class:`os.DirEntry`).
+	"""
+	entries = iter(scan)
+	while True:
+		try:
+			entry = next(entries)
+		except StopIteration:
+			return
+		except OSError as e:
+			if on_error is not None:
+				on_error(e)
+			return
+		yield entry
+
+
 @deprecated((
 	"pathspec.util.iter_tree() is deprecated. Use iter_tree_files() instead."
 ))
@@ -338,7 +367,7 @@ def _iter_tree_entries_next(
 
 	with scan_iter:
 		node_ent: os.DirEntry
-		for node_ent in scan_iter:
+		for node_ent in _iter_scandir_entries(scan_iter, on_error):
 			node_rel = os.path.join(dir_rel, node_ent.name)
 
 			# Inspect child node.
@@ -483,7 +512,7 @@ def _iter_tree_files_next(
 
 	with scan_iter:
 		node_ent: os.DirEntry
-		for node_ent in scan_iter:
+		for node_ent in _iter_scandir_entries(scan_iter, on_error):
 			node_rel = os.path.join(dir_rel, node_ent.name)
 
 			try:
@@ -618,9 +647,11 @@ def normalize_file(
 		# Make path relative.
 		norm_file = norm_file[1:]
 
-	elif norm_file.startswith('./'):
-		# Remove current directory prefix.
-		norm_file = norm_file[2:]
+	# Remove all leading current directory prefixes without resolving '..'.
+	prefix_length = 0
+	while norm_file.startswith('./', prefix_length):
+		prefix_length += 2
+	norm_file = norm_file[prefix_length:]
 
 	if '//' in norm_file or '/./' in norm_file:
 		norm_file = _NORMALIZE_INTERIOR_PATH.sub('/', norm_file)
