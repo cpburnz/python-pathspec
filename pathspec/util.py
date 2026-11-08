@@ -618,10 +618,9 @@ def normalize_file(
 	separators: Optional[Collection[str]] = None,
 ) -> str:
 	"""
-	Normalizes the file path to use the POSIX path separator (i.e., ``"/"``), and
-	make the paths relative (remove leading ``"/"``).
-	Redundant interior separators and current-directory components are removed.
-	Parent-directory components and a trailing separator are preserved.
+	Normalizes the file path to use the POSIX path separator (i.e., ``"/"``), make
+	the paths relative (remove leading ``"/"`` and ``"./``), and removes redundant
+	path components and separators (collapses ``"/./"`` and ``"//"``).
 
 	*file* (:class:`str` or :class:`os.PathLike`) is the file path.
 
