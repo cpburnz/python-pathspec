@@ -83,6 +83,54 @@ def _collapse_star_runs(segments: list[str]) -> list[str]:
 	return [_STAR_3P.sub('**', seg) for seg in segments]
 
 
+def _split_pattern(pattern: str) -> list[str]:
+	"""
+	Split path separators outside complete, unescaped bracket expressions.
+
+	Preserve Git's root anchoring when the only nonterminal slashes occur
+	inside a bracket, by supplying an explicit leading empty segment.
+	"""
+	if '[' not in pattern or '/' not in pattern:
+		return pattern.split('/')
+	segments: list[str] = []
+	start = i = 0
+	while i < len(pattern):
+		if pattern[i] == '\\' and i + 1 < len(pattern) and pattern[i + 1] != '/':
+			i += 2
+			continue
+		if pattern[i] == '[':
+			j = i + 1
+			if j < len(pattern) and pattern[j] in '!^':
+				j += 1
+			if j < len(pattern) and pattern[j] == ']':
+				j += 1
+			while j < len(pattern) and pattern[j] != ']':
+				if pattern[j] == '\\':
+					j += 2
+				elif pattern[j:j+2] == '[:':
+					close = pattern.find(':]', j + 2)
+					if close == -1:
+						j = len(pattern)
+						break
+					j = close + 2
+				else:
+					j += 1
+			if j < len(pattern):
+				i = j + 1
+				continue
+		if pattern[i] == '/':
+			segments.append(pattern[start:i])
+			start = i + 1
+		i += 1
+	segments.append(pattern[start:])
+	# Git's raw slash check anchors even slashes inside bracket expressions.
+	if '/' in segments[0] and (
+		len(segments) == 1 or (len(segments) == 2 and not segments[-1])
+	):
+		segments.insert(0, '')
+	return segments
+
+
 def _has_ending_escape(pattern: str) -> bool:
 	"""
 	Determine whether there is an unpaired backslash ending the segment.
@@ -162,6 +210,12 @@ def _sub_bracket_token(match: re.Match[str]) -> str:
 	# Character range. A bracket expression cannot match a directory separator.
 	if range_start is not None:
 		range_start, range_end = range_start[-1], range_end[-1]
+		if range_start == '/' and range_end == '/':
+			return ''
+		if range_start == '/':
+			range_start = '0'
+		if range_end == '/':
+			range_end = '.'
 		if range_start < '/' < range_end:
 			return re.escape(range_start) + '-.0-' + re.escape(range_end)
 		return re.escape(range_start) + '-' + re.escape(range_end)
@@ -427,6 +481,12 @@ class _GitIgnoreBasePattern(RegexPattern):
 							body = '\\' + body
 						expr += '/'
 
+					if not is_expr_negated:
+						body = body.replace('/', '')
+						if body.startswith('^'):
+							body = '\\' + body
+						if not body:
+							raise _NeverMatchError
 					expr += body + ']'
 
 					if errors == 'raise':
@@ -474,6 +534,10 @@ class GitIgnorePatternError(ValueError):
 	pattern.
 	"""
 	pass
+
+
+class _NeverMatchError(ValueError):
+	"""A valid bracket expression contains only the path separator."""
 
 
 class _PosixClassError(GitIgnorePatternError):

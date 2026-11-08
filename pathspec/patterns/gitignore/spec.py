@@ -22,12 +22,14 @@ from .base import (
 	GitIgnorePatternError,
 	_BYTES_ENCODING,
 	_GitIgnoreBasePattern,
+	_NeverMatchError,
 	_PosixClassError,
 	_RangeNotationError,
 	_TrailingBackslashError,
 	_collapse_star_runs,
 	_has_ending_escape,
 	_strip_ending_escape,
+	_split_pattern,
 	_strip_trailing_ws)
 
 _DIR_MARK = 'ps_d'
@@ -269,7 +271,7 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 			return (None, None)
 
 		# Split pattern into segments.
-		orig_segs = pattern_str.split('/')
+		orig_segs = _split_pattern(pattern_str)
 
 		# Check whether the pattern is specifically a directory pattern before
 		# normalization.
@@ -319,6 +321,9 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 				regex_parts = cls.__translate_segments(
 					seg_errors, is_dir_pattern, pattern_segs, requires_dir_descendant,
 				)
+			except _NeverMatchError:
+				# A bracket containing only slashes cannot match a path component.
+				return (None, None)
 			except (_PosixClassError, _RangeNotationError) as e:
 				if errors == 'raise':
 					raise GitIgnorePatternError((
