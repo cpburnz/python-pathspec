@@ -100,7 +100,7 @@ class RegexFlagsTest(unittest.TestCase):
 		"""
 		for expression, flags, path, no_path in TRANSLATABLE_CASES:
 			for spec_class in (PathSpec, GitIgnoreSpec):
-				with self.subTest(expression=expression, flags=flags, spec_class=spec_class):
+				with self.subTest(expression=expression, flags=flags, spec_class=spec_class.__name__):
 					require_backend('simple')
 					expected = []
 					for backend in BACKENDS:
@@ -121,7 +121,7 @@ class RegexFlagsTest(unittest.TestCase):
 			for spec_class in (PathSpec, GitIgnoreSpec):
 				for backend in (None, 'best'):
 					with self.subTest(expression=expression, flags=flags,
-					                  spec_class=spec_class, backend=backend):
+					                  spec_class=spec_class.__name__, backend=backend):
 						spec = spec_class(
 							[RegexPattern(re.compile(expression, flags), include=True)],
 							backend=backend,
@@ -137,7 +137,7 @@ class RegexFlagsTest(unittest.TestCase):
 			for spec_class in (PathSpec, GitIgnoreSpec):
 				for backend in (None, 'best'):
 					with self.subTest(expression=expression, flags=flags,
-					                  spec_class=spec_class, backend=backend):
+					                  spec_class=spec_class.__name__, backend=backend):
 						spec = spec_class(
 							[RegexPattern(re.compile(expression, flags), include=True)],
 							backend=backend,
@@ -159,7 +159,7 @@ class RegexFlagsTest(unittest.TestCase):
 				for expression, flags, _, _ in UNTRANSLATABLE_CASES:
 					for spec_class in (PathSpec, GitIgnoreSpec):
 						with self.subTest(expression=expression, flags=flags,
-						                  spec_class=spec_class):
+						                  spec_class=spec_class.__name__):
 							patterns = [RegexPattern(re.compile(expression, flags), include=True)]
 							with self.assertRaisesRegex(ValueError, "backend='simple'"):
 								spec_class(patterns, backend=backend)

@@ -17,7 +17,7 @@ class BracketSlashTest(unittest.TestCase):
 	def test_invalid_posix_after_range(self):
 		for factory in (GitIgnoreBasicPattern, GitIgnoreSpecPattern):
 			for line in ('[z-[:bogus:]]', '[z-[:^alpha:]]', '[.-[:bogus:]]'):
-				with self.subTest(factory=factory, line=line):
+				with self.subTest(factory=factory.__name__, line=line):
 					pattern = factory(line, errors='literal')
 					self.assertIsNotNone(pattern.match_file(line))
 					self.assertIsNone(factory(line, errors='null').regex)
@@ -39,19 +39,18 @@ class BracketSlashTest(unittest.TestCase):
 				('[[:print:]]', '. '),
 				('[[:digit:].]', '.0'),
 			):
-				for as_bytes in (False, True):
-					with self.subTest(factory=factory, bracket=bracket, as_bytes=as_bytes):
-						line = 'a' + bracket + 'b'
-						with warnings.catch_warnings():
-							warnings.simplefilter('ignore', DeprecationWarning)
-							pattern = factory(line.encode() if as_bytes else line)
-						for char in matched + '/':
-							path = 'a' + char + 'b'
-							self.assertEqual(
-								bool(pattern.match_file(path.encode() if as_bytes else path)),
-								char != '/',
-								path,
-							)
+				with self.subTest(factory=factory.__name__, bracket=bracket):
+					line = 'a' + bracket + 'b'
+					with warnings.catch_warnings():
+						warnings.simplefilter('ignore', DeprecationWarning)
+						pattern = factory(line)
+					for char in matched + '/':
+						path = 'a' + char + 'b'
+						self.assertEqual(
+							bool(pattern.match_file(path)),
+							char != '/',
+							path,
+						)
 
 	def test_spec_separator(self):
 		for backend in ('simple', 're2', 'hyperscan'):

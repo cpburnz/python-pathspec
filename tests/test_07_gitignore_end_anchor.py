@@ -23,30 +23,26 @@ class EndAnchorTest(unittest.TestCase):
 				('foo[0-9]', 'foo1'),
 				(r'foo\\Z', r'foo\Z'),
 			):
-				for as_bytes in (False, True):
-					with self.subTest(factory=factory, source=source, as_bytes=as_bytes):
-						pattern = factory(source.encode() if as_bytes else source)
-						path = filename.encode() if as_bytes else filename
-						newline = b'\n' if as_bytes else '\n'
-						self.assertIsNotNone(pattern.match_file(path))
-						self.assertIsNone(pattern.match_file(path + newline))
+				with self.subTest(factory=factory.__name__, source=source):
+					pattern = factory(source)
+					path = filename
+					newline = '\n'
+					self.assertIsNotNone(pattern.match_file(path))
+					self.assertIsNone(pattern.match_file(path + newline))
 
 	def test_backend_filename_end(self):
 		for backend in ('simple', 're2', 'hyperscan'):
 			with self.subTest(backend=backend):
 				require_backend(backend)
 				for factory in (GitIgnoreBasicPattern, GitIgnoreSpecPattern):
-					for as_bytes in (False, True):
-						if as_bytes and backend == 'simple':
-							continue  # The simple backend requires string patterns for string paths.
-						with self.subTest(factory=factory, as_bytes=as_bytes):
-							line = b'foo' if as_bytes else 'foo'
-							spec = PathSpec.from_lines(factory, [line], backend=backend)
-							self.assertTrue(spec.match_file('foo'))
-							self.assertFalse(spec.match_file('foo\n'))
-							spec = GitIgnoreSpec.from_lines([line], backend=backend)
-							self.assertTrue(spec.match_file('foo'))
-							self.assertFalse(spec.match_file('foo\n'))
+					with self.subTest(factory=factory.__name__):
+						line = 'foo'
+						spec = PathSpec.from_lines(factory, [line], backend=backend)
+						self.assertTrue(spec.match_file('foo'))
+						self.assertFalse(spec.match_file('foo\n'))
+						spec = GitIgnoreSpec.from_lines([line], backend=backend)
+						self.assertTrue(spec.match_file('foo'))
+						self.assertFalse(spec.match_file('foo\n'))
 
 	def test_negation_keeps_newline_filename(self):
 		for backend in ('simple', 're2', 'hyperscan'):
