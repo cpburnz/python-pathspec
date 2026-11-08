@@ -50,6 +50,7 @@ Bug fixes:
 - `Pull #167`_: - A gitignore pattern segment made of three or more asterisks (e.g., `***/x`) is now treated as a double-asterisk, matching Git.
 - `Pull #170`_: Match escaped internal path separators in gitignore patterns without treating them as trailing backslashes.
 - `Pull #171`_: An explicit `**/*/**` pattern no longer matches top-level directories, so a negation can re-include files below them.
+- `Pull #173`_: Strip repeated './' prefixes before matching paths.
 - `Pull #174`_: Tree walks now honor `on_error` for errors reading an open directory scan, preserving yielded entries and continuing with sibling directories.
 
 
@@ -87,6 +88,7 @@ Bug fixes:
 .. _`Pull #167`: https://github.com/cpburnz/python-pathspec/pull/167
 .. _`Pull #170`: https://github.com/cpburnz/python-pathspec/pull/170
 .. _`Pull #171`: https://github.com/cpburnz/python-pathspec/pull/171
+.. _`Pull #173`: https://github.com/cpburnz/python-pathspec/pull/173
 .. _`Pull #174`: https://github.com/cpburnz/python-pathspec/pull/174
 .. _`Pull #181`: https://github.com/cpburnz/python-pathspec/pull/181
 
