@@ -127,6 +127,10 @@ accepts ``(?u)``: both match ``\w``, ``\d``, ``\s``, and ``\b`` as ASCII
 regardless, which is the same difference the native backends already have for
 the patterns they generate themselves.
 
+Precompiled expressions from other regex libraries keep their original engine
+when using "best" or "simple". Explicit native backends reject these expressions
+because their compile options cannot be preserved when rebuilding the pattern.
+
 See `benchmarks_backends.md`_ for comparisons between native Python regular
 expressions and the optional backends.
 

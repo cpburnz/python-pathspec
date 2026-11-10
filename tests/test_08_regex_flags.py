@@ -236,6 +236,72 @@ class RegexFlagsTest(unittest.TestCase):
 				plain_result = PathSpec(patterns, backend=backend).check_file('LOGS/KEEP')
 				self.assertEqual((plain_result.include, plain_result.index), (False, 1))
 
+	def test_foreign_regex_falls_back(self):
+		"""
+		Foreign compiled expressions keep the behavior of their original engine.
+		"""
+		class ForeignRegex:
+			pattern = 'secret'
+
+			def match(self, file):
+				return re.match(self.pattern, file, re.IGNORECASE)
+
+			def search(self, file):
+				return re.search(self.pattern, file, re.IGNORECASE)
+
+		for spec_class in (PathSpec, GitIgnoreSpec):
+			for backend in (None, 'best', 'simple'):
+				with self.subTest(spec_class=spec_class, backend=backend):
+					patterns = [RegexPattern(ForeignRegex(), include=True)]
+					spec = spec_class(patterns, backend=backend)
+					self.assertTrue(spec.match_file('SECRET'))
+					self.assertFalse(spec.match_file('public'))
+					self.assertTrue(type(spec._backend).__name__.startswith('Simple'))
+
+		for backend in ('re2', 'hyperscan'):
+			with self.subTest(backend=backend):
+				require_backend(backend)
+				for spec_class in (PathSpec, GitIgnoreSpec):
+					with self.subTest(spec_class=spec_class):
+						with self.assertRaisesRegex(ValueError, "backend='simple'"):
+							spec_class([RegexPattern(ForeignRegex(), include=True)], backend=backend)
+
+	def test_foreign_re2_options(self):
+		"""
+		Even an RE2 expression cannot be rebuilt without preserving its options.
+		"""
+		require_backend('re2')
+		import re2
+
+		options = re2.Options()
+		options.case_sensitive = False
+		pattern = RegexPattern(re2.compile('secret', options=options), include=True)
+		for spec_class in (PathSpec, GitIgnoreSpec):
+			with self.subTest(spec_class=spec_class):
+				self.assertTrue(spec_class([pattern]).match_file('SECRET'))
+
+	def test_inactive_foreign_regex_stays_native(self):
+		"""
+		A no-op foreign expression must not demote other active patterns.
+		"""
+		class ForeignRegex:
+			def match(self, file):
+				raise AssertionError('inactive expression must not be used')
+
+		patterns = [
+			RegexPattern(ForeignRegex(), include=None),
+			RegexPattern(re.compile('secret'), include=True),
+		]
+		self.assertFalse(has_unsupported_flags(patterns))
+		for backend in ('re2', 'hyperscan'):
+			with self.subTest(backend=backend):
+				require_backend(backend)
+				for spec_class in (PathSpec, GitIgnoreSpec):
+					with self.subTest(spec_class=spec_class):
+						spec = spec_class(patterns, backend=backend)
+						result = spec.check_file('secret')
+						self.assertEqual((result.include, result.index), (True, 1))
+
 	def test_translate_regex_flags(self):
 		"""
 		Only the flags a native engine understands are prepended.
@@ -306,7 +372,7 @@ class RegexFlagsTest(unittest.TestCase):
 
 	def test_has_unsupported_flags(self):
 		"""
-		Null patterns and foreign patterns are not reported as unsupported.
+		Null patterns do not require preserving compile flags.
 		"""
 		cases = [
 			([], False),

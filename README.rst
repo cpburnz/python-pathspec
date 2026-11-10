@@ -122,6 +122,10 @@ backends translate its compile flags to the global inline flags ``(?ims)``. The
 flags are only supported by the "simple" backend. The ``re.UNICODE`` flag is
 ignored.
 
+Precompiled expressions from other regex libraries keep their original engine
+when using "best" or "simple". Explicit native backends reject these expressions
+because their compile options cannot be preserved when rebuilding the pattern.
+
 See `benchmarks_backends.md`_ for comparisons between native Python regular
 expressions and the optional backends.
 

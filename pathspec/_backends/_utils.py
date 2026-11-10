@@ -138,7 +138,7 @@ def has_unsupported_flags(patterns: Iterable[Pattern]) -> bool:
 		if not isinstance(regex, re.Pattern):
 			# The pattern was not compiled by Python's *re* module. Its flags are
 			# unknown, and only the simple backend can use it faithfully.
-			continue
+			return True
 
 		if not supports_regex_flags(regex.flags):
 			return True
