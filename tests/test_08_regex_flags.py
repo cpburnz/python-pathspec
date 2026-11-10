@@ -14,7 +14,7 @@ from pathspec._backends import (
 	agg)
 from pathspec._backends._utils import (
 	get_regex_flags,
-	has_unsupported_flags,
+	is_native_compatible,
 	supports_regex_flags,
 	translate_regex_flags)
 from pathspec.patterns.gitignore.basic import (
@@ -161,7 +161,7 @@ class RegexFlagsTest(unittest.TestCase):
 						with self.subTest(expression=expression, flags=flags,
 						                  spec_class=spec_class.__name__):
 							patterns = [RegexPattern(re.compile(expression, flags), include=True)]
-							with self.assertRaisesRegex(ValueError, "backend='simple'"):
+							with self.assertRaisesRegex(ValueError, ".*Use the simple backend instead."):
 								spec_class(patterns, backend=backend)
 
 	def test_ordinary_patterns_stay_native(self):
@@ -263,7 +263,7 @@ class RegexFlagsTest(unittest.TestCase):
 				require_backend(backend)
 				for spec_class in (PathSpec, GitIgnoreSpec):
 					with self.subTest(spec_class=spec_class):
-						with self.assertRaisesRegex(ValueError, "backend='simple'"):
+						with self.assertRaisesRegex(ValueError, ".*Use the simple backend instead."):
 							spec_class([RegexPattern(ForeignRegex(), include=True)], backend=backend)
 
 	def test_foreign_re2_options(self):
@@ -292,7 +292,7 @@ class RegexFlagsTest(unittest.TestCase):
 			RegexPattern(ForeignRegex(), include=None),
 			RegexPattern(re.compile('secret'), include=True),
 		]
-		self.assertFalse(has_unsupported_flags(patterns))
+		self.assertTrue(all(map(is_native_compatible, patterns)))
 		for backend in ('re2', 'hyperscan'):
 			with self.subTest(backend=backend):
 				require_backend(backend)
@@ -370,28 +370,28 @@ class RegexFlagsTest(unittest.TestCase):
 			with self.subTest(regex=regex):
 				self.assertEqual(get_regex_flags(regex), expected)
 
-	def test_has_unsupported_flags(self):
+	def test_is_native_compatible(self):
 		"""
 		Null patterns do not require preserving compile flags.
 		"""
 		cases = [
-			([], False),
-			([RegexPattern(None)], False),
-			([RegexPattern(re.compile('secret'), include=True)], False),
-			([RegexPattern(re.compile('secret', re.IGNORECASE), include=True)], False),
-			([RegexPattern(re.compile('secret', re.VERBOSE), include=True)], True),
+			([], True),
+			([RegexPattern(None)], True),
+			([RegexPattern(re.compile('secret'), include=True)], True),
+			([RegexPattern(re.compile('secret', re.IGNORECASE), include=True)], True),
+			([RegexPattern(re.compile('secret', re.VERBOSE), include=True)], False),
 			([
 				RegexPattern(re.compile('secret', re.IGNORECASE), include=True),
 				RegexPattern(re.compile('secret', re.VERBOSE), include=False),
-			], True),
+			], False),
 			([
 				RegexPattern(re.compile('secret', re.IGNORECASE), include=None),
 				RegexPattern(re.compile('secret', re.VERBOSE), include=None),
-			], False),
+			], True),
 		]
 		for patterns, expected in cases:
 			with self.subTest(patterns=patterns):
-				self.assertEqual(has_unsupported_flags(patterns), expected)
+				self.assertEqual(all(map(is_native_compatible, patterns)), expected)
 
 
 if __name__ == '__main__':

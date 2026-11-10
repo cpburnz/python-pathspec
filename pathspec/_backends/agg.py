@@ -19,7 +19,7 @@ from pathspec.pattern import (
 	RegexPattern)
 
 from ._utils import (
-	has_unsupported_flags)
+	is_native_compatible)
 
 from .hyperscan.base import (
 	hyperscan_error)
@@ -68,9 +68,9 @@ def make_gitignore_backend(
 	"""
 	if name == 'best':
 		name = _BEST_BACKEND
-		if name != 'simple' and has_unsupported_flags(patterns):
-			# Only the simple backend can keep the compile flags of the patterns it
-			# was given.
+		if name != 'simple' and not all(map(is_native_compatible, patterns)):
+			# Only the simple backend supports custom patterns and compile flags that
+			# cannot be translated.
 			name = 'simple'
 
 	if name == 'hyperscan':
@@ -100,10 +100,7 @@ def make_pathspec_backend(
 	"""
 	if name == 'best':
 		name = _BEST_BACKEND
-		if name != 'simple' and (
-			any(not isinstance(pattern, RegexPattern) for pattern in patterns)
-			or has_unsupported_flags(patterns)
-		):
+		if name != 'simple' and not all(map(is_native_compatible, patterns)):
 			# Only the simple backend supports custom patterns and compile flags that
 			# cannot be translated.
 			name = 'simple'

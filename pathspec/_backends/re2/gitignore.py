@@ -28,6 +28,7 @@ from pathspec._typing import (
 
 from .._utils import (
 	get_regex_flags,
+	is_native_compatible,
 	translate_end_anchor,
 	translate_regex_flags)
 
@@ -82,6 +83,12 @@ class Re2GiBackend(Re2PsBackend):
 			pattern_include = pattern.include
 			if pattern_include is None:
 				continue
+
+			if not is_native_compatible(pattern):
+				raise ValueError((
+					f"patterns[{pattern_index}]={pattern!r} is not compatible with the "
+					f"re2 backend. Use the simple backend instead."
+				))
 
 			assert pattern.regex is not None, pattern
 			assert isinstance(pattern, RegexPattern), pattern

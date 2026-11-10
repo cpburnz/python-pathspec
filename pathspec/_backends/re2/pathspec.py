@@ -27,7 +27,7 @@ from pathspec._typing import (
 from .._utils import (
 	enumerate_patterns,
 	get_regex_flags,
-	has_unsupported_flags,
+	is_native_compatible,
 	translate_end_anchor,
 	translate_regex_flags)
 
@@ -60,15 +60,6 @@ class Re2PsBackend(_Backend):
 		"""
 		if re2_error is not None:
 			raise re2_error
-
-		if patterns and not isinstance(patterns[0], RegexPattern):
-			raise TypeError(f"{patterns[0]=!r} must be a RegexPattern.")
-
-		if has_unsupported_flags(patterns):
-			raise ValueError((
-				"The re2 backend cannot preserve the regex compile flags. "
-				"Use backend='simple'."
-			))
 
 		use_patterns = dict(enumerate_patterns(
 			patterns, filter=True, reverse=False,
@@ -140,6 +131,12 @@ class Re2PsBackend(_Backend):
 			pattern_include = pattern.include
 			if pattern_include is None:
 				continue
+
+			if not is_native_compatible(pattern):
+				raise ValueError((
+					f"patterns[{pattern_index}]={pattern!r} is not compatible with the "
+					f"re2 backend. Use the simple backend instead."
+				))
 
 			assert pattern.regex is not None, pattern
 			assert isinstance(pattern, RegexPattern), pattern

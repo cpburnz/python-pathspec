@@ -122,28 +122,30 @@ def get_regex_flags(regex: Union[re.Pattern, str, bytes, None]) -> int:
 	return 0
 
 
-def has_unsupported_flags(patterns: Iterable[Pattern]) -> bool:
+def is_native_compatible(pattern: Pattern) -> bool:
 	"""
-	Check for active patterns with compile flags a native backend can't keep.
+	Check whether a native backend can match the pattern faithfully. The pattern
+	must be a :class:`.RegexPattern` and have compatible flags.
 
-	*patterns* (:class:`Iterable` of :class:`.Pattern`) contains the patterns.
+	*pattern* (:class:`.Pattern`) is the pattern.
 
 	Returns the answer (:class:`bool`).
 	"""
-	for pattern in patterns:
-		if pattern.include is None or not isinstance(pattern, RegexPattern):
-			continue
+	if pattern.include is None:
+		# Null patterns are never compiled by a backend.
+		return True
 
-		regex = pattern.regex
-		if not isinstance(regex, re.Pattern):
-			# The pattern was not compiled by Python's *re* module. Its flags are
-			# unknown, and only the simple backend can use it faithfully.
-			return True
+	if not isinstance(pattern, RegexPattern):
+		# Custom patterns can only be matched by calling them.
+		return False
 
-		if not supports_regex_flags(regex.flags):
-			return True
+	regex = pattern.regex
+	if not isinstance(regex, re.Pattern):
+		# The pattern was not compiled by Python's *re* module. Its flags and
+		# options are unknown, and only the simple backend can use it faithfully.
+		return False
 
-	return False
+	return supports_regex_flags(regex.flags)
 
 
 @overload

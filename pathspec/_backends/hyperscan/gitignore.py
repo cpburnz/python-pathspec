@@ -31,6 +31,7 @@ from pathspec._typing import (
 
 from .._utils import (
 	get_regex_flags,
+	is_native_compatible,
 	translate_end_anchor,
 	translate_regex_flags)
 
@@ -117,6 +118,12 @@ class HyperscanGiBackend(HyperscanPsBackend):
 		expr_data: list[HyperscanExprDat] = []
 		exprs: list[bytes] = []
 		for pattern_index, pattern in patterns:
+			if not is_native_compatible(pattern):
+				raise ValueError((
+					f"patterns[{pattern_index}]={pattern!r} is not compatible with the "
+					f"hyperscan backend. Use the simple backend instead."
+				))
+
 			pattern_include = pattern.include
 			assert pattern_include is not None, (pattern_index, pattern)
 			assert pattern.regex is not None, (pattern_index, pattern)

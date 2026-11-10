@@ -28,7 +28,7 @@ from pathspec._typing import (
 from .._utils import (
 	enumerate_patterns,
 	get_regex_flags,
-	has_unsupported_flags,
+	is_native_compatible,
 	translate_end_anchor,
 	translate_regex_flags)
 
@@ -66,15 +66,6 @@ class HyperscanPsBackend(_Backend):
 		if hyperscan is None:
 			assert hyperscan_error is not None, (hyperscan, hyperscan_error)
 			raise hyperscan_error
-
-		if patterns and not isinstance(patterns[0], RegexPattern):
-			raise TypeError(f"{patterns[0]=!r} must be a RegexPattern.")
-
-		if has_unsupported_flags(patterns):
-			raise ValueError((
-				"The hyperscan backend cannot preserve the regex compile flags. "
-				"Use backend='simple'."
-			))
 
 		use_patterns = enumerate_patterns(
 			patterns, filter=True, reverse=False,
@@ -160,6 +151,12 @@ class HyperscanPsBackend(_Backend):
 		expr_data: list[HyperscanExprDat] = []
 		exprs: list[bytes] = []
 		for pattern_index, pattern in patterns:
+			if not is_native_compatible(pattern):
+				raise ValueError((
+					f"patterns[{pattern_index}]={pattern!r} is not compatible with the "
+					f"hyperscan backend. Use the simple backend instead."
+				))
+
 			pattern_include = pattern.include
 			assert pattern_include is not None, (pattern_index, pattern)
 			assert pattern.regex is not None, (pattern_index, pattern)

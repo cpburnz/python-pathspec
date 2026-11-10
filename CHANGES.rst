@@ -55,6 +55,7 @@ Bug fixes:
 - `Pull #171`_: An explicit `**/*/**` pattern no longer matches top-level directories, so a negation can re-include files below them.
 - `Pull #173`_: Strip repeated './' prefixes before matching paths.
 - `Pull #174`_: Tree walks now honor `on_error` for errors reading an open directory scan, preserving yielded entries and continuing with sibling directories.
+- `Pull #175`_: Preserve foreign compiled regex options when selecting a backend.
 - `Issue #176`_: Normalize redundant interior separators and current-directory components in matching paths, preserving original paths in matching results.
 - `Issue #177`_: Preserve slashes inside gitignore bracket expressions while excluding path separators from their matches.
 - `Pull #180`_: - Treat a negated root-only gitignore pattern (``!/``) as a no-op instead of re-including directories.
@@ -96,6 +97,7 @@ Bug fixes:
 .. _`Pull #171`: https://github.com/cpburnz/python-pathspec/pull/171
 .. _`Pull #173`: https://github.com/cpburnz/python-pathspec/pull/173
 .. _`Pull #174`: https://github.com/cpburnz/python-pathspec/pull/174
+.. _`Pull #175`: https://github.com/cpburnz/python-pathspec/pull/175
 .. _`Issue #176`: https://github.com/cpburnz/python-pathspec/issues/176
 .. _`Issue #177`: https://github.com/cpburnz/python-pathspec/issues/177
 .. _`Pull #180`: https://github.com/cpburnz/python-pathspec/pull/180

@@ -99,5 +99,6 @@ __credits__ = [
 	"Ammann Labs <https://github.com/agammann>",
 	"咕咕咕 <https://github.com/lexingtonhibiki>",
 	"Parijat Biswas <https://github.com/parijat1222q>",
+	"Shuyun Yang <https://github.com/liuyinchu>",
 ]
 __license__ = "MPL 2.0"
