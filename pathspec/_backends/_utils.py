@@ -105,23 +105,6 @@ def enumerate_patterns(
 	return out_patterns
 
 
-def get_regex_flags(regex: Union[re.Pattern, str, bytes, None]) -> int:
-	"""
-	Get the compile flags of a pattern's regular expression.
-
-	*regex* (:class:`re.Pattern`, :class:`bytes`, :class:`str`, or
-	:data:`None`) is the regular expression of a :class:`.RegexPattern`.
-
-	Returns the flags (:class:`int`) of a regular expression compiled by
-	Python's *re* module, or zero (:class:`int`) for anything else (a native
-	backend only ever sees the expression of a foreign pattern).
-	"""
-	if isinstance(regex, re.Pattern):
-		return int(regex.flags)
-
-	return 0
-
-
 def is_native_compatible(pattern: Pattern) -> bool:
 	"""
 	Check whether a native backend can match the pattern faithfully. The pattern

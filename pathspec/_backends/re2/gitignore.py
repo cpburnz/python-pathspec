@@ -27,7 +27,6 @@ from pathspec._typing import (
 	override)  # Added in 3.12.
 
 from .._utils import (
-	get_regex_flags,
 	is_native_compatible,
 	translate_end_anchor,
 	translate_regex_flags)
@@ -90,9 +89,10 @@ class Re2GiBackend(Re2PsBackend):
 					f"re2 backend. Use the simple backend instead."
 				))
 
-			assert pattern.regex is not None, pattern
-			assert isinstance(pattern, RegexPattern), pattern
-			regex = pattern.regex.pattern
+			assert isinstance(pattern, RegexPattern), (pattern_index, pattern)
+			re_pattern = pattern.regex
+			assert re_pattern is not None, (pattern_index, pattern)
+			regex = re_pattern.pattern
 
 			use_regexes: list[tuple[Union[str, bytes], bool]] = []
 			if isinstance(pattern, GitIgnoreSpecPattern):
@@ -128,10 +128,7 @@ class Re2GiBackend(Re2PsBackend):
 
 			for regex, is_dir_pattern in use_regexes:
 				regex = translate_end_anchor(regex)
-				regex = translate_regex_flags(
-					regex,
-					get_regex_flags(pattern.regex),
-				)
+				regex = translate_regex_flags(regex, re_pattern.flags)
 				if debug:
 					regex_data.append(Re2RegexDebug(
 						include=pattern_include,

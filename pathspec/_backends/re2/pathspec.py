@@ -26,7 +26,6 @@ from pathspec._typing import (
 
 from .._utils import (
 	enumerate_patterns,
-	get_regex_flags,
 	is_native_compatible,
 	translate_end_anchor,
 	translate_regex_flags)
@@ -138,12 +137,11 @@ class Re2PsBackend(_Backend):
 					f"re2 backend. Use the simple backend instead."
 				))
 
-			assert pattern.regex is not None, pattern
-			assert isinstance(pattern, RegexPattern), pattern
-			regex = translate_regex_flags(
-				translate_end_anchor(pattern.regex.pattern),
-				get_regex_flags(pattern.regex),
-			)
+			assert isinstance(pattern, RegexPattern), (pattern_index, pattern)
+			re_pattern = pattern.regex
+			assert re_pattern is not None, (pattern_index, pattern)
+			regex = translate_end_anchor(re_pattern.pattern)
+			regex = translate_regex_flags(regex, re_pattern.flags)
 
 			if debug:
 				regex_data.append(Re2RegexDebug(

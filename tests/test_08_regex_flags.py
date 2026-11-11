@@ -13,7 +13,6 @@ from pathspec import (
 from pathspec._backends import (
 	agg)
 from pathspec._backends._utils import (
-	get_regex_flags,
 	is_native_compatible,
 	supports_regex_flags,
 	translate_regex_flags)
@@ -346,29 +345,6 @@ class RegexFlagsTest(unittest.TestCase):
 		for flags, expected in cases:
 			with self.subTest(flags=flags):
 				self.assertEqual(supports_regex_flags(flags), expected)
-
-	def test_get_regex_flags(self):
-		"""
-		A pattern that Python did not compile has no flags to translate.
-		"""
-		class ForeignPattern(object):
-			"""
-			A regular expression that was not compiled by the *re* module.
-			"""
-			pattern = '(?i)secret'
-
-		compiled = re.compile('secret', re.IGNORECASE)
-		cases = [
-			(compiled, int(compiled.flags)),
-			(re.compile('secret'), int(re.compile('secret').flags)),
-			('secret', 0),
-			(b'secret', 0),
-			(None, 0),
-			(ForeignPattern(), 0),
-		]
-		for regex, expected in cases:
-			with self.subTest(regex=regex):
-				self.assertEqual(get_regex_flags(regex), expected)
 
 	def test_is_native_compatible(self):
 		"""
