@@ -5,6 +5,7 @@ WARNING: The *pathspec._backends.simple* package is not part of the public API.
 Its contents and structure are likely to change.
 """
 
+import re
 from collections.abc import (
 	Sequence)
 from typing import (
@@ -81,13 +82,17 @@ class SimpleGiBackend(SimplePsBackend):
 		file_include: Optional[bool] = None
 		file_index: Optional[int] = None
 
-		for index, pattern in self._patterns:
-			if (
-				(include := pattern.include) is not None
-				and (match := pattern.match_file(file)) is not None
-			):
+		for index, include, regex, pattern in self._tests:
+			if regex is not None:
+				match = regex.search(file)
+			elif (result := pattern.match_file(file)) is not None:
+				match = result.match
+			else:
+				match = None
+
+			if match is not None:
 				# Pattern matched.
-				if match.match.groupdict().get(_DIR_MARK):
+				if match.groupdict().get(_DIR_MARK):
 					# A pattern can match both a strict ancestor of the file and the
 					# file itself. For anchored patterns there is only one match, but
 					# `**/` compiles to the unanchored `(?P<ps_d>/)`: on "a/b/" it
