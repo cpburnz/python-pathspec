@@ -5,6 +5,8 @@ WARNING: The *pathspec._backends.simple* package is not part of the public API.
 Its contents and structure are likely to change.
 """
 
+import platform
+import re
 from collections.abc import (
 	Sequence)
 from typing import (
@@ -13,14 +15,20 @@ from typing import (
 from pathspec.backend import (
 	_Backend)
 from pathspec.pattern import (
-	Pattern)
+	Pattern,
+	RegexPattern)
 from pathspec._typing import (
 	override)  # Added in 3.12.
-from pathspec.util import (
-	check_match_file)
 
 from .._utils import (
 	enumerate_patterns)
+
+_USE_REGEX = platform.python_implementation() != 'PyPy'
+"""
+*_USE_REGEX* (:class:`bool`) is whether to test a pattern with its regex
+directly. It is faster on CPython, but not on PyPy, where the JIT already
+removes the cost of :meth:`.RegexPattern.match_file`.
+"""
 
 
 class SimplePsBackend(_Backend):
@@ -62,6 +70,26 @@ class SimplePsBackend(_Backend):
 		patterns.
 		"""
 
+		self._tests: list[tuple[int, bool, Optional[re.Pattern], Pattern]] = [
+			(index, pattern.include, (
+				pattern.regex
+				if _USE_REGEX
+				and type(pattern).match_file is RegexPattern.match_file
+				and type(pattern.regex) is re.Pattern
+				else None
+			), pattern)
+			for index, pattern in self._patterns
+			if pattern.include is not None
+		]
+		"""
+		*_tests* (:class:`list` of :class:`tuple`) contains the index, include,
+		regex, and pattern of each pattern with an include. The regex is set when
+		the pattern uses :meth:`.RegexPattern.match_file` with a :class:`re.Pattern`.
+		Then the file is tested with the regex search, which gives the same result
+		without creating a :class:`.RegexMatchResult`. Otherwise, the regex is
+		:data:`None` and the file is tested with :meth:`.Pattern.match_file`.
+		"""
+
 	@override
 	def match_file(self, file: str) -> tuple[Optional[bool], Optional[int]]:
 		"""
@@ -73,4 +101,25 @@ class SimplePsBackend(_Backend):
 		or :data:`None`), and the index of the last matched pattern (:class:`int` or
 		:data:`None`).
 		"""
-		return check_match_file(self._patterns, file, self._is_reversed)
+		tests = self._tests
+		if self._is_reversed:
+			# The first pattern that matches takes precedence.
+			for index, include, regex, pattern in tests:
+				if (
+					regex.search(file) if regex is not None else pattern.match_file(file)
+				) is not None:
+					return (include, index)
+
+			return (None, None)
+
+		# The last pattern that matches takes precedence.
+		out_include: Optional[bool] = None
+		out_index: Optional[int] = None
+		for index, include, regex, pattern in tests:
+			if (
+				regex.search(file) if regex is not None else pattern.match_file(file)
+			) is not None:
+				out_include = include
+				out_index = index
+
+		return (out_include, out_index)
