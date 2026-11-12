@@ -125,6 +125,9 @@ ignored.
 Precompiled expressions from other regex libraries keep their original engine
 when using "best" or "simple". Explicit native backends reject these expressions
 because their compile options cannot be preserved when rebuilding the pattern.
+Patterns overriding ``match_file()`` also use "simple" during automatic backend
+selection and are rejected by explicit native backends, preserving their custom
+matching behavior.
 
 See `benchmarks_backends.md`_ for comparisons between native Python regular
 expressions and the optional backends.

@@ -122,6 +122,14 @@ def is_native_compatible(pattern: Pattern) -> bool:
 		# Custom patterns can only be matched by calling them.
 		return False
 
+	match_file = pattern.match_file
+	if (
+		getattr(match_file, '__func__', None) is not RegexPattern.match_file
+		or getattr(match_file, '__self__', None) is not pattern
+	):
+		# Recompiling the regex would bypass a custom matching implementation.
+		return False
+
 	regex = pattern.regex
 	if not isinstance(regex, re.Pattern):
 		# The pattern was not compiled by Python's *re* module. Its flags and
