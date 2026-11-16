@@ -69,8 +69,11 @@ class PathSpec(Generic[TPattern_co]):
 		Initializes the :class:`.PathSpec` instance.
 
 		*patterns* (:class:`~collections.abc.Sequence` or :class:`~collections.abc.Iterable`)
-		contains each compiled pattern (:class:`.Pattern`). If not a sequence, it
-		will be converted to a :class:`list`.
+		contains each compiled pattern (:class:`.Pattern`). A sequence is stored
+		as supplied and is not modified by the spec. The caller must not modify
+		that sequence after construction: matching is not guaranteed to reflect
+		external changes. An iterable that is not a sequence is consumed into a
+		new :class:`list`. These rules also apply to :class:`.GitIgnoreSpec`.
 
 		*backend* (:class:`str` or :data:`None`) is the pattern (regular expression)
 		matching backend to use. Default is :data:`None` for "best" to use the best
@@ -107,7 +110,10 @@ class PathSpec(Generic[TPattern_co]):
 		self.patterns: Sequence[TPattern_co] = use_patterns
 		"""
 		*patterns* (:class:`~collections.abc.Sequence` of :class:`.Pattern`)
-		contains the compiled patterns.
+		contains the compiled patterns the spec was created with. Do not modify
+		this sequence directly; matching is not guaranteed to reflect external
+		changes to it. To use a changed collection of patterns, construct a new
+		spec.
 		"""
 
 	def __repr__(self) -> str:
