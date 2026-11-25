@@ -263,6 +263,20 @@ class PathSpecTest(PathSpecMixin, TestCase):
 	The :class:`PathSpecTest` class tests the :class:`.PathSpec` class.
 	"""
 
+	def test_match_files_preserves_path_objects_and_duplicates(self):
+		files = [Path('a.txt'), Path('b.log'), Path('c.txt'), Path('a.txt')]
+		for sub_test in self.parameterize_from_lines('gitignore', ['*.txt']):
+			with sub_test() as spec:
+				for negate, expected in (
+					(False, [files[0], files[2], files[3]]),
+					(True, [files[1]]),
+				):
+					with self.subTest(negate=negate):
+						actual = list(spec.match_files(iter(files), negate=negate))
+						self.assertEqual(actual, expected)
+						for result, original in zip(actual, expected):
+							self.assertIs(result, original)
+
 	def test_01_absolute_dir_paths_1(self):
 		"""
 		Tests that absolute paths will be properly normalized and matched.
