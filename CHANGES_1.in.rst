@@ -56,6 +56,7 @@ Bug fixes:
 - `Issue #176`_: Normalize redundant interior separators and current-directory components in matching paths, preserving original paths in matching results.
 - `Issue #177`_: Preserve slashes inside gitignore bracket expressions while excluding path separators from their matches.
 - `Pull #180`_: - Treat a negated root-only gitignore pattern (``!/``) as a no-op instead of re-including directories.
+- A directory pattern ending in a run of three or more asterisks (e.g., ``d/***/``) now requires a descendant directory like ``d/**/``, so it no longer matches ``d/`` or its direct files.
 
 
 .. _`Issue #116`: https://github.com/cpburnz/python-pathspec/issues/116

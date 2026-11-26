@@ -293,12 +293,14 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 
 		# A terminal directory globstar with a concrete prefix must consume a
 		# descendant segment before the directory marker. Keep this semantic bit
-		# separate from normalized segments, which collapse adjacent ``**``.
+		# separate from normalized segments, which collapse adjacent ``**``. A run
+		# of three or more asterisks is a globstar too (e.g., ``d/***/``).
+		star_segs = _collapse_star_runs(orig_segs)
 		requires_dir_descendant = (
 			is_dir_pattern
-			and len(orig_segs) > 2
-			and orig_segs[-2] == '**'
-			and any(seg not in ('', '**') for seg in orig_segs[:-2])
+			and len(star_segs) > 2
+			and star_segs[-2] == '**'
+			and any(seg not in ('', '**') for seg in star_segs[:-2])
 		)
 
 		# Normalize pattern to make processing easier.
