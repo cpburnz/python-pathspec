@@ -30,6 +30,8 @@ ESCAPED_SLASH_FAIL_CASES: list[tuple[
 ]] = [
 	('\\', [None, 'literal', 'null'], ['raise']),
 	('a\\', [None, 'literal', 'null'], ['raise']),
+	('**\\', [None, 'literal', 'null'], ['raise']),
+	('a/**\\', [None, 'literal', 'null'], ['raise']),
 ]
 """
 Escaped slash failure test cases.
