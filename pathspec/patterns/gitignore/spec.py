@@ -442,9 +442,10 @@ class GitIgnoreSpecPattern(_GitIgnoreBasePattern):
 					# Match whole path segment.
 					out_parts.append('[^/]+')
 
-				elif seg == '**\\':
+				elif seg == '**\\' and i < end:
 					# EDGE CASE: Git does not match a root path with `**\` like it does
-					# `**`.
+					# `**`. A final `**\` is a trailing backslash, which is handled
+					# below as an invalid pattern.
 					out_parts.append('(?s:.+)')
 
 				else:
