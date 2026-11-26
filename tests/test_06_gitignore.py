@@ -1132,6 +1132,28 @@ class GitIgnoreSpecIssue137Test(GitIgnoreSpecMixin, TestCase):
 				{"top.txt", "d/"},
 				{"d/top.txt", "d/child/", "a/b/deep.txt"},
 			),
+			# A run of three or more asterisks is a globstar, so these behave like
+			# the "**" patterns above.
+			(
+				"d/***/",
+				{"d/", "d/top.txt"},
+				{"d/child/", "d/child/file.txt", "d/child/grandchild/deep.txt"},
+			),
+			(
+				"/d/****/",
+				{"d/", "d/top.txt"},
+				{"d/child/", "d/child/file.txt"},
+			),
+			(
+				"**/d/***/",
+				{"d/top.txt", "x/d/", "x/d/top.txt"},
+				{"d/child/file.txt", "x/d/child/file.txt"},
+			),
+			(
+				"a/**/***/",
+				{"a/", "a/top.txt"},
+				{"a/child/", "a/child/file.txt", "a/b/top.txt"},
+			),
 		]
 		for pattern, unignored, ignored in cases:
 			for sub_test in self.parameterize_from_lines([pattern]):
